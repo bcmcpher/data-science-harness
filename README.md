@@ -406,6 +406,41 @@ data-science-harness/
 
 ---
 
+## Architecture Notes — Dependencies & Package Scope
+
+> Design notes for contributors and hackathon participants. These describe the intended model; the `ds-harness` package and the `requires:` manifests below are not yet built.
+
+**Standards vs. dependencies.** Most entries in the tables above are *reference-only standards* (BIDS conventions, SNOMED / NIDM / Neurobagel schemas, COBIDAS, EQUATOR, DataCite, maDMP, CRediT, ROR, ORCID, …). These need no installation — they live as Markdown in each plugin's `references/` and are baked into skill prompts. Only a smaller set are *executable dependencies* that must actually be installed.
+
+**Per-plugin dependency declaration.** Each `plugin.yaml` declares a `requires:` block so dependency requirements stay tracked per module:
+
+```yaml
+requires:
+  system:    [git, git-annex, datalad]          # OS / non-language tools
+  python:    [bagel-cli, pynidm, reproschema]   # pip-installable
+  npm:       [bids-validator]                    # Node tools
+  reference: [bids, snomed-ct]                   # no install — references/ only
+```
+
+Executable dependencies fall into three tiers:
+
+- **Core (always):** `git`, `git-annex`, `datalad` (+ Python/pip-uv for the CLI) — declared once in `harness.yaml`; the provenance + ledger substrate every project sits on.
+- **Cross-step (shared by ≥2 plugins):** container runtime (`provenance` + `dissemination`), `osfclient` (`research-export` + `project-governance`), `repo2data` (`provenance` + `dissemination`). Declared once and reused — the main source of inter-plugin coupling.
+- **Step-localized (one plugin):** e.g. `bids-validator` (`data-standards`), `bagel-cli` / `pynidm` / `reproschema` (`annotation`), `mystmd` / `jupyter-book` (`dissemination`).
+
+Dependencies span pip, npm/Node, and system packages, so `ds-harness` **detects and advises**: it verifies presence/version of every declared dependency, auto-installs only `python:` tools, and prints guidance for `system:` / `npm:` tools.
+
+**What `ds-harness` does beyond copying files.** Translating and installing the Markdown/YAML content is the package's primary job; on top of that it adds a thin layer of *deterministic* support:
+
+- **Validation** (schema-driven, runs as CI on PRs): `project.yaml`, the `requires:` blocks, and plugin.yaml/harness.yaml cross-references, plus the universal `SKILL.md` superset frontmatter — including cross-harness translation-loss warnings (e.g. a mistyped `when.globs` that would silently fail to trigger on another harness). The schemas double as contributor docs.
+- **Environment doctor** against the declared `requires:` (detect + advise, above).
+- **Ledger read/query:** `ds-harness obligations | status | validate` provide deterministic reads that back the `obligations-due` hook and status reports. Ledger *edits* stay with the skills/LLM.
+- **Install-state tracking** for clean `update` / `remove` and drift detection.
+
+**Guiding line:** the package owns deterministic, verifiable, harness-agnostic operations; skills/LLM own generative judgment (drafting a DMP, choosing a test, writing a manuscript). Every package operation is an *optional convenience* — if the CLI is absent, skills fall back to reading/writing the content directly (Design Rule 2). Deliberately out of scope: re-implementing provenance/analysis orchestration or a project-management tracker — DataLad and git already own those.
+
+---
+
 ## Plugin Manifest (`plugin.yaml`)
 
 Human-readable, no tooling required to understand or contribute:
