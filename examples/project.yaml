@@ -1,0 +1,30 @@
+# project.yaml — the append-only project activity log (v1).
+# No formal schema yet (by design): it is a simple record of the core operations the workflow
+# skills are prompted to append. A validated schema will emerge later as tracking depth and the
+# associated standards (maDMP, ethics, funder reporting, DataCite) are folded in.
+#
+# It is `datalad save`-d like any other file, so the administrative record is provenance-tracked
+# alongside the science.
+
+project:
+  name: demo-study
+  description: "Effect of X on outcome Y in cohort Z"
+  created: 2026-07-10T14:30:00Z
+  dataset_root: .
+  stack: python
+
+log:
+  # Append-only. Each entry: { ts, op, stage, note, branch? }.
+  # Never rewrite or reorder prior entries — corrections are new entries.
+  - { ts: 2026-07-10T14:30:00Z, op: new-project, stage: initialize,
+      note: "scaffolded YODA+BIDS dataset + container recipe", branch: main }
+
+  - { ts: 2026-07-10T15:05:00Z, op: propose-comparison, stage: analyze,
+      note: "cmp: group difference in outcome Y (exploratory quick query)", branch: cmp/group-diff-y }
+
+  - { ts: 2026-07-10T15:40:00Z, op: run-comparison, stage: analyze,
+      note: "container-run stats.py; recorded commit a1b2c3d; outputs derivatives/cmp-group-diff-y/",
+      branch: cmp/group-diff-y }
+
+  - { ts: 2026-07-10T16:00:00Z, op: checkpoint, stage: analyze,
+      note: "datalad save end-of-session; decision log updated", branch: cmp/group-diff-y }
