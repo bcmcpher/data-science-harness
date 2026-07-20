@@ -29,7 +29,7 @@ works because the project log + DataLad provenance are Actionable enough to reco
    - siblings/remotes (for Distributability status): `datalad siblings` (or `git remote -v`)
 4. **Synthesize a brief report** (don't dump raw output). Cover:
    - **Where you are** — project name, current branch, current lifecycle stage (infer from the
-     last log op: new-project→Initialize, annotate→Curate, run-pipeline→Process,
+     last log op: new-project→Initialize, raw-to-bids/annotate→Curate, run-pipeline→Process,
      propose/run-comparison→Analyze, checkpoint→Analyze, manage-product→Analyze,
      dataset-release/publish/link-outputs→Disseminate).
    - **Open threads** — active `cmp/*` branches; any uncommitted changes; the last thing done.
@@ -38,6 +38,7 @@ works because the project log + DataLad provenance are Actionable enough to reco
    - **Suggested next step** — one clear recommendation mapped to a planner skill, e.g.:
      - uncommitted changes → `analyze/checkpoint`
      - on a `cmp/*` branch with a script but no run entry → `analyze/run-comparison`
+     - raw DICOMs staged in a nipoppy dataset but no `bids/` yet → `curate/raw-to-bids`
      - BIDS data present but thin metadata (no data dictionary / sparse dataset_description) →
        `curate/annotate`
      - nipoppy dataset (config.json + BIDS) with no pipeline derivatives yet → `process/run-pipeline`
