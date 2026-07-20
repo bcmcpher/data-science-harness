@@ -56,8 +56,10 @@ You own the *what/why*; you delegate every DataLad operation to the **datalad do
    - R → an `renv.lock` stub + equivalent container def.
    Note in the README that analyses run via `datalad container-run` (Portability + Ephemerality).
 
-5. **Initialize the project log** — write `project.yaml` at the dataset root using the shape
-   below, with one `new-project` entry.
+5. **Initialize the project ledger** — write `project.yaml` at the dataset root using the shape
+   below, with one `new-project` log entry and empty `products:` / `obligations:` lists (later
+   skills populate them). Follow the conventions in `docs/project-ledger.md`; the structure is
+   validated by `schemas/project.schema.json`.
 
 6. **Save everything** — delegate to the **datalad doer**:
    > "Save the new-project scaffold: `datalad save -m 'scaffold YODA+BIDS project <short_name>'`."
@@ -65,14 +67,19 @@ You own the *what/why*; you delegate every DataLad operation to the **datalad do
 7. **Report** — dataset path, what was created, and the suggested next step
    (`analyze/propose-comparison`, or link input data with the datalad doer).
 
-## `project.yaml` shape (append-only log)
+## `project.yaml` shape (the ledger)
+Validated by `schemas/project.schema.json`; conventions in `docs/project-ledger.md`. `new-project`
+writes the header + first log entry and seeds empty `products`/`obligations` (populated later by
+`analyze/manage-product`, `disseminate/*`, and `govern/*`).
 ```yaml
 project:
   name: <short_name>
   description: <one-line description>
   created: 2026-07-10T14:30:00Z
   dataset_root: .
-  stack: python            # or R
+  stack: python            # python | R | other
+products: []               # named deliverables — grouped from kept comparisons later
+obligations: []            # Manage & Comply commitments (pre-registrations, DMP/ethics/funder)
 log:
   # append-only; never rewrite or reorder prior entries
   - { ts: 2026-07-10T14:30:00Z, op: new-project, stage: initialize,
@@ -81,7 +88,8 @@ log:
 
 ## Constraints
 - Never run DataLad commands yourself — delegate creation and save to the datalad doer.
-- Keep `project.yaml` append-only. The `new-project` entry is the first log line.
+- Keep `project.yaml` append-only and schema-valid (`schemas/project.schema.json`). The
+  `new-project` entry is the first log line; `products`/`obligations` start empty.
 - BIDS files are the only thing this skill writes directly; everything provenance-related goes
   through the doer so the very first commit is properly tracked.
 - Container building is deferred to first run — scaffold the recipe, don't build it here.

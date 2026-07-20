@@ -1,7 +1,7 @@
-# project.yaml — the append-only project activity log (v1).
-# No formal schema yet (by design): it is a simple record of the core operations the workflow
-# skills are prompted to append. A validated schema will emerge later as tracking depth and the
-# associated standards (maDMP, ethics, funder reporting, DataCite) are folded in.
+# project.yaml — the project ledger (v1, Phase 1).
+# The administrative source of truth: a project header, an append-only activity `log`, and the
+# `products` / `obligations` registries. Validated against schemas/project.schema.json; conventions
+# in docs/project-ledger.md. Validate with: python3 schemas/validate-ledger.py examples/project.yaml
 #
 # It is `datalad save`-d like any other file, so the administrative record is provenance-tracked
 # alongside the science.
@@ -12,6 +12,36 @@ project:
   created: 2026-07-10T14:30:00Z
   dataset_root: .
   stack: python
+
+products:
+  # Named deliverables grouped from kept comparisons (analyze/manage-product), released and
+  # cross-linked by disseminate/*. Empty at new-project; populated as the story takes shape.
+  - id: main-paper
+    kind: paper
+    title: "X reduces Y in cohort Z"
+    status: in-progress
+    comparisons: [cmp/group-diff-y]
+    outputs: [derivatives/cmp-group-diff-y/]
+    dois: []
+    relations:
+      - { relation: IsSupplementedBy, target: data-release }
+  - id: data-release
+    kind: dataset
+    title: "Cohort Z curated BIDS dataset"
+    status: planned
+    comparisons: []
+    outputs: [.]
+    dois: []
+    relations: []
+
+obligations:
+  # Manage & Comply commitments (govern/*). Resolved by flipping status, never by deletion.
+  - id: prereg-h1
+    kind: preregistration
+    description: "Primary hypothesis (group difference in Y) frozen before data lock"
+    due: 2026-09-01
+    status: pending
+    ref: https://osf.io/xxxxx
 
 log:
   # Append-only. Each entry: { ts, op, stage, note, branch? }.
@@ -28,3 +58,6 @@ log:
 
   - { ts: 2026-07-10T16:00:00Z, op: checkpoint, stage: analyze,
       note: "datalad save end-of-session; decision log updated", branch: cmp/group-diff-y }
+
+  - { ts: 2026-07-10T16:30:00Z, op: manage-product, stage: analyze,
+      note: "grouped cmp/group-diff-y into product main-paper", branch: main }

@@ -37,6 +37,7 @@ WORKDIR="${1:-$(mktemp -d "${TMPDIR:-/tmp}/dsh-e2e.XXXXXX")}"
 cleanup() { chmod -R u+w "$WORKDIR" 2>/dev/null || true; rm -rf "$WORKDIR"; }
 trap cleanup EXIT
 mkdir -p "$WORKDIR"
+REPO="$(cd "$(dirname "$0")/.." && pwd)"   # repo root, for schemas/ + examples/
 
 # ---------------------------------------------------------- preflight: tool availability
 command -v datalad >/dev/null || { echo "SKIP: datalad not on PATH"; exit 2; }
@@ -84,6 +85,8 @@ project:
   created: 2026-07-10T14:30:00Z
   dataset_root: .
   stack: python
+products: []
+obligations: []
 log:
   - { ts: 2026-07-10T14:30:00Z, op: new-project, stage: initialize, note: "scaffold", branch: main }
 YAML
@@ -96,6 +99,16 @@ assert "project.yaml is a real writable git file (not an annex symlink)" \
 assert "participants.tsv kept in git (text2git, not annexed)" '[ ! -L participants.tsv ]'
 git log --oneline > "$WORKDIR/log1.txt"
 assert_grep "scaffold commit recorded" "scaffold YODA\+BIDS" "$WORKDIR/log1.txt"
+
+# ledger schema validation (Phase 1) — gated on pyyaml + jsonschema
+python3 "$REPO/schemas/validate-ledger.py" project.yaml > "$WORKDIR/ledger.txt" 2>&1; LRC=$?
+if [ "$LRC" -eq 2 ]; then
+  echo "  SKIP: ledger schema validation — $(cat "$WORKDIR/ledger.txt")"
+else
+  assert "scaffolded project.yaml validates against schemas/project.schema.json" "[ $LRC -eq 0 ]"
+  python3 "$REPO/schemas/validate-ledger.py" "$REPO/examples/project.yaml" >/dev/null 2>&1; ERC=$?
+  assert "examples/project.yaml validates against schemas/project.schema.json" "[ $ERC -eq 0 ]"
+fi
 
 # =========================================================== M3: propose-comparison
 echo; echo "## propose-comparison (named cmp/* branch + log entry)"
@@ -169,6 +182,9 @@ echo; echo "## checkpoint (clean described snapshot)"
 echo "session notes" > code/NOTES.md
 datalad save -m "checkpoint: session notes" >/dev/null
 assert "working tree clean after checkpoint" '[ -z "$(git status --porcelain)" ]'
+# ledger stayed schema-valid through all appended log entries (Phase 1)
+python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; FRC=$?
+[ "$FRC" -eq 2 ] || assert "project.yaml still schema-valid after log appends" "[ $FRC -eq 0 ]"
 
 # =========================================================== Distributability (D)
 echo; echo "## distributability (push to sibling -> clone -> datalad get)"
