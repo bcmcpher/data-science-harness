@@ -6,6 +6,7 @@
   "license": "MIT",
   "keywords": ["data-science", "publish", "disseminate", "distributability", "datalad", "sibling", "stamped", "workflow"],
   "skills": [
-    "./skills/publish"
+    "./skills/publish",
+    "./skills/dataset-release"
   ]
 }

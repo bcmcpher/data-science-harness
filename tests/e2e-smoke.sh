@@ -216,6 +216,35 @@ PY
          'git log --oneline -1 | grep -q "manage-product"'
 fi
 
+# =========================================================== dataset-release (Phase 2: tag+status)
+echo; echo "## dataset-release (version + BIDS CHANGES + datalad version tag) [gated on pyyaml]"
+# Simulates disseminate/dataset-release: write a CHANGES entry, tag the state via datalad, and
+# flip the product to released. DOI minting is the gated archive-doer add-on (no creds here).
+if ! python3 -c 'import yaml' 2>/dev/null; then
+  echo "  SKIP: pyyaml not available"
+else
+  REL_VER=0.1.0
+  printf '%s %s\n  - Initial release of main-paper outputs\n' "$REL_VER" "$(date +%F)" > CHANGES
+  python3 - project.yaml <<'PY'
+import sys, yaml
+path = sys.argv[1]
+with open(path) as fh:
+    doc = yaml.safe_load(fh)
+for prod in doc.get("products", []):
+    if prod.get("id") == "main-paper":
+        prod["status"] = "released"      # DOI stays unminted (no archive credentials)
+with open(path, "w") as fh:
+    yaml.safe_dump(doc, fh, sort_keys=False)
+PY
+  datalad save -m "release main-paper v$REL_VER" --version-tag "v$REL_VER" >/dev/null
+  python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; RRC=$?
+  assert "ledger valid after release (status -> released)" "[ $RRC -eq 0 ]"
+  assert "BIDS CHANGES entry written"                      '[ -s CHANGES ]'
+  git tag -l > "$WORKDIR/tags.txt"
+  assert_grep "immutable version tag created via datalad save --version-tag" "v0\.1\.0" "$WORKDIR/tags.txt"
+  assert_grep "product marked released in ledger"          "status: released"  "project.yaml"
+fi
+
 # =========================================================== Distributability (D)
 echo; echo "## distributability (push to sibling -> clone -> datalad get)"
 SIB="$WORKDIR/sibling"; CLONE="$WORKDIR/clone"

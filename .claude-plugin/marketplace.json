@@ -42,6 +42,11 @@
       "description": "Nipoppy doer: the tool subagent that constructs/validates nipoppy pipeline commands and hands dataset-mutating steps to the datalad doer for provenanced execution."
     },
     {
+      "name": "archive",
+      "source": "./plugins/archive",
+      "description": "Archive doer: deposits a released version to an external archive (OSF/Zenodo/DataCite) and mints a persistent DOI; reports 'unminted' rather than fabricating one when credentials are absent."
+    },
+    {
       "name": "datalad-cli",
       "source": "./plugins/datalad-cli",
       "description": "DataLad skill toolbox: 19 focused skills wrapping individual datalad subcommands (create, run, save, container-run, siblings, push, ...)."
