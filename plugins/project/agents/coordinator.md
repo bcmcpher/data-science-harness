@@ -51,6 +51,8 @@ works because the project log + DataLad provenance are Actionable enough to reco
      - comparisons recorded but not grouped into any product yet → `analyze/manage-product`
      - BIDS data present but unvalidated, or before a release → `govern/qc-review`
      - a product grouped but not yet versioned/tagged → `disseminate/dataset-release`
+     - a released product with no write-up / living form yet → `disseminate/draft-manuscript`,
+       `executable-article`, or `agent-bundle`
      - multiple products released but not cross-linked → `disseminate/link-outputs`
      - clean tree, comparisons recorded, no sibling yet (or user wants to share) →
        `disseminate/publish`

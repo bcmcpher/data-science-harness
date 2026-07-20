@@ -53,12 +53,12 @@ and, critically, the **product layer** (no concept of a "product", so no way to 
 - [x] `bids` capability doer + `govern/qc-review` — read-only BIDS validation (`bids-validator` +
       structural checks, gated) and a STAMPED self-assessment that routes each gap to its skill.
 
-## Phase 4 — Living products
-- [ ] `disseminate/draft-manuscript` (IMRaD, auto-filled from `datalad log` + ledger)
-- [ ] `disseminate/reporting-checklist` (EQUATOR / COBIDAS)
-- [ ] `disseminate/executable-article` (NeuroLibre)
-- [ ] `disseminate/agent-bundle` (Paper2Agent MCP server)
-- [ ] `disseminate/liab-deploy` (Lab-in-a-Box)
+## Phase 4 — Living products  ✅ DONE
+- [x] `disseminate/draft-manuscript` (IMRaD, auto-filled from `datalad log` + ledger)
+- [x] `disseminate/reporting-checklist` (EQUATOR / COBIDAS; `references/equator-guidelines.md`)
+- [x] `disseminate/executable-article` (NeuroLibre; `references/neurolibre-structure.md`)
+- [x] `disseminate/agent-bundle` (Paper2Agent MCP server; `references/paper2agent-bundle.md`)
+- [x] `disseminate/liab-deploy` (Lab-in-a-Box; `references/liab-deployments.md`)
 
 ## Phase 5 — Manage & Comply lane + capability fill
 - [ ] `project/status-report`, `project/people` (CRediT/ORCID), `project/log-decision`

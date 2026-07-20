@@ -1,6 +1,6 @@
 {
   "name": "disseminate",
-  "description": "Dissemination planner (workflow plane): make research objects Distributable (STAMPED-D) — publish committed dataset state (git history + annexed content) to a sibling and verify an independent clone can retrieve the outputs. Delegates DataLad mechanics to the datalad doer.",
+  "description": "Dissemination planner (workflow plane): turn provenanced work into published, linked products. publish pushes to a sibling; dataset-release cuts a citable versioned release (DOI via the archive doer); link-outputs cross-links products (DataCite); draft-manuscript + reporting-checklist produce the paper; executable-article (NeuroLibre), agent-bundle (Paper2Agent), and liab-deploy (Lab-in-a-Box) produce the living compendium. Delegates DataLad mechanics to the datalad doer.",
   "version": "0.1.0",
   "author": { "name": "bcmcpher" },
   "license": "MIT",
@@ -10,6 +10,9 @@
     "./skills/dataset-release",
     "./skills/link-outputs",
     "./skills/draft-manuscript",
-    "./skills/reporting-checklist"
+    "./skills/reporting-checklist",
+    "./skills/executable-article",
+    "./skills/agent-bundle",
+    "./skills/liab-deploy"
   ]
 }
