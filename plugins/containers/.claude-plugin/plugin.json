@@ -1,0 +1,11 @@
+{
+  "name": "containers",
+  "description": "Containers doer (capability plane): the tool subagent that builds an Apptainer/Singularity .sif image from a project's container recipe (handling the apptainer<->Docker API workaround via docker-archive) so analyses have a pinned, rebuildable environment. Registration (datalad containers-add) and running (container-run) stay with the datalad doer.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["containers", "apptainer", "singularity", "sif", "portability", "ephemerality", "doer", "capability"],
+  "agents": [
+    "./agents/containers-doer.md"
+  ]
+}

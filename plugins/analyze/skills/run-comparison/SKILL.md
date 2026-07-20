@@ -7,7 +7,7 @@ description: >
   written the analysis script for a branch created by propose-comparison.
 plane: workflow
 stamped: [A, T, P, E]
-delegates_to: [datalad]
+delegates_to: [containers, datalad]
 ---
 
 # Skill: run-comparison
@@ -31,18 +31,23 @@ you delegate to the **datalad doer**.
    - `-o` outputs — where results land (prefer `derivatives/cmp-<slug>/…`)
    - `-m` message — a meaningful description of the run
    - container — the project container recipe from `containers/` (build/register on first use)
-3. **Delegate execution to the datalad doer**:
-   > "container-run `<command>` on branch `cmp/<slug>` using container `<name>` (register it from
-   > `containers/<recipe>` if not yet registered), inputs `<-i …>`, outputs `<-o …>`, message
-   > `<-m …>`."
+3. **Ensure the container image exists (containers doer)** — if no `.sif` has been built yet for the
+   project recipe, delegate to the **containers doer**:
+   > "build a `.sif` from `containers/<recipe>` into `containers/<name>.sif`."
+   It returns the image path and the `datalad containers-add …` command to register it. Skip if the
+   image is already built and registered.
+4. **Delegate execution to the datalad doer**:
+   > "container-run `<command>` on branch `cmp/<slug>` using container `<name>` (register it with the
+   > `containers-add` command from step 3 if not yet registered), inputs `<-i …>`, outputs `<-o …>`,
+   > message `<-m …>`."
    Wait for its structured result (commit sha, recorded outputs, pass/fail).
-4. **Handle the result**:
+5. **Handle the result**:
    - **ok** — note the commit and output paths.
    - **failed** — relay the doer's error + suggested fix; nothing was committed. Stop.
-5. **Log it** — append to `project.yaml`:
+6. **Log it** — append to `project.yaml`:
    `{ ts, op: run-comparison, stage: analyze, note: "container-run <command>; commit <sha>;
    outputs <paths>", branch: cmp/<slug> }`.
-6. **Report** — commit, outputs, and that the run is replayable via the doer (`datalad rerun`).
+7. **Report** — commit, outputs, and that the run is replayable via the doer (`datalad rerun`).
 
 ## Constraints
 - Always run through the datalad doer's `container-run` path so the environment is captured — do
