@@ -1,0 +1,11 @@
+{
+  "name": "disseminate",
+  "description": "Dissemination planner (workflow plane): make research objects Distributable (STAMPED-D) — publish committed dataset state (git history + annexed content) to a sibling and verify an independent clone can retrieve the outputs. Delegates DataLad mechanics to the datalad doer.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["data-science", "publish", "disseminate", "distributability", "datalad", "sibling", "stamped", "workflow"],
+  "skills": [
+    "./skills/publish"
+  ]
+}

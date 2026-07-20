@@ -22,6 +22,11 @@
       "description": "DataLad doer: the tool subagent that executes all DataLad / git-annex operations with provenance on behalf of the planner skills."
     },
     {
+      "name": "disseminate",
+      "source": "./plugins/disseminate",
+      "description": "Dissemination planner: publish committed dataset state to a sibling (git + annexed content) and verify an independent clone can retrieve the outputs (STAMPED-D)."
+    },
+    {
       "name": "datalad-cli",
       "source": "./plugins/datalad-cli",
       "description": "DataLad skill toolbox: 19 focused skills wrapping individual datalad subcommands (create, run, save, container-run, siblings, push, ...)."

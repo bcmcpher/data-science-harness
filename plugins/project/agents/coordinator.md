@@ -37,6 +37,8 @@ works because the project log + DataLad provenance are Actionable enough to reco
      - uncommitted changes → `analyze/checkpoint`
      - on a `cmp/*` branch with a script but no run entry → `analyze/run-comparison`
      - on `main`, project scaffolded, no comparisons yet → `analyze/propose-comparison`
+     - clean tree, comparisons recorded, no sibling yet (or user wants to share) →
+       `disseminate/publish`
      - no dataset → `project/new-project`
 
 ## Constraints
