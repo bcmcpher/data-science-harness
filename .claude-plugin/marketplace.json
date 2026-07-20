@@ -12,6 +12,11 @@
       "description": "Project lifecycle planner: scaffold a new YODA/BIDS DataLad study and orient a researcher (coordinator agent) on where a project stands."
     },
     {
+      "name": "govern",
+      "source": "./plugins/govern",
+      "description": "Governance planner (Manage & Comply lane): preregister freezes a comparison's spec before execution and registers it as a confirmatory obligation; obligations tracks and resolves the project's outstanding commitments in the ledger."
+    },
+    {
       "name": "analyze",
       "source": "./plugins/analyze",
       "description": "Analysis planner: propose comparisons on their own branch, run them with full (optionally containerized) provenance, and checkpoint clean snapshots."

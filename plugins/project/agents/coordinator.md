@@ -31,12 +31,17 @@ works because the project log + DataLad provenance are Actionable enough to reco
    - **Where you are** — project name, current branch, current lifecycle stage (infer from the
      last log op: new-project→Initialize, raw-to-bids/annotate→Curate, run-pipeline→Process,
      propose/run-comparison→Analyze, checkpoint→Analyze, manage-product→Analyze,
-     dataset-release/publish/link-outputs→Disseminate).
+     preregister/obligations→Govern, dataset-release/publish/link-outputs→Disseminate).
+   - **Manage & Comply** — any `pending` entries in the ledger `obligations[]` (highlight ones with
+     a `due` date that is near or past); route to `govern/obligations`.
    - **Open threads** — active `cmp/*` branches; any uncommitted changes; the last thing done.
    - **STAMPED status at a glance** — is the tree clean/tracked (T), is a container recipe present
      (P/E), is there a sibling to push to (D)? Flag gaps briefly.
    - **Suggested next step** — one clear recommendation mapped to a planner skill, e.g.:
      - uncommitted changes → `analyze/checkpoint`
+     - on a `cmp/*` branch intended as confirmatory but not yet frozen/registered →
+       `govern/preregister`
+     - pending obligations (esp. anything due) → `govern/obligations`
      - on a `cmp/*` branch with a script but no run entry → `analyze/run-comparison`
      - raw DICOMs staged in a nipoppy dataset but no `bids/` yet → `curate/raw-to-bids`
      - BIDS data present but thin metadata (no data dictionary / sparse dataset_description) →

@@ -216,6 +216,46 @@ PY
          'git log --oneline -1 | grep -q "manage-product"'
 fi
 
+# =========================================================== govern/obligations (Phase 3)
+echo; echo "## govern (preregister -> obligations[], then resolve) [gated on pyyaml]"
+# Simulates govern/preregister recording a pending confirmatory obligation, then govern/obligations
+# resolving it forward to met — exercising the ledger obligations[] registry (add + status change).
+if ! python3 -c 'import yaml' 2>/dev/null; then
+  echo "  SKIP: pyyaml not available"
+else
+  python3 - project.yaml <<'PY'
+import sys, yaml
+path = sys.argv[1]
+with open(path) as fh:
+    doc = yaml.safe_load(fh)
+doc.setdefault("obligations", []).append({
+    "id": "prereg-group-diff-y", "kind": "preregistration",
+    "description": "H1 group difference in Y; frozen for cmp/group-diff-y",
+    "due": "2026-09-01", "status": "pending", "ref": "https://osf.io/xxxxx"})
+with open(path, "w") as fh:
+    yaml.safe_dump(doc, fh, sort_keys=False)
+PY
+  datalad save -m "preregister cmp/group-diff-y: pending obligation" >/dev/null
+  python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; ORC=$?
+  assert "ledger valid after adding a pending obligation" "[ $ORC -eq 0 ]"
+  assert_grep "confirmatory obligation recorded as pending" "status: pending" "project.yaml"
+  python3 - project.yaml <<'PY'
+import sys, yaml
+path = sys.argv[1]
+with open(path) as fh:
+    doc = yaml.safe_load(fh)
+for ob in doc.get("obligations", []):
+    if ob.get("id") == "prereg-group-diff-y":
+        ob["status"] = "met"          # forward-only resolution; never deleted
+with open(path, "w") as fh:
+    yaml.safe_dump(doc, fh, sort_keys=False)
+PY
+  datalad save -m "obligations: met prereg-group-diff-y" >/dev/null
+  python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; ORC2=$?
+  assert "ledger valid after resolving obligation to met" "[ $ORC2 -eq 0 ]"
+  assert_grep "obligation resolved forward to met"        "status: met" "project.yaml"
+fi
+
 # =========================================================== dataset-release (Phase 2: tag+status)
 echo; echo "## dataset-release (version + BIDS CHANGES + datalad version tag) [gated on pyyaml]"
 # Simulates disseminate/dataset-release: write a CHANGES entry, tag the state via datalad, and

@@ -12,10 +12,11 @@ delegates_to: [datalad]
 
 # Skill: propose-comparison
 
-Create a comparison: a small, branch-scoped analysis unit. In v1 every comparison is an
-exploratory quick query realized as a **named DataLad branch** plus a project-log entry. (The
-confirmatory / pre-registered end of the rigor spectrum — freezing the spec first via `govern` —
-is deferred; the *record* here is already the spec-centric research object of STAMPED §3.12.1.)
+Create a comparison: a small, branch-scoped analysis unit realized as a **named DataLad branch**
+plus a project-log entry. Comparisons span a rigor spectrum: an **exploratory** quick query (default)
+that lives only as a branch/run, or a **confirmatory** one whose spec is frozen and registered
+*before* execution via `govern/preregister`. The *record* here is already the spec-centric research
+object of STAMPED §3.12.1.
 
 ## When to use
 - The user wants to run any analysis/plot/comparison against the dataset.
@@ -27,8 +28,9 @@ is deferred; the *record* here is already the spec-centric research object of ST
    - `what` — the comparison in a sentence ("group difference in outcome Y")
    - `why` — the question it answers *(optional but encouraged)*
    - expected `inputs` and `outputs` (best guess; refined at run time)
-   - rigor: `exploratory` (default in v1). If the user wants `confirmatory`, note that
-     pre-registration (`govern/preregister`) is deferred and record it as exploratory-with-intent.
+   - rigor: `exploratory` (default). If the user wants `confirmatory`, create the branch (steps
+     2–4) and then route to `govern/preregister` to freeze + register the spec *before* the analysis
+     is run — do not execute it as confirmatory until the spec is frozen.
 2. **Choose a clear branch name** — `cmp/<short-slug>` (e.g. `cmp/group-diff-y`). The user owns
    naming conventions; suggest one and confirm. Clear, stable names are how comparisons stay
    navigable (the harness does not track branches for you beyond the log).

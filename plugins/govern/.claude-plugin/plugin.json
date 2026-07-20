@@ -1,0 +1,12 @@
+{
+  "name": "govern",
+  "description": "Governance planner (workflow plane): the Manage & Comply lane. preregister freezes a comparison's spec before execution and registers it (OSF/ClinicalTrials/PROSPERO) as a confirmatory obligation; obligations tracks and resolves the project's outstanding commitments (pre-registrations, DMP/ethics/funder deliverables). Commitments live in the ledger obligations[] and are provenanced via the datalad doer.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["data-science", "govern", "preregistration", "obligations", "compliance", "confirmatory", "ledger", "stamped", "workflow"],
+  "skills": [
+    "./skills/preregister",
+    "./skills/obligations"
+  ]
+}
