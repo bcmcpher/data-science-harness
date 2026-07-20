@@ -45,11 +45,13 @@ and, critically, the **product layer** (no concept of a "product", so no way to 
       (with inverses for internal links); `references/datacite-relations.md`.
 - [x] `e2e-smoke.sh` — two products, released + cross-linked, ledger re-validated (37 passed).
 
-## Phase 3 — Front-end completeness (parallelizable after Phase 1)
-- [ ] `govern/preregister` + `govern/obligations` — freeze specs, record confirmatory obligations
-      (wires `propose-comparison`'s pre-registered mode).
-- [ ] `curate/raw-to-bids` — drive `nipoppy bidsify` through `datalad run` (reuses existing doers).
-- [ ] `bids` capability doer + QC skill — `bids-validator`, data-quality, `stamped-assess`.
+## Phase 3 — Front-end completeness (parallelizable after Phase 1)  ✅ DONE
+- [x] `govern/preregister` + `govern/obligations` — freeze specs, record + resolve confirmatory
+      obligations; wires `propose-comparison`'s pre-registered mode. (e2e: obligations[] add/resolve.)
+- [x] `curate/raw-to-bids` — drives `nipoppy bidsify` through `datalad run` (reuses nipoppy+datalad
+      doers), Stage-2 ingest.
+- [x] `bids` capability doer + `govern/qc-review` — read-only BIDS validation (`bids-validator` +
+      structural checks, gated) and a STAMPED self-assessment that routes each gap to its skill.
 
 ## Phase 4 — Living products
 - [ ] `disseminate/draft-manuscript` (IMRaD, auto-filled from `datalad log` + ledger)

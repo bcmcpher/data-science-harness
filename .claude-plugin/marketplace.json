@@ -47,6 +47,11 @@
       "description": "Nipoppy doer: the tool subagent that constructs/validates nipoppy pipeline commands and hands dataset-mutating steps to the datalad doer for provenanced execution."
     },
     {
+      "name": "bids",
+      "source": "./plugins/bids",
+      "description": "BIDS doer: read-only validation of a dataset against the Brain Imaging Data Structure (bids-validator + structural checks); reports conformance, never modifies the dataset."
+    },
+    {
       "name": "archive",
       "source": "./plugins/archive",
       "description": "Archive doer: deposits a released version to an external archive (OSF/Zenodo/DataCite) and mints a persistent DOI; reports 'unminted' rather than fabricating one when credentials are absent."

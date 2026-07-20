@@ -1,0 +1,11 @@
+{
+  "name": "bids",
+  "description": "BIDS doer (capability plane): the read-only tool subagent that validates a dataset against the Brain Imaging Data Structure (bids-validator + structural checks) and reports conformance. Planner skills (govern/qc-review, curate/*) delegate BIDS validation here; it never modifies the dataset.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["bids", "bids-validator", "neuroimaging", "validation", "self-containment", "doer", "capability"],
+  "agents": [
+    "./agents/bids-doer.md"
+  ]
+}

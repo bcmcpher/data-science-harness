@@ -31,7 +31,7 @@ works because the project log + DataLad provenance are Actionable enough to reco
    - **Where you are** — project name, current branch, current lifecycle stage (infer from the
      last log op: new-project→Initialize, raw-to-bids/annotate→Curate, run-pipeline→Process,
      propose/run-comparison→Analyze, checkpoint→Analyze, manage-product→Analyze,
-     preregister/obligations→Govern, dataset-release/publish/link-outputs→Disseminate).
+     preregister/obligations/qc-review→Govern, dataset-release/publish/link-outputs→Disseminate).
    - **Manage & Comply** — any `pending` entries in the ledger `obligations[]` (highlight ones with
      a `due` date that is near or past); route to `govern/obligations`.
    - **Open threads** — active `cmp/*` branches; any uncommitted changes; the last thing done.
@@ -49,6 +49,7 @@ works because the project log + DataLad provenance are Actionable enough to reco
      - nipoppy dataset (config.json + BIDS) with no pipeline derivatives yet → `process/run-pipeline`
      - on `main`, project scaffolded, no comparisons yet → `analyze/propose-comparison`
      - comparisons recorded but not grouped into any product yet → `analyze/manage-product`
+     - BIDS data present but unvalidated, or before a release → `govern/qc-review`
      - a product grouped but not yet versioned/tagged → `disseminate/dataset-release`
      - multiple products released but not cross-linked → `disseminate/link-outputs`
      - clean tree, comparisons recorded, no sibling yet (or user wants to share) →
