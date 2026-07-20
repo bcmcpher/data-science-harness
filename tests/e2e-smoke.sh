@@ -8,13 +8,18 @@
 #   new-project        -> YODA + text2git dataset, plain BIDS scaffold, project.yaml log
 #   propose-comparison -> analysis on its own cmp/* branch + log entry
 #   run-comparison     -> provenanced run (inputs/cmd/outputs recorded, replayable)
+#   containers-run     -> provenanced run inside a container, image hash annexed + recorded
 #   checkpoint         -> clean, described snapshot
 #   distributability   -> push to a sibling, clone it independently, `datalad get` the result
 #
 # This runs the raw DataLad commands the doer would execute (the skills themselves are agent
-# prompts). `datalad container-run` is validated by equivalence via `datalad run`: container-run
-# wraps the same provenance mechanism and additionally annexes the container image hash — that
-# extra image capture is NOT exercised here (it needs a built .sif).
+# prompts). The containers-run step exercises the extra provenance a plain `datalad run` cannot:
+# it registers a container and records the container image's annex key (content hash) in the run
+# commit, so `datalad rerun` re-fetches the exact image. That block is GATED — it self-skips
+# unless the datalad-container extension, an apptainer/singularity runtime, and a .sif are all
+# present. Provide an image via DSH_SIF=/path/to.sif; otherwise the block builds hello-world.sif
+# from the local Docker `hello-world:latest` image (via `docker save` -> docker-archive://,
+# because apptainer 1.1.x speaks too old a Docker API to read the daemon directly).
 #
 # Requirements: git, python3, and a DataLad whose git-annex is >= 10.20230126.
 # Usage: tests/e2e-smoke.sh [workdir]     (workdir defaults to a fresh mktemp dir)
@@ -117,6 +122,48 @@ assert_grep "provenance captured the command" '"cmd": "python3 code/stats.py"' "
 assert_grep "provenance captured inputs"      '"inputs"'          "$WORKDIR/runbody.txt"
 assert_grep "provenance captured outputs"     '"outputs"'         "$WORKDIR/runbody.txt"
 
+# =========================================================== containers-run (image-capture)
+echo; echo "## containers-run (container image-capture provenance) [gated]"
+# The command is `datalad containers-run` (plural) from the datalad-container extension. It
+# registers a container, annexes the image, and records the image's annex key in the run commit
+# — the extra provenance a bare `datalad run` cannot capture.
+CR_RUNTIME="$(command -v apptainer || command -v singularity || true)"
+SIF=""
+if [ -n "${DSH_SIF:-}" ] && [ -f "$DSH_SIF" ]; then
+  SIF="$DSH_SIF"
+elif [ -n "$CR_RUNTIME" ] && command -v docker >/dev/null && docker image inspect hello-world:latest >/dev/null 2>&1; then
+  # apptainer 1.1.x can't read the modern Docker daemon (API too old) -> go via docker-archive (offline)
+  docker save hello-world:latest -o "$WORKDIR/hello-world.tar" >/dev/null 2>&1 \
+    && "$CR_RUNTIME" build "$WORKDIR/hello-world.sif" "docker-archive://$WORKDIR/hello-world.tar" >/dev/null 2>&1 \
+    && SIF="$WORKDIR/hello-world.sif"
+fi
+if ! datalad containers-add --help >/dev/null 2>&1; then
+  echo "  SKIP: datalad-container extension not installed (no containers-add/containers-run)"
+elif [ -z "$CR_RUNTIME" ]; then
+  echo "  SKIP: no apptainer/singularity runtime on PATH"
+elif [ -z "$SIF" ] || [ ! -f "$SIF" ]; then
+  echo "  SKIP: no .sif available (set DSH_SIF=/path/to.sif, or make hello-world:latest available to Docker)"
+else
+  echo "  using runtime $(basename "$CR_RUNTIME"), image $SIF"
+  datalad containers-add demo-env --url "$SIF" \
+    --call-fmt "$(basename "$CR_RUNTIME") exec {img} {cmd}" >/dev/null 2>&1
+  # hello-world has no shell/python; the outer shell redirects the banner to a tracked output file
+  datalad containers-run -m "containers-run: hello banner (image-capture demo)" \
+    --container-name demo-env -o container-hello.txt \
+    "/hello > container-hello.txt" >/dev/null 2>&1
+  datalad containers-list > "$WORKDIR/containers.txt" 2>/dev/null || true
+  git show -s --format='%B' HEAD > "$WORKDIR/crbody.txt"
+
+  assert_grep "container 'demo-env' registered"          "demo-env"        "$WORKDIR/containers.txt"
+  assert "container image annexed (content hash captured, not a plain file)" \
+         '[ -L .datalad/environments/demo-env/image ]'
+  assert_grep "run recorded as DATALAD RUNCMD"           "DATALAD RUNCMD"  "$WORKDIR/crbody.txt"
+  assert_grep "provenance captured the container image"  "\.datalad/environments/demo-env/image" "$WORKDIR/crbody.txt"
+  assert_grep "image recorded as a run input (extra_inputs)" '"extra_inputs"' "$WORKDIR/crbody.txt"
+  assert "container ran (banner output produced)" '[ -f container-hello.txt ]'
+  assert_grep "container output is the hello-world banner" "Hello from Docker" "container-hello.txt"
+fi
+
 # =========================================================== M4: checkpoint
 echo; echo "## checkpoint (clean described snapshot)"
 echo "session notes" > code/NOTES.md
@@ -146,4 +193,4 @@ assert "annexed result retrievable from sibling (datalad get)" \
 echo; echo "==================================================="
 echo "e2e-smoke: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1
-echo "OK — STAMPED S/T/A/M/D loop verified (P/E via datalad run; container image-capture not exercised)"
+echo "OK — STAMPED S/T/A/M/D loop verified (P/E via datalad run + containers-run image-capture when gated deps present)"
