@@ -43,6 +43,13 @@ obligations:
     status: pending
     ref: https://osf.io/xxxxx
 
+contributors:
+  # People + CRediT credit (project/people); mirrored to dataset_description.json Authors.
+  - name: Ada Researcher
+    orcid: https://orcid.org/0000-0002-1825-0097
+    affiliation_ror: https://ror.org/00xxxxx
+    roles: [Conceptualization, Formal analysis, Writing – original draft]
+
 log:
   # Append-only. Each entry: { ts, op, stage, note, branch? }.
   # Never rewrite or reorder prior entries — corrections are new entries.

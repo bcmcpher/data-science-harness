@@ -30,6 +30,11 @@
       "description": "Outstanding commitments in the Manage & Comply lane (pre-registered comparisons, DMP/ethics/funder items).",
       "items": { "$ref": "#/$defs/obligation" }
     },
+    "contributors": {
+      "type": "array",
+      "description": "People credited on the project, with CRediT roles and persistent identifiers (project/people). Feeds dataset_description.json Authors and DataCite creators.",
+      "items": { "$ref": "#/$defs/contributor" }
+    },
     "log": {
       "type": "array",
       "description": "Append-only activity log. Corrections are new entries; never rewrite or reorder prior entries.",
@@ -88,6 +93,21 @@
         "due": { "type": "string", "format": "date" },
         "status": { "type": "string", "enum": ["pending", "met", "waived"] },
         "ref": { "type": "string", "description": "Pre-registration id / URL or other external reference." }
+      }
+    },
+    "contributor": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "orcid": { "type": "string", "description": "ORCID iD URL, e.g. https://orcid.org/0000-0002-1825-0097." },
+        "affiliation_ror": { "type": "string", "description": "ROR URL for the affiliation." },
+        "roles": {
+          "type": "array",
+          "description": "CRediT contributor roles (e.g. Conceptualization, Data curation, Formal analysis, Writing – original draft).",
+          "items": { "type": "string" }
+        }
       }
     },
     "logEntry": {

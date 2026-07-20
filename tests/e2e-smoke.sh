@@ -256,6 +256,30 @@ PY
   assert_grep "obligation resolved forward to met"        "status: met" "project.yaml"
 fi
 
+# =========================================================== project/people (Phase 5: contributors[])
+echo; echo "## project/people (credit a contributor w/ CRediT roles) [gated on pyyaml]"
+# Simulates project/people upserting a contributor into the ledger contributors[] registry.
+if ! python3 -c 'import yaml' 2>/dev/null; then
+  echo "  SKIP: pyyaml not available"
+else
+  python3 - project.yaml <<'PY'
+import sys, yaml
+path = sys.argv[1]
+with open(path) as fh:
+    doc = yaml.safe_load(fh)
+doc.setdefault("contributors", []).append({
+    "name": "Ada Researcher",
+    "orcid": "https://orcid.org/0000-0002-1825-0097",
+    "roles": ["Conceptualization", "Formal analysis", "Writing – original draft"]})
+with open(path, "w") as fh:
+    yaml.safe_dump(doc, fh, sort_keys=False, allow_unicode=True)
+PY
+  datalad save -m "people: credit Ada Researcher" >/dev/null
+  python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; PRC=$?
+  assert "ledger valid after crediting a contributor" "[ $PRC -eq 0 ]"
+  assert_grep "contributor recorded with an ORCID" "orcid:" "project.yaml"
+fi
+
 # =========================================================== dataset-release (Phase 2: tag+status)
 echo; echo "## dataset-release (version + BIDS CHANGES + datalad version tag) [gated on pyyaml]"
 # Simulates disseminate/dataset-release: write a CHANGES entry, tag the state via datalad, and

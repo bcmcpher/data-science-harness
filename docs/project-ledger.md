@@ -37,6 +37,12 @@ obligations:        # Manage & Comply lane (Phase 3: govern/*)
     status: pending         # pending | met | waived
     ref: https://osf.io/xxxxx
 
+contributors:       # people + CRediT credit (Phase 5: project/people)
+  - name: Ada Researcher
+    orcid: https://orcid.org/0000-0002-1825-0097
+    affiliation_ror: https://ror.org/00xxxx
+    roles: [Conceptualization, Formal analysis, Writing – original draft]
+
 log:                # append-only activity log
   - { ts: 2026-07-20T14:30:00Z, op: new-project, stage: initialize,
       note: "scaffolded YODA+BIDS dataset + container recipe", branch: main }
@@ -67,9 +73,13 @@ These are the only ways a skill mutates the ledger. Follow them exactly, then de
 | Section | Written by |
 |---|---|
 | `project` | `project/new-project` (once) |
-| `log` | every planner (append) |
+| `log` | every planner (append); `project/log-decision` records decisions + rationale |
 | `products` | `analyze/manage-product` (create/group), `disseminate/dataset-release` + `link-outputs` (dois/relations) |
 | `obligations` | `govern/preregister`, `govern/obligations`; resolved as work completes |
+| `contributors` | `project/people` (CRediT roles + ORCID/ROR; mirrored to `dataset_description.json` Authors) |
+
+`project/status-report` reads the whole ledger and renders `PROJECT.md` / funder reports — it never
+writes project state, only the append-only `status-report` log entry.
 
 ## Evolution
 
