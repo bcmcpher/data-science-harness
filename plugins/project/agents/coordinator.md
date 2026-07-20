@@ -29,13 +29,15 @@ works because the project log + DataLad provenance are Actionable enough to reco
    - siblings/remotes (for Distributability status): `datalad siblings` (or `git remote -v`)
 4. **Synthesize a brief report** (don't dump raw output). Cover:
    - **Where you are** — project name, current branch, current lifecycle stage (infer from the
-     last log op: new-project→Initialize, propose/run-comparison→Analyze, checkpoint→Analyze).
+     last log op: new-project→Initialize, run-pipeline→Process, propose/run-comparison→Analyze,
+     checkpoint→Analyze, publish→Disseminate).
    - **Open threads** — active `cmp/*` branches; any uncommitted changes; the last thing done.
    - **STAMPED status at a glance** — is the tree clean/tracked (T), is a container recipe present
      (P/E), is there a sibling to push to (D)? Flag gaps briefly.
    - **Suggested next step** — one clear recommendation mapped to a planner skill, e.g.:
      - uncommitted changes → `analyze/checkpoint`
      - on a `cmp/*` branch with a script but no run entry → `analyze/run-comparison`
+     - nipoppy dataset (config.json + BIDS) with no pipeline derivatives yet → `process/run-pipeline`
      - on `main`, project scaffolded, no comparisons yet → `analyze/propose-comparison`
      - clean tree, comparisons recorded, no sibling yet (or user wants to share) →
        `disseminate/publish`

@@ -22,9 +22,19 @@
       "description": "DataLad doer: the tool subagent that executes all DataLad / git-annex operations with provenance on behalf of the planner skills."
     },
     {
+      "name": "process",
+      "source": "./plugins/process",
+      "description": "Processing planner: run nipoppy pipelines (fMRIPrep, MRIQC, ...) on BIDS data with full DataLad provenance, then record completion. Orchestrates the nipoppy and datalad doers."
+    },
+    {
       "name": "disseminate",
       "source": "./plugins/disseminate",
       "description": "Dissemination planner: publish committed dataset state to a sibling (git + annexed content) and verify an independent clone can retrieve the outputs (STAMPED-D)."
+    },
+    {
+      "name": "nipoppy",
+      "source": "./plugins/nipoppy",
+      "description": "Nipoppy doer: the tool subagent that constructs/validates nipoppy pipeline commands and hands dataset-mutating steps to the datalad doer for provenanced execution."
     },
     {
       "name": "datalad-cli",

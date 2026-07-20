@@ -1,0 +1,11 @@
+{
+  "name": "process",
+  "description": "Processing planner (workflow plane): run nipoppy processing pipelines (fMRIPrep, MRIQC, ...) on a dataset's BIDS data with full DataLad provenance, then record completion. Orchestrates the nipoppy doer (command construction) and the datalad doer (provenanced execution).",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["data-science", "process", "pipeline", "nipoppy", "fmriprep", "mriqc", "provenance", "datalad", "stamped", "workflow"],
+  "skills": [
+    "./skills/run-pipeline"
+  ]
+}

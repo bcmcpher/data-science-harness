@@ -1,0 +1,11 @@
+{
+  "name": "nipoppy",
+  "description": "Nipoppy doer (capability plane): the tool subagent that executes nipoppy CLI operations (init, track-curation, reorg, bidsify, process, track-processing, extract, status). It constructs and validates pipeline commands but hands dataset-mutating computations to the datalad doer so nipoppy commands are invoked with DataLad provenance.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["nipoppy", "neuroimaging", "bids", "pipeline", "boutiques", "apptainer", "doer", "capability"],
+  "agents": [
+    "./agents/nipoppy-doer.md"
+  ]
+}
