@@ -186,6 +186,36 @@ assert "working tree clean after checkpoint" '[ -z "$(git status --porcelain)" ]
 python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; FRC=$?
 [ "$FRC" -eq 2 ] || assert "project.yaml still schema-valid after log appends" "[ $FRC -eq 0 ]"
 
+# =========================================================== manage-product (Phase 2: products[])
+echo; echo "## manage-product (group a comparison into a product) [gated on pyyaml]"
+# Simulates what analyze/manage-product records: upsert a product into the ledger's products[]
+# registry grouping the cmp/group-diff-y comparison, then re-validate against the schema.
+if ! python3 -c 'import yaml' 2>/dev/null; then
+  echo "  SKIP: pyyaml not available"
+else
+  python3 - project.yaml <<'PY'
+import sys, yaml
+path = sys.argv[1]
+with open(path) as fh:
+    doc = yaml.safe_load(fh)
+doc.setdefault("products", []).append({
+    "id": "main-paper", "kind": "paper", "title": "X reduces Y",
+    "status": "in-progress", "comparisons": ["cmp/group-diff-y"],
+    "outputs": ["derivatives/cmp-group-diff-y/result.json"],
+    "dois": [], "relations": [],
+})
+with open(path, "w") as fh:
+    yaml.safe_dump(doc, fh, sort_keys=False)
+PY
+  datalad save -m "manage-product: main-paper groups cmp/group-diff-y" >/dev/null
+  python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; MRC=$?
+  assert "ledger valid after grouping a product" "[ $MRC -eq 0 ]"
+  assert_grep "product 'main-paper' recorded in products[]" "id: main-paper"      "project.yaml"
+  assert_grep "product groups the comparison branch"        "cmp/group-diff-y"    "project.yaml"
+  assert "product save recorded as a tracked commit" \
+         'git log --oneline -1 | grep -q "manage-product"'
+fi
+
 # =========================================================== Distributability (D)
 echo; echo "## distributability (push to sibling -> clone -> datalad get)"
 SIB="$WORKDIR/sibling"; CLONE="$WORKDIR/clone"

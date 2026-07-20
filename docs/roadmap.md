@@ -35,8 +35,9 @@ and, critically, the **product layer** (no concept of a "product", so no way to 
 - [x] `tests/e2e-smoke.sh` — gated assertions validating scaffolded + example ledgers, and that
       the ledger stays valid after log appends. (25 passed, 0 failed.)
 
-## Phase 2 — Product layer: publish *multiple* products *(critical path)*
-- [ ] `analyze/manage-product` — group comparison branches into a named product; write `products[]`.
+## Phase 2 — Product layer: publish *multiple* products *(critical path)*  ⏳ IN PROGRESS
+- [x] `analyze/manage-product` — group comparison branches into a named product; write `products[]`.
+      (e2e: upserts a product, re-validates the ledger, asserts the tracked save — 29 passed.)
 - [ ] archive/DOI capability doer — Zenodo/OSF DOI minting (`datalad-osf` / Zenodo API).
 - [ ] `disseminate/dataset-release` — version bump, BIDS `CHANGES`, `datalad` tag, mint DOI.
 - [ ] `disseminate/link-outputs` — DataCite `RelatedIdentifier` cross-linking across products.

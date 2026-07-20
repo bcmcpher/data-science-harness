@@ -30,7 +30,8 @@ works because the project log + DataLad provenance are Actionable enough to reco
 4. **Synthesize a brief report** (don't dump raw output). Cover:
    - **Where you are** — project name, current branch, current lifecycle stage (infer from the
      last log op: new-project→Initialize, annotate→Curate, run-pipeline→Process,
-     propose/run-comparison→Analyze, checkpoint→Analyze, publish→Disseminate).
+     propose/run-comparison→Analyze, checkpoint→Analyze, manage-product→Analyze,
+     publish→Disseminate).
    - **Open threads** — active `cmp/*` branches; any uncommitted changes; the last thing done.
    - **STAMPED status at a glance** — is the tree clean/tracked (T), is a container recipe present
      (P/E), is there a sibling to push to (D)? Flag gaps briefly.
@@ -41,6 +42,7 @@ works because the project log + DataLad provenance are Actionable enough to reco
        `curate/annotate`
      - nipoppy dataset (config.json + BIDS) with no pipeline derivatives yet → `process/run-pipeline`
      - on `main`, project scaffolded, no comparisons yet → `analyze/propose-comparison`
+     - comparisons recorded but not grouped into any product yet → `analyze/manage-product`
      - clean tree, comparisons recorded, no sibling yet (or user wants to share) →
        `disseminate/publish`
      - no dataset → `project/new-project`
