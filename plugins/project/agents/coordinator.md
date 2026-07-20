@@ -31,7 +31,7 @@ works because the project log + DataLad provenance are Actionable enough to reco
    - **Where you are** — project name, current branch, current lifecycle stage (infer from the
      last log op: new-project→Initialize, annotate→Curate, run-pipeline→Process,
      propose/run-comparison→Analyze, checkpoint→Analyze, manage-product→Analyze,
-     dataset-release/publish→Disseminate).
+     dataset-release/publish/link-outputs→Disseminate).
    - **Open threads** — active `cmp/*` branches; any uncommitted changes; the last thing done.
    - **STAMPED status at a glance** — is the tree clean/tracked (T), is a container recipe present
      (P/E), is there a sibling to push to (D)? Flag gaps briefly.
@@ -44,6 +44,7 @@ works because the project log + DataLad provenance are Actionable enough to reco
      - on `main`, project scaffolded, no comparisons yet → `analyze/propose-comparison`
      - comparisons recorded but not grouped into any product yet → `analyze/manage-product`
      - a product grouped but not yet versioned/tagged → `disseminate/dataset-release`
+     - multiple products released but not cross-linked → `disseminate/link-outputs`
      - clean tree, comparisons recorded, no sibling yet (or user wants to share) →
        `disseminate/publish`
      - no dataset → `project/new-project`

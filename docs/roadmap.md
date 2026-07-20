@@ -35,15 +35,15 @@ and, critically, the **product layer** (no concept of a "product", so no way to 
 - [x] `tests/e2e-smoke.sh` — gated assertions validating scaffolded + example ledgers, and that
       the ledger stays valid after log appends. (25 passed, 0 failed.)
 
-## Phase 2 — Product layer: publish *multiple* products *(critical path)*  ⏳ IN PROGRESS
+## Phase 2 — Product layer: publish *multiple* products *(critical path)*  ✅ DONE
 - [x] `analyze/manage-product` — group comparison branches into a named product; write `products[]`.
-      (e2e: upserts a product, re-validates the ledger, asserts the tracked save — 29 passed.)
 - [x] archive/DOI capability doer (`plugins/archive`) — OSF/Zenodo/DataCite DOI minting; reports
       `unminted` rather than fabricating a DOI when credentials are absent.
 - [x] `disseminate/dataset-release` — version bump, BIDS `CHANGES`, `datalad save --version-tag`,
-      gated DOI mint; sets product `status: released`. (e2e: tag + CHANGES + status — 33 passed.)
-- [ ] `disseminate/link-outputs` — DataCite `RelatedIdentifier` cross-linking across products.
-- [ ] `e2e-smoke.sh` — two products from two branches, released + linked, asserted.
+      gated DOI mint; sets product `status: released`.
+- [x] `disseminate/link-outputs` — DataCite `RelatedIdentifier` cross-linking across products
+      (with inverses for internal links); `references/datacite-relations.md`.
+- [x] `e2e-smoke.sh` — two products, released + cross-linked, ledger re-validated (37 passed).
 
 ## Phase 3 — Front-end completeness (parallelizable after Phase 1)
 - [ ] `govern/preregister` + `govern/obligations` — freeze specs, record confirmatory obligations

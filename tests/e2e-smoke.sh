@@ -245,6 +245,39 @@ PY
   assert_grep "product marked released in ledger"          "status: released"  "project.yaml"
 fi
 
+# =========================================================== link-outputs (Phase 2 capstone)
+echo; echo "## link-outputs (cross-link multiple products via DataCite relations) [gated on pyyaml]"
+# The multi-product endgame: a second product (as a prior manage-product would create), then
+# DataCite RelatedIdentifier links (with inverses) tying the two into one linked compendium.
+if ! python3 -c 'import yaml' 2>/dev/null; then
+  echo "  SKIP: pyyaml not available"
+else
+  python3 - project.yaml <<'PY'
+import sys, yaml
+path = sys.argv[1]
+with open(path) as fh:
+    doc = yaml.safe_load(fh)
+prods = doc.setdefault("products", [])
+by_id = {p["id"]: p for p in prods}
+if "data-release" not in by_id:
+    dr = {"id": "data-release", "kind": "dataset", "title": "Cohort BIDS dataset",
+          "status": "planned", "comparisons": [], "outputs": ["."], "dois": [], "relations": []}
+    prods.append(dr); by_id["data-release"] = dr
+# DataCite RelatedIdentifier links + their inverses (internal product-to-product)
+by_id["main-paper"].setdefault("relations", []).append({"relation": "IsSupplementedBy", "target": "data-release"})
+by_id["data-release"].setdefault("relations", []).append({"relation": "IsSupplementTo", "target": "main-paper"})
+with open(path, "w") as fh:
+    yaml.safe_dump(doc, fh, sort_keys=False)
+PY
+  datalad save -m "link-outputs: main-paper <-> data-release (DataCite relations)" >/dev/null
+  python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; KRC=$?
+  assert "ledger valid after cross-linking products" "[ $KRC -eq 0 ]"
+  NPROD=$(python3 -c 'import yaml; print(len(yaml.safe_load(open("project.yaml")).get("products",[])))')
+  assert "ledger holds multiple products (>=2)"            "[ $NPROD -ge 2 ]"
+  assert_grep "forward DataCite relation recorded (IsSupplementedBy)" "IsSupplementedBy" "project.yaml"
+  assert_grep "inverse DataCite relation recorded (IsSupplementTo)"   "IsSupplementTo"   "project.yaml"
+fi
+
 # =========================================================== Distributability (D)
 echo; echo "## distributability (push to sibling -> clone -> datalad get)"
 SIB="$WORKDIR/sibling"; CLONE="$WORKDIR/clone"
