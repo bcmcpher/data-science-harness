@@ -1,0 +1,11 @@
+{
+  "name": "datalad",
+  "description": "DataLad doer (capability plane): the tool subagent that executes all DataLad / git-annex operations with provenance — create datasets, run/container-run commands, save, inspect status/log, push to siblings. Workflow-plane planner skills delegate here instead of calling the CLI directly.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["datalad", "git-annex", "provenance", "reproducibility", "doer", "capability"],
+  "agents": [
+    "./agents/datalad-doer.md"
+  ]
+}

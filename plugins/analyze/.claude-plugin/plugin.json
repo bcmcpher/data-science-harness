@@ -1,0 +1,13 @@
+{
+  "name": "analyze",
+  "description": "Analysis planner (workflow plane): run the comparison engine — propose an analysis on its own DataLad branch, execute it with full provenance (optionally in a container), and checkpoint clean snapshots. Delegates DataLad mechanics to the datalad doer.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["data-science", "analysis", "comparison", "provenance", "datalad", "stamped", "workflow"],
+  "skills": [
+    "./skills/propose-comparison",
+    "./skills/run-comparison",
+    "./skills/checkpoint"
+  ]
+}

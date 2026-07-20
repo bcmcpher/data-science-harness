@@ -1,0 +1,14 @@
+{
+  "name": "project",
+  "description": "Project lifecycle planner (workflow plane): scaffold a new neuroimaging study as a YODA/BIDS DataLad dataset and orient a researcher on where a project stands. Delegates DataLad mechanics to the datalad doer.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["data-science", "research", "project", "yoda", "bids", "datalad", "stamped", "workflow"],
+  "skills": [
+    "./skills/new-project"
+  ],
+  "agents": [
+    "./agents/coordinator.md"
+  ]
+}

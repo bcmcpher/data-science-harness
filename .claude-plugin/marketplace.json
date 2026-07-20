@@ -1,0 +1,35 @@
+{
+  "name": "data-science-harness",
+  "owner": { "name": "bcmcpher" },
+  "metadata": {
+    "description": "A harness for reproducible, STAMPED-aligned data-science research. Workflow-plane planner skills (project, analyze) delegate to capability-plane doers (datalad, datalad-cli, nipoppy-cli) so every research object is Shareable, Tracked, Actionable, Metadata-rich, Provenanced, Executable, and Distributable.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "project",
+      "source": "./plugins/project",
+      "description": "Project lifecycle planner: scaffold a new YODA/BIDS DataLad study and orient a researcher (coordinator agent) on where a project stands."
+    },
+    {
+      "name": "analyze",
+      "source": "./plugins/analyze",
+      "description": "Analysis planner: propose comparisons on their own branch, run them with full (optionally containerized) provenance, and checkpoint clean snapshots."
+    },
+    {
+      "name": "datalad",
+      "source": "./plugins/datalad",
+      "description": "DataLad doer: the tool subagent that executes all DataLad / git-annex operations with provenance on behalf of the planner skills."
+    },
+    {
+      "name": "datalad-cli",
+      "source": "./plugins/datalad-cli",
+      "description": "DataLad skill toolbox: 19 focused skills wrapping individual datalad subcommands (create, run, save, container-run, siblings, push, ...)."
+    },
+    {
+      "name": "nipoppy-cli",
+      "source": "./plugins/nipoppy-cli",
+      "description": "Nipoppy skill toolbox: dataset curation, BIDS conversion, pipeline running/tracking, and IDP extraction for neuroimaging studies."
+    }
+  ]
+}
