@@ -22,6 +22,11 @@
       "description": "DataLad doer: the tool subagent that executes all DataLad / git-annex operations with provenance on behalf of the planner skills."
     },
     {
+      "name": "curate",
+      "source": "./plugins/curate",
+      "description": "Curation planner: the annotate skill enriches a dataset's metadata (dataset_description.json, participants.json data dictionary, BIDS sidecars, controlled-term mappings) with provenance, advancing STAMPED Metadata + Actionable."
+    },
+    {
       "name": "process",
       "source": "./plugins/process",
       "description": "Processing planner: run nipoppy pipelines (fMRIPrep, MRIQC, ...) on BIDS data with full DataLad provenance, then record completion. Orchestrates the nipoppy and datalad doers."
