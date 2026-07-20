@@ -8,6 +8,8 @@
   "skills": [
     "./skills/publish",
     "./skills/dataset-release",
-    "./skills/link-outputs"
+    "./skills/link-outputs",
+    "./skills/draft-manuscript",
+    "./skills/reporting-checklist"
   ]
 }
