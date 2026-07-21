@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bcmcpher/data-science-harness/schemas/project.schema.json",
+  "title": "data-science-harness project ledger (project.yaml)",
+  "description": "The administrative source of truth at the dataset root, datalad save-d like any other artifact. Additive by design: new top-level keys are introduced per roadmap phase. Phase 1 adds `products` and `obligations` alongside the existing `project` header and append-only `log`.",
+  "type": "object",
+  "required": ["project", "log"],
+  "additionalProperties": false,
+  "properties": {
+    "project": {
+      "type": "object",
+      "description": "Project header. Set once by project/new-project.",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "created": { "type": "string", "format": "date-time" },
+        "dataset_root": { "type": "string" },
+        "stack": { "type": "string", "enum": ["python", "R", "other"] }
+      }
+    },
+    "products": {
+      "type": "array",
+      "description": "Named deliverables grouped from kept comparisons (analyze/manage-product), released and cross-linked by disseminate/*.",
+      "items": { "$ref": "#/$defs/product" }
+    },
+    "obligations": {
+      "type": "array",
+      "description": "Outstanding commitments in the Manage & Comply lane (pre-registered comparisons, DMP/ethics/funder items).",
+      "items": { "$ref": "#/$defs/obligation" }
+    },
+    "contributors": {
+      "type": "array",
+      "description": "People credited on the project, with CRediT roles and persistent identifiers (project/people). Feeds dataset_description.json Authors and DataCite creators.",
+      "items": { "$ref": "#/$defs/contributor" }
+    },
+    "log": {
+      "type": "array",
+      "description": "Append-only activity log. Corrections are new entries; never rewrite or reorder prior entries.",
+      "items": { "$ref": "#/$defs/logEntry" }
+    }
+  },
+  "$defs": {
+    "product": {
+      "type": "object",
+      "required": ["id", "kind", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "description": "Stable slug, unique within products[]." },
+        "kind": { "type": "string", "enum": ["paper", "dataset", "report", "article", "agent-bundle", "other"] },
+        "title": { "type": "string" },
+        "status": { "type": "string", "enum": ["planned", "in-progress", "released"] },
+        "comparisons": {
+          "type": "array",
+          "description": "Comparison ids / cmp/* branch names that make up this product.",
+          "items": { "type": "string" }
+        },
+        "outputs": {
+          "type": "array",
+          "description": "Dataset-relative paths this product publishes.",
+          "items": { "type": "string" }
+        },
+        "dois": {
+          "type": "array",
+          "description": "Minted DOIs / persistent identifiers for released versions.",
+          "items": { "type": "string" }
+        },
+        "relations": {
+          "type": "array",
+          "description": "DataCite RelatedIdentifier links to other products or external identifiers.",
+          "items": { "$ref": "#/$defs/relation" }
+        }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "required": ["relation", "target"],
+      "additionalProperties": false,
+      "properties": {
+        "relation": { "type": "string", "description": "DataCite relationType, e.g. IsSourceOf, IsSupplementTo, IsDerivedFrom, IsVariantFormOf." },
+        "target": { "type": "string", "description": "A product id (this ledger) or an external DOI/URL." }
+      }
+    },
+    "obligation": {
+      "type": "object",
+      "required": ["id", "kind", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "type": "string", "enum": ["preregistration", "confirmatory-comparison", "dmp", "ethics", "funder-report", "other"] },
+        "description": { "type": "string" },
+        "due": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["pending", "met", "waived"] },
+        "ref": { "type": "string", "description": "Pre-registration id / URL or other external reference." }
+      }
+    },
+    "contributor": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "orcid": { "type": "string", "description": "ORCID iD URL, e.g. https://orcid.org/0000-0002-1825-0097." },
+        "affiliation_ror": { "type": "string", "description": "ROR URL for the affiliation." },
+        "roles": {
+          "type": "array",
+          "description": "CRediT contributor roles (e.g. Conceptualization, Data curation, Formal analysis, Writing – original draft).",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "logEntry": {
+      "type": "object",
+      "required": ["ts", "op"],
+      "additionalProperties": false,
+      "properties": {
+        "ts": { "type": "string", "format": "date-time" },
+        "op": { "type": "string", "description": "The skill operation, e.g. new-project, annotate, run-comparison, manage-product, publish." },
+        "stage": { "type": "string" },
+        "note": { "type": "string" },
+        "branch": { "type": "string" }
+      }
+    }
+  }
+}

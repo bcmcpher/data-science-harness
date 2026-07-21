@@ -1,0 +1,12 @@
+{
+  "name": "curate",
+  "description": "Curation planner (workflow plane): make raw data standardized and self-describing. raw-to-bids converts DICOMs to a BIDS layout via nipoppy with DataLad provenance; annotate enriches metadata (dataset_description.json, participants.json data dictionary, BIDS sidecars, controlled terms). All mutations are provenanced via the datalad doer.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["data-science", "curate", "annotate", "metadata", "bids", "data-dictionary", "neurobagel", "stamped", "workflow"],
+  "skills": [
+    "./skills/raw-to-bids",
+    "./skills/annotate"
+  ]
+}

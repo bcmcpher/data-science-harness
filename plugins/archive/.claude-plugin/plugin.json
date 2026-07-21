@@ -1,0 +1,11 @@
+{
+  "name": "archive",
+  "description": "Archive doer (capability plane): the tool subagent that deposits a released dataset/product version to an external archive (OSF, Zenodo, DataCite) and mints a persistent DOI. It never fabricates a DOI — absent credentials it reports 'unminted'. Planner skills (disseminate/dataset-release, link-outputs) delegate DOI minting here.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["archive", "doi", "zenodo", "osf", "datacite", "citable", "distributability", "doer", "capability"],
+  "agents": [
+    "./agents/archive-doer.md"
+  ]
+}

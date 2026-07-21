@@ -1,0 +1,70 @@
+# project.yaml — the project ledger (v1, Phase 1).
+# The administrative source of truth: a project header, an append-only activity `log`, and the
+# `products` / `obligations` registries. Validated against schemas/project.schema.json; conventions
+# in docs/project-ledger.md. Validate with: python3 schemas/validate-ledger.py examples/project.yaml
+#
+# It is `datalad save`-d like any other file, so the administrative record is provenance-tracked
+# alongside the science.
+
+project:
+  name: demo-study
+  description: "Effect of X on outcome Y in cohort Z"
+  created: 2026-07-10T14:30:00Z
+  dataset_root: .
+  stack: python
+
+products:
+  # Named deliverables grouped from kept comparisons (analyze/manage-product), released and
+  # cross-linked by disseminate/*. Empty at new-project; populated as the story takes shape.
+  - id: main-paper
+    kind: paper
+    title: "X reduces Y in cohort Z"
+    status: in-progress
+    comparisons: [cmp/group-diff-y]
+    outputs: [derivatives/cmp-group-diff-y/]
+    dois: []
+    relations:
+      - { relation: IsSupplementedBy, target: data-release }
+  - id: data-release
+    kind: dataset
+    title: "Cohort Z curated BIDS dataset"
+    status: planned
+    comparisons: []
+    outputs: [.]
+    dois: []
+    relations: []
+
+obligations:
+  # Manage & Comply commitments (govern/*). Resolved by flipping status, never by deletion.
+  - id: prereg-h1
+    kind: preregistration
+    description: "Primary hypothesis (group difference in Y) frozen before data lock"
+    due: 2026-09-01
+    status: pending
+    ref: https://osf.io/xxxxx
+
+contributors:
+  # People + CRediT credit (project/people); mirrored to dataset_description.json Authors.
+  - name: Ada Researcher
+    orcid: https://orcid.org/0000-0002-1825-0097
+    affiliation_ror: https://ror.org/00xxxxx
+    roles: [Conceptualization, Formal analysis, Writing – original draft]
+
+log:
+  # Append-only. Each entry: { ts, op, stage, note, branch? }.
+  # Never rewrite or reorder prior entries — corrections are new entries.
+  - { ts: 2026-07-10T14:30:00Z, op: new-project, stage: initialize,
+      note: "scaffolded YODA+BIDS dataset + container recipe", branch: main }
+
+  - { ts: 2026-07-10T15:05:00Z, op: propose-comparison, stage: analyze,
+      note: "cmp: group difference in outcome Y (exploratory quick query)", branch: cmp/group-diff-y }
+
+  - { ts: 2026-07-10T15:40:00Z, op: run-comparison, stage: analyze,
+      note: "container-run stats.py; recorded commit a1b2c3d; outputs derivatives/cmp-group-diff-y/",
+      branch: cmp/group-diff-y }
+
+  - { ts: 2026-07-10T16:00:00Z, op: checkpoint, stage: analyze,
+      note: "datalad save end-of-session; decision log updated", branch: cmp/group-diff-y }
+
+  - { ts: 2026-07-10T16:30:00Z, op: manage-product, stage: analyze,
+      note: "grouped cmp/group-diff-y into product main-paper", branch: main }

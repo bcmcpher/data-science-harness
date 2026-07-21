@@ -1,0 +1,75 @@
+{
+  "name": "data-science-harness",
+  "owner": { "name": "bcmcpher" },
+  "metadata": {
+    "description": "A harness for reproducible, STAMPED-aligned data-science research. Workflow-plane planner skills (project, analyze) delegate to capability-plane doers (datalad, datalad-cli, nipoppy-cli) so every research object is Shareable, Tracked, Actionable, Metadata-rich, Provenanced, Executable, and Distributable.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "project",
+      "source": "./plugins/project",
+      "description": "Project lifecycle planner: scaffold a new YODA/BIDS DataLad study and orient a researcher (coordinator agent) on where a project stands."
+    },
+    {
+      "name": "govern",
+      "source": "./plugins/govern",
+      "description": "Governance planner (Manage & Comply lane): preregister freezes a comparison's spec before execution and registers it as a confirmatory obligation; obligations tracks and resolves the project's outstanding commitments in the ledger."
+    },
+    {
+      "name": "analyze",
+      "source": "./plugins/analyze",
+      "description": "Analysis planner: propose comparisons on their own branch, run them with full (optionally containerized) provenance, and checkpoint clean snapshots."
+    },
+    {
+      "name": "datalad",
+      "source": "./plugins/datalad",
+      "description": "DataLad doer: the tool subagent that executes all DataLad / git-annex operations with provenance on behalf of the planner skills."
+    },
+    {
+      "name": "curate",
+      "source": "./plugins/curate",
+      "description": "Curation planner: the annotate skill enriches a dataset's metadata (dataset_description.json, participants.json data dictionary, BIDS sidecars, controlled-term mappings) with provenance, advancing STAMPED Metadata + Actionable."
+    },
+    {
+      "name": "process",
+      "source": "./plugins/process",
+      "description": "Processing planner: run nipoppy pipelines (fMRIPrep, MRIQC, ...) on BIDS data with full DataLad provenance, then record completion. Orchestrates the nipoppy and datalad doers."
+    },
+    {
+      "name": "disseminate",
+      "source": "./plugins/disseminate",
+      "description": "Dissemination planner: publish committed dataset state to a sibling (git + annexed content) and verify an independent clone can retrieve the outputs (STAMPED-D)."
+    },
+    {
+      "name": "nipoppy",
+      "source": "./plugins/nipoppy",
+      "description": "Nipoppy doer: the tool subagent that constructs/validates nipoppy pipeline commands and hands dataset-mutating steps to the datalad doer for provenanced execution."
+    },
+    {
+      "name": "containers",
+      "source": "./plugins/containers",
+      "description": "Containers doer: builds an Apptainer/Singularity .sif from a project's recipe (with the docker-archive workaround) so analyses have a pinned, rebuildable environment; registration/running stay with the datalad doer."
+    },
+    {
+      "name": "bids",
+      "source": "./plugins/bids",
+      "description": "BIDS doer: read-only validation of a dataset against the Brain Imaging Data Structure (bids-validator + structural checks); reports conformance, never modifies the dataset."
+    },
+    {
+      "name": "archive",
+      "source": "./plugins/archive",
+      "description": "Archive doer: deposits a released version to an external archive (OSF/Zenodo/DataCite) and mints a persistent DOI; reports 'unminted' rather than fabricating one when credentials are absent."
+    },
+    {
+      "name": "datalad-cli",
+      "source": "./plugins/datalad-cli",
+      "description": "DataLad skill toolbox: 19 focused skills wrapping individual datalad subcommands (create, run, save, container-run, siblings, push, ...)."
+    },
+    {
+      "name": "nipoppy-cli",
+      "source": "./plugins/nipoppy-cli",
+      "description": "Nipoppy skill toolbox: dataset curation, BIDS conversion, pipeline running/tracking, and IDP extraction for neuroimaging studies."
+    }
+  ]
+}
