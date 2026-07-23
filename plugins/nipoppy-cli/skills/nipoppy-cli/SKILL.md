@@ -6,9 +6,10 @@ description: >
   running BIDS conversion (bidsify), executing processing pipelines (process, fMRIPrep,
   MRIQC), tracking pipeline status (track-processing), extracting imaging-derived
   phenotypes (extract/IDPs), or managing the pipeline catalog (pipeline install/search/
-  upload/validate). Also invoke for /nipoppy-cli or when a manifest.tsv or nipoppy
-  config.json is present.
-argument-hint: [command | question | dataset-path]
+  upload/validate). Trigger on "nipoppy", "nipoppy dataset", "bidsify", "run a pipeline",
+  "track processing", "extract IDPs". Also invoke for /nipoppy-cli or when a manifest.tsv
+  or nipoppy config.json is present.
+argument-hint: '[command | question | dataset-path]'
 user-invocable: true
 disable-model-invocation: false
 allowed-tools: Read, Bash, Glob, Grep
