@@ -8,7 +8,7 @@ description: >
   or /datalad-container-run. Records both the command and the container image in dataset
   provenance. Do NOT trigger for bare datalad run commands without a container — use
   datalad-run for those.
-argument-hint: [container-name command]
+argument-hint: '[container-name command]'
 user-invocable: true
 disable-model-invocation: false
 allowed-tools: Read, Bash, Glob
