@@ -1,0 +1,49 @@
+id: cost
+question: What does a lifecycle stage cost with the harness versus without it?
+
+status: specified
+
+instrument:
+  analyzer: ~/.claude/scripts/model-usage.mjs
+  note: >
+    An existing cost-priced transcript analyzer. Do not write a second one — a duplicate pricing
+    table is a duplicate source of truth.
+
+metrics:
+  - id: tokens
+    type: measured
+    definition: Input, output, and cache tokens per completed lifecycle stage.
+  - id: priced_cost
+    type: measured
+    definition: Cost per completed lifecycle stage at the model's published rates.
+  - id: wall_clock
+    type: measured
+    definition: Elapsed time per completed lifecycle stage.
+  - id: manual_interventions
+    type: measured
+    definition: >
+      Clarifying questions asked, corrections issued, and manual fixes applied. A cheaper run that
+      needed three corrections is not cheaper.
+
+control:
+  kind: harness_off
+  description: The same task and the same model with no harness plugins installed.
+
+requires:
+  - transcripts from both conditions
+  - matched task and model across conditions
+
+confounds:
+  - id: context_overhead
+    description: >
+      The harness adds skill and agent definitions to context, so the harness-on condition starts
+      with a token overhead before doing any work.
+    handling: Report the overhead separately from the work it enabled.
+  - id: conversation_length
+    description: Longer conversations cost more regardless of the harness.
+    handling: Match conditions on turn count, or report per-turn.
+
+invalidators:
+  - Comparing runs on different models or from different context-window states.
+  - Reporting token counts without manual_interventions.
+  - Attributing a cost difference to the harness when it is attributable to conversation length.
