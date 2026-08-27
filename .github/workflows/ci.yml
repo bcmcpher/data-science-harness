@@ -146,9 +146,9 @@ jobs:
         # The container block self-skips when datalad-container or apptainer is absent; apptainer
         # is a system package outside conda's reach and is deliberately not installed here.
         #
-        # On failure, re-run under `bash -x`. The script silences stderr on the commands `set -e`
-        # aborts on, so a bare failure prints nothing after the last PASS and is undiagnosable
-        # from the log alone.
+        # The script now reports its own failures — `step` prints the failing command and its
+        # output, and an ERR trap catches anything unwrapped. The `bash -x` re-run stays as a last
+        # resort for a failure neither of those localises.
         run: |
           if ! bash tests/e2e-smoke.sh; then
             echo "::group::re-running under bash -x to locate the aborting command"
