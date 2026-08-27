@@ -115,7 +115,7 @@ fi
 # stdout only: DataLad writes warnings to stderr, so `2>&1 | head -1` would report a warning as
 # the version string — which is exactly what a runner with no git identity produced.
 DL_VER="$(datalad --version 2>/dev/null | head -1)"
-echo "Using datalad ${DL_VER:-<unknown>} / git-annex 10.${GA_VER}"
+echo "Using ${DL_VER:-datalad <unknown>} / git-annex 10.${GA_VER}"   # DL_VER already reads "datalad X.Y.Z"
 echo "Workdir: $WORKDIR"; echo
 
 DS="$WORKDIR/demo-study"
