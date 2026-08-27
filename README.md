@@ -667,140 +667,83 @@ This project generalizes and re-partitions the Claude Code-specific plugins in [
 
 ---
 
-## Roadmap — deepening the capability plane
+## Developing on this repo
 
-> **Temporary section.** This tracks the build-out from a complete *workflow outline* to a
-> harness with real tools under each conceptual step. **Delete this section once every phase
-> below is checked off** — it is scaffolding, not permanent documentation. Per-feature docs
-> live with their plugins.
+**Using the harness needs nothing installed.** `bin/install.sh` is a shell file copier and the
+content is plain Markdown — see [Install](#install). The toolchains below are for *checking and
+building this repository*, and each is pinned in a committed manifest, because STAMPED P.2/P.3 ask
+that computational environments be explicitly specified and version controlled and it would be odd
+to ask that of users and not of ourselves.
 
-### Where we are
-
-The v1 vertical slice is done and the workflow plane is genuinely complete: **22 planner
-skills** across six workflow plugins, each naming concrete ledger fields, log-entry shapes,
-and delegations — not placeholders. `tests/lint-plugins.py` enforces the structure and
-`tests/e2e-smoke.sh` carries 51 assertions.
-
-The thinness is one layer down. The planners describe research process well; the **capability
-plane beneath them is uneven**, so most steps can express what should happen but can only
-actually *do* the git-annex part.
-
-| Capability | Doer | CLI toolbox skills | State |
+| Toolchain | Manifest | Locked | Enables |
 |---|---|---|---|
-| `datalad` | 1 | **19** | deep — the model for the others |
-| `nipoppy` | 1 | 1 | shallow |
-| `bids` | 1 | **0** | the doer is the entire surface |
-| `containers` | 1 | **0** | the doer is the entire surface |
-| `archive` | 1 | **0** | the doer is the entire surface |
+| Python | `pyproject.toml` | `uv.lock` | the four check scripts |
+| Node | `package.json` | `package-lock.json` | `openspec validate`, the `paper/` build |
+| e2e stack | `environment.yml` | *deliberately not* — see the file | `tests/e2e-smoke.sh` |
 
-Two measurements make the gap concrete:
+```bash
+# Python checks
+uv sync --group dev
+uv run python tests/lint-plugins.py --strict        # plugin/skill/agent structure
+uv run python tests/lint-plugins-selftest.py        # meta-test of the lint
+uv run python schemas/validate-ledger.py examples/project.yaml
+uv run python tests/check-bench-fixtures.py         # evaluation fixtures + routing ground truth
 
-- **17 of 22 planner skills declare `delegates_to: [datalad]` and nothing else.** Their only
-  real capability is committing the result.
-- **16 tools are named in planner bodies with no doer and no toolbox skill:** `mcp` (11
-  mentions), `osf` (10), `datacite` (7), `pyinfra` (6), `neurobagel` (5), `forgejo` (5),
-  `snomed` (4), `reproschema` (4), `myst` (4), `bids-validator` (4), `zenodo` (3),
-  `repo2data` (3), `cobidas` (3), `pynidm` (2), `equator` (2), `bagel-cli` (2).
+# Node CLIs (resolved from node_modules, not globally)
+npm ci
+npm run spec:validate     # openspec validate --all --strict
+npm run paper:check       # build paper/ and fail on any unresolved citation
 
-That list *is* the backlog. Each phase below turns one cluster of it into a capability.
-
-### Guiding principles
-
-Carried forward from the v1 roadmap:
-
-- **Two-plane discipline** — new tool mechanics → a capability doer; new research process → a
-  workflow planner that delegates. Planners never call a CLI.
-- **Additive, not breaking** — existing `project:` header and append-only `log:` stay as they are.
-- **Ledger-first** — formalize the schema before the skills that write to it.
-- **Verify each phase** by extending `tests/e2e-smoke.sh` with real assertions (or a gated skip
-  when the tool or credential is absent).
-
-New for this arc:
-
-- **One step deep before the next step wide.** Finish a cluster end-to-end — doer, toolbox
-  skills, planner rewired, assertion — before starting another. A half-built capability is
-  worse than an absent one, because the planner will try to use it.
-- **`datalad-cli` is the reference shape.** One skill per CLI verb, `user-invocable: true`,
-  `allowed-tools` limited to what that verb needs. Copy that pattern rather than inventing one.
-- **A phase is done when its planner's `delegates_to:` grows.** That field is the observable
-  signal that a conceptual step gained a real tool; if it still reads `[datalad]`, nothing shipped.
-- **Dual-harness from the start.** `bin/install.sh` targets both `claude-code` and `opencode`.
-  Anything added must survive the OpenCode frontmatter rewrite (see Phase 11).
-
----
-
-### Phase 6 — `annotate` capability *(keystone — unblocks the most STAMPED-M/A work)*
-- [ ] `plugins/annotate/agents/annotate-doer.md` — metadata enrichment mechanics.
-- [ ] `plugins/annotate-cli/skills/` — one skill per tool: `bagel-cli`, `pynidm`,
-      `reproschema`, SNOMED/controlled-term lookup.
-- [ ] Rewire `curate/annotate` → `delegates_to: [annotate, datalad]`. It already names this as a
-      "future annotate doer" in its body, so the prose needs no rewrite.
-- [ ] e2e assertion: a scaffolded dataset gains a validated `participants.json` with controlled terms.
-
-### Phase 7 — `archive` toolbox *(shortest path to a visible outcome)*
-- [ ] `plugins/archive-cli/skills/` — `osf`, `zenodo`, `datacite` as separate skills; the doer
-      currently carries all three inline.
-- [ ] DataCite `RelatedIdentifier` handling promoted out of `disseminate/link-outputs` prose
-      into a real toolbox skill.
-- [ ] e2e assertion: DOI mint reports `unminted` without credentials and succeeds with them.
-
-### Phase 8 — `compendium` capability *(the living-products goal)*
-- [ ] `plugins/compendium/agents/compendium-doer.md` — build mechanics for executable articles.
-- [ ] `plugins/compendium-cli/skills/` — `myst`, `jupyter-book`, `repo2data`, MCP-server scaffolding.
-- [ ] Rewire `disseminate/executable-article` and `disseminate/agent-bundle`, which today name
-      MyST, Jupyter Book, `repo2data`, and MCP with nothing beneath them.
-- [ ] e2e assertion: `executable-article` produces a buildable MyST tree from a released product.
-
-### Phase 9 — deepen `bids` and `nipoppy`
-- [ ] `plugins/bids-cli/skills/` — `bids-validator` as a first-class skill rather than a doer detail.
-- [ ] Extend `plugins/nipoppy-cli` beyond its single skill toward the `datalad-cli` shape.
-- [ ] `references/` sets for EQUATOR and COBIDAS so `disseminate/reporting-checklist` and
-      `govern/qc-review` cite fixed text instead of relying on recall.
-
-### Phase 10 — `liab` infrastructure capability
-- [ ] `plugins/liab/agents/liab-doer.md` + toolbox for `pyinfra` and `forgejo`.
-- [ ] Rewire `disseminate/liab-deploy`, currently `[datalad]` only.
-- [ ] e2e assertion: a dry-run deploy plan is produced without touching a real host.
-
-### Phase 11 — cross-cutting: model pinning and harness portability
-- [ ] Pin `model:` on read-only doers (`bids-doer`, `coordinator`) — they read and report, so they
-      do not need a frontier model. Leave mutating doers (`datalad`, `archive`) unpinned.
-- [ ] `tests/lint-plugins.py` — validate `model:` against an allowed set; it currently ignores
-      the field entirely, so a typo is silent.
-- [ ] `bin/install.sh` — the OpenCode path strips `name:` and `tools:` and inserts
-      `mode: subagent`, but passes `model:` through verbatim. OpenCode expects provider-prefixed
-      strings, so a bare `haiku` will not resolve. Translate or strip it.
-- [ ] `templates/skill/SKILL.md` and the Universal Skill Format section — document `model:` as an
-      optional field; it is currently undocumented anywhere.
-
-### Phase 12 — documentation debt (small, do whenever)
-- [ ] The README references **`plugin.yaml` 7 times; there are 0 on disk and 13
-      `.claude-plugin/plugin.json`.** The Contributing steps tell a new contributor to edit a file
-      that does not exist. Fix the Plugin Manifest section and Contributing together.
-- [ ] The Install section does not mention OpenCode, although `bin/install.sh` defaults to it.
-- [ ] `docs/writing/SPEC.md` specs a `manuscript` sub-agent with a symbolic `model: strong-writing`
-      that was never built — either build it (it fits Phase 8) or mark it explicitly deferred.
-
----
-
-### Dependency / critical path
-
-```
-Phase 6 (annotate)  ──►  richest STAMPED M/A payoff; curate/annotate already anticipates it
-Phase 7 (archive)   ──►  shortest path to a visible end-to-end outcome (DOI on a real product)
-Phase 8 (compendium) ─►  depends on 7 (a compendium cites a released, DOI'd product)
-Phase 9, 10, 11, 12  ─►  independent; pick up any time
+# End-to-end provenance smoke test (needs git-annex; apptainer is a system package)
+conda env create -f environment.yml && conda activate ds-harness-e2e
+bash tests/e2e-smoke.sh
 ```
 
-Phases 6 and 7 are parallel and neither blocks the other. Phase 8 is the one true dependency.
-Phase 11 is worth doing early despite being cross-cutting — it is cheap, and the lint gap means
-any `model:` added before it lands is unvalidated.
+Each check exits **2** when its own dependency is absent, so it degrades to a skip rather than a
+failure. [`.github/workflows/ci.yml`](.github/workflows/ci.yml) installs from the manifests and
+treats a 2 as an environment error, since the lock file should have supplied the dependency.
 
-### Definition of done (delete this section when true)
+CI checks **structure and specs, not agent behaviour** — see [Evaluating the harness](#evaluating-the-harness).
 
-Every checkbox above is checked; no planner skill still reads `delegates_to: [datalad]` unless
-committing really is its only action; and each shipped capability has an assertion in
-`tests/e2e-smoke.sh` or a gated skip when its tool or credential is absent.
+## Planning & specs — `openspec/`
+
+The forward plan no longer lives in this README. It lives in [`openspec/`](openspec), where each
+proposed change is a validated record rather than a checkbox in a 55 KB file:
+
+- **[`openspec/specs/`](openspec/specs)** — 15 specs describing what the harness *does today*,
+  grounded in the checks that already enforce it (`tests/lint-plugins.py`, `tests/e2e-smoke.sh`,
+  `schemas/project.schema.json`).
+- **[`openspec/changes/`](openspec/changes)** — what we have decided to do next. The former
+  "deepening the capability plane" roadmap is now seven changes: `add-annotate-capability`,
+  `add-archive-toolbox`, `add-compendium-capability`, `deepen-bids-nipoppy`, `add-liab-capability`,
+  `pin-doer-models`, and `reconcile-docs-with-disk`.
+
+```bash
+openspec list            # proposed changes
+openspec list --specs    # current specs
+openspec show <id>       # a change or a spec
+openspec validate --all --strict
+```
+
+[`openspec/README.md`](openspec/README.md) covers the conventions — including the fact that OpenSpec
+calls a spec folder a "capability", which is *not* this repository's "capability plane".
+
+**Where the harness stands.** The workflow plane is complete: 22 planner skills across six workflow
+plugins, each naming concrete ledger fields, log-entry shapes, and delegations. The capability plane
+beneath them is uneven — `datalad` has 19 toolbox skills while `bids`, `containers`, and `archive`
+have none, so most steps can express what should happen but can only actually *do* the git-annex
+part. Closing that gap is what the changes above are for. The observable signal that one has shipped
+is a planner's `delegates_to:` growing beyond `[datalad]`.
+
+## Evaluating the harness
+
+[`docs/evaluation.md`](docs/evaluation.md) specifies four probes — routing accuracy, provenance
+completeness, end-to-end reproducibility, and cost — with declarative fixtures in
+[`bench/`](bench). **None has been run.** The protocol is written before the capabilities it would
+measure, deliberately.
+
+The paper describing all of this is drafted in [`paper/`](paper) as a MyST project; its motivating
+literature is tracked in [`docs/references/`](docs/references).
 
 ## Contributing
 
