@@ -57,5 +57,6 @@
 - [x] 6.2 `paper/` builds and citations resolve — `npm run paper:check`. mystmd is now pinned in
       `package.json` (see `add-dependency-environment`).
 - [x] 6.3 Every `bench/tasks/*.yaml` `expected_delegates_to` names a plugin that provides an agent.
-- [ ] 6.4 CI green on a branch push; confirm it fails when a spec is deliberately corrupted.
-      **Not yet run:** the workflow has never executed — nothing has been pushed.
+- [x] 6.4 CI green on a branch push, and verified it can go red: a throwaway branch with one fault
+      per job (a requirement stripped of its SHALL, a stale routing fixture, an unresolvable
+      citation key) failed all three, each for the right reason.

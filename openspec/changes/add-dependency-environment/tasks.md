@@ -48,3 +48,11 @@
 - [x] 7.1 From a clean checkout: sync each toolchain and run all four checks plus `openspec validate`.
 - [x] 7.2 `myst build --html` in `paper/` succeeds from the locked Node environment.
 - [x] 7.3 `python3 tests/lint-plugins.py --strict` and the selftest both clean.
+- [x] 7.4 `environment.yml` verified by dispatching the e2e job: conda-forge resolved
+      git-annex 10.20260717 (well past the >= 10.20230126 the smoke test requires) and
+      datalad 1.6.2, and `tests/e2e-smoke.sh` reported 36 passed / 0 failed with the container
+      block skipping cleanly on the absent apptainer runtime.
+- [x] 7.5 The first dispatch failed: a fresh runner has no git identity, and the script silences
+      stderr on the commands `set -e` aborts on, so the log ended at the last PASS with no
+      diagnostic. Both fixed in the workflow — identity configured, and a `bash -x` re-run on
+      failure so the next one is diagnosable.
