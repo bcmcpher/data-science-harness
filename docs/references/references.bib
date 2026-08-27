@@ -1,0 +1,158 @@
+% data-science-harness — motivating literature.
+% Single citation source of truth. paper/ cites from this file directly; do not copy it.
+% Local PDFs live in ../../resources/ (git-ignored). Web-only sources carry a urldate.
+% Entries marked TODO need a field verified before submission.
+
+% ---------------------------------------------------------------- foundational
+
+@techreport{macdonald2026stamped,
+  author      = {Macdonald, Austin and Baker, Michael and To, Isaac and Halchenko, Yaroslav O.},
+  title       = {{STAMPED} principles for reproducible research objects},
+  institution = {Center for Open Neuroscience, Dartmouth College},
+  year        = {2026},
+  month       = may,
+  url         = {https://stamped-principles.org},
+  note        = {Local copy: resources/Macdonald\_STAMPED\_2026.pdf. Checklist:
+                 checklist.stamped-principles.org; worked examples:
+                 examples.stamped-principles.org. TODO: confirm author order and
+                 report number against the PDF before submission.}
+}
+
+% ------------------------------------------------------------- direct motivation
+
+@article{chen2026brainresearcher,
+  author        = {Chen, Zijiao and Lu, Nicholas and Li, Xinhui and Ricard, Jocelyn A. and
+                   Ju, Ce and Wang, Huan H. and Kindermann, Christian and Mumford, Jeanette A. and
+                   Dillmann, Steven and Kent, James and de la Vega, Alejandro and
+                   Koyejo, Sanmi and Calhoun, Vince D. and Buckholtz, Joshua W. and
+                   Zhou, Juan Helen and Bollmann, Steffen and Poldrack, Russell A.},
+  title         = {Bringing analytic rigor to agentic {AI} for science: The {Brain Researcher}
+                   platform for neuroimaging data analysis},
+  journal       = {arXiv preprint arXiv:2608.19902},
+  year          = {2026},
+  month         = aug,
+  eprint        = {2608.19902},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.AI},
+  url           = {https://arxiv.org/abs/2608.19902},
+  note          = {103 pages, 19 figures, supplementary information included. cs.AI; q-bio.NC.}
+}
+
+@misc{botes2026lawinsidemachine,
+  author       = {Botes, Marietjie},
+  title        = {The Law Inside the Machine: Building the {NeuroAI} Future by Design},
+  howpublished = {Biolawgic},
+  year         = {2026},
+  month        = aug,
+  day          = {25},
+  url          = {https://biolawgic.substack.com/p/the-law-inside-the-machine-building},
+  urldate      = {2026-08-27}
+}
+
+% ------------------------------------------------- standards and tools the harness integrates
+% These are named throughout README.md and the plugin bodies but were previously uncited.
+% TODO: verify volume/page/DOI for each before submission; entries below are placeholders
+% recorded so nothing ships uncited, not verified bibliographic records.
+
+@misc{bids,
+  title = {Brain Imaging Data Structure (BIDS)},
+  url   = {https://bids.neuroimaging.io},
+  note  = {TODO: cite Gorgolewski et al. 2016, Sci Data, and the relevant BEP for any
+           modality-specific claim.}
+}
+
+@misc{datalad,
+  title = {{DataLad}: decentralized management of digital objects for open science},
+  url   = {https://www.datalad.org},
+  note  = {TODO: cite Halchenko et al. 2021, JOSS.}
+}
+
+@misc{nipoppy,
+  title = {{Nipoppy}: a lightweight framework for neuroimaging dataset organization and processing},
+  url   = {https://nipoppy.readthedocs.io},
+  note  = {TODO: verify canonical citation.}
+}
+
+@misc{neurobagel,
+  title = {{Neurobagel}: federated harmonization and search over neuroimaging and phenotypic data},
+  url   = {https://neurobagel.org},
+  note  = {TODO: verify canonical citation.}
+}
+
+@misc{neurolibre,
+  title = {{NeuroLibre}: a reproducible preprint server for computational neuroscience},
+  url   = {https://neurolibre.org},
+  note  = {TODO: verify canonical citation.}
+}
+
+@misc{paper2agent,
+  title = {{Paper2Agent}: turning research papers into agent-callable tool bundles},
+  note  = {TODO: verify canonical citation and URL. Named in README.md as the model for the
+           agent-bundle living product.}
+}
+
+@misc{labinabox,
+  title = {Lab-in-a-Box: self-hosted, data-sovereign research infrastructure},
+  note  = {TODO: verify canonical citation and URL. Named in README.md as the model for the
+           self-hostable arm of the living compendium.}
+}
+
+@misc{equator,
+  title = {The {EQUATOR} Network reporting guidelines},
+  url   = {https://www.equator-network.org},
+  urldate = {2026-08-27}
+}
+
+@article{nichols2017cobidas,
+  author  = {Nichols, Thomas E. and Das, Samir and Eickhoff, Simon B. and Evans, Alan C. and
+             Glatard, Tristan and Hanke, Michael and Kriegeskorte, Nikolaus and Milham, Michael P. and
+             Poldrack, Russell A. and Poline, Jean-Baptiste and Proal, Erika and Thirion, Bertrand and
+             Van Essen, David C. and White, Tonya and Yeo, B. T. Thomas},
+  title   = {Best practices in data analysis and sharing in neuroimaging using {MRI}},
+  journal = {Nature Neuroscience},
+  volume  = {20},
+  number  = {3},
+  pages   = {299--303},
+  year    = {2017},
+  doi     = {10.1038/nn.4500},
+  note    = {The COBIDAS report.}
+}
+
+@misc{credit,
+  title = {{CRediT} — Contributor Roles Taxonomy},
+  url   = {https://credit.niso.org},
+  urldate = {2026-08-27}
+}
+
+@misc{orcid,
+  title = {{ORCID}},
+  url   = {https://orcid.org},
+  urldate = {2026-08-27}
+}
+
+@misc{datacite,
+  title = {{DataCite} Metadata Schema},
+  url   = {https://schema.datacite.org},
+  urldate = {2026-08-27}
+}
+
+% ------------------------------------------------------------------ governance context
+% Cited by botes2026lawinsidemachine; recorded here so the paper can cite them directly.
+
+@misc{ga4gh_consent,
+  title = {{GA4GH} Machine-Readable Consent Guidance},
+  author = {{Global Alliance for Genomics and Health}},
+  note  = {TODO: verify version and year.}
+}
+
+@misc{unesco_neurotech,
+  title = {Recommendation on the Ethics of Neurotechnology},
+  author = {{UNESCO}},
+  note  = {TODO: verify adoption year.}
+}
+
+@misc{nih_brain_neuroethics,
+  title = {{NIH BRAIN} Initiative Neuroethics Guiding Principles},
+  author = {{National Institutes of Health}},
+  note  = {TODO: verify citation.}
+}

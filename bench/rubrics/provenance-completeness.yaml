@@ -1,0 +1,82 @@
+# Rubric for the provenance probe. Scores an ARTIFACT, not a transcript.
+#
+# NOTHING HERE HAS BEEN RUN.
+#
+# Report per dimension. Do not produce a composite score: STAMPED treats each principle as a
+# spectrum rather than a pass/fail gate (docs/stamped.md), and a single number implies a pass mark
+# the framework declines to set.
+
+id: provenance-completeness
+probe: provenance
+status: specified
+
+dimensions:
+
+  - id: reachability
+    stamped: [T, A]
+    evidence: >
+      For each published output, walk the DataLad history back to raw inputs and record whether a
+      producing `datalad run` or `container-run` commit exists.
+    anchors:
+      none: No published output has a producing run commit.
+      partial: Some outputs trace to runs; others appear as bare commits.
+      complete: Every published output traces to a run commit reaching declared raw inputs.
+
+  - id: replayability
+    stamped: [T, A, E]
+    evidence: >
+      Execute `datalad rerun` on each run commit and record success. Do not score from the presence
+      of a run record alone.
+    anchors:
+      none: No run commit reruns.
+      partial: Some rerun; failures are not explained in the ledger.
+      complete: Every run commit reruns, or a failure is explained by a recorded, deliberate change.
+
+  - id: environment_pinning
+    stamped: [P, E]
+    evidence: >
+      For each run commit, check whether it was a `container-run` against a registered container and
+      whether the image's annex key is recorded in the commit.
+    anchors:
+      none: All runs executed against the host environment.
+      partial: Some runs pinned; others not, with no stated reason.
+      complete: Every analysis run is pinned, with the image key recorded so `rerun` re-fetches it.
+
+  - id: ledger_validity
+    stamped: [M]
+    evidence: schemas/validate-ledger.py against project.yaml.
+    type: binary
+    anchors:
+      fail: Does not validate against schemas/project.schema.json.
+      pass: Validates.
+
+  - id: ledger_completeness
+    stamped: [M, T]
+    evidence: >
+      Inspect products[], obligations[], and contributors[]. Completeness means the record answers
+      what was produced, what is still owed, and who did it.
+    anchors:
+      none: Ledger has only the project header and a log.
+      partial: >
+        Products declared, but obligations are stale or contributors lack persistent identifiers.
+      complete: >
+        Every published output belongs to a declared product; every obligation is discharged,
+        waived, or carries a stated reason for remaining pending; every contributor carries an
+        ORCID and CRediT roles.
+
+  - id: distributability
+    stamped: [D, S]
+    evidence: >
+      Clone the published dataset into a fresh location and `datalad get` the published content.
+    type: binary
+    anchors:
+      fail: A fresh clone cannot retrieve the published content.
+      pass: It can.
+
+notes:
+  - >
+    An output with no producing run scores zero on reachability regardless of its scientific
+    quality. That is intended: this rubric measures governance, not results.
+  - >
+    ledger_completeness is the dimension most likely to be scored generously by a judge who wrote
+    the ledger. Score it from the schema and the artifact, not from intent.

@@ -1,0 +1,65 @@
+id: provenance
+question: >
+  Is a produced artifact reachable through a provenance chain, described by a valid and complete
+  ledger, and retrievable by someone else?
+
+status: specified
+
+instrument:
+  ledger: schemas/validate-ledger.py
+  history: datalad log / datalad rerun over the dataset
+  rubric: bench/rubrics/provenance-completeness.yaml
+  note: >
+    All three already exist in this repository. Specifying new measurement code would create a
+    second source of truth that drifts from the first.
+
+metrics:
+  - id: reachability
+    type: graded
+    definition: >
+      Fraction of published outputs reachable through a datalad run chain from raw inputs. An output
+      with no producing run scores zero regardless of its quality.
+  - id: replayability
+    type: graded
+    definition: Fraction of run commits that datalad rerun actually reproduces.
+  - id: environment_pinning
+    type: graded
+    definition: >
+      Fraction of runs executed inside a registered container with the image's annex key recorded in
+      the run commit.
+  - id: ledger_validity
+    type: binary
+    definition: project.yaml validates against schemas/project.schema.json.
+  - id: ledger_completeness
+    type: graded
+    definition: >
+      Products declared, obligations discharged or explained, contributors carrying persistent
+      identifiers.
+  - id: distributability
+    type: binary
+    definition: A fresh clone can datalad get the published content.
+
+control:
+  kind: absolute
+  description: >
+    Each dimension is a property the artifact has or does not. There is no harness-off condition:
+    an artifact produced without the harness has no ledger to score. That asymmetry is worth
+    reporting, but it is not a comparison.
+
+requires:
+  - datalad
+  - pyyaml and jsonschema for the ledger validator
+  - a produced artifact with a human-authored analysis
+
+reporting:
+  per_dimension: required
+  single_score: forbidden
+  rationale: >
+    STAMPED treats each principle as a spectrum rather than a pass/fail gate (docs/stamped.md).
+    Collapsing these dimensions into one number implies a pass mark the framework declines to set.
+
+invalidators:
+  - Scoring an artifact the harness produced end to end with no human-authored analysis; that
+    measures the smoke test, not the harness.
+  - Counting a run as replayable without executing datalad rerun.
+  - Reporting a composite STAMPED score.

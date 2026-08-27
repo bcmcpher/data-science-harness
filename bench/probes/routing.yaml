@@ -1,0 +1,72 @@
+id: routing
+question: >
+  Given a plain-language research request, does the assistant select the correct planner skill and
+  delegate to the correct capability doer?
+
+status: specified   # specified | piloted | run — nothing here has been executed
+
+instrument:
+  ground_truth: >
+    Derived from the repository. Each task declares expected_skill and expected_delegates_to; the
+    latter must resolve to plugins that provide an agent, by the same rule tests/lint-plugins.py
+    applies at check_skill. Ground truth is therefore checkable rather than hand-maintained.
+  prior_art: >
+    Metric names follow Chen et al. (2026), arXiv:2608.19902, which reported first-choice
+    tool-selection accuracy of 23.3% without their harness versus 93.6% with it across seven models
+    on 60 tool-calling tasks. Names are shared so the measurements are comparable in kind. They are
+    NOT directly comparable in value: different task suites, and a far richer tool registry there.
+
+metrics:
+  - id: route@1
+    type: exact
+    definition: >
+      Fraction of tasks where the first planner skill selected is expected_skill.
+  - id: route@k
+    type: exact
+    definition: >
+      Fraction of tasks where expected_skill appears among the first k planner skills selected.
+    parameters: { k: [1, 3] }
+  - id: capability@k
+    type: graded
+    definition: >
+      Fraction of expected_delegates_to that the selected route would actually reach, averaged over
+      tasks. Partial credit: reaching datalad but not annotate scores above reaching neither and
+      below reaching both.
+  - id: handoff@k
+    type: judged
+    definition: >
+      Whether the delegation carries enough parameters for the doer to act without asking back,
+      scored against the parameters that doer states it requires.
+
+control:
+  kind: harness_off
+  description: >
+    The same task and the same model with no harness plugins installed. Both conditions must be
+    recorded in the same run, from equivalent context states.
+
+requires:
+  - the harness plugins installed for the harness-on condition
+  - at least one model endpoint
+  - a transcript capable of showing which skill was selected and what it delegated to
+
+judging:
+  applies_to: [handoff@k]
+  procedure: >
+    Independent judges label each delegation as sufficient, partial, or insufficient; report the
+    majority and the per-judge labels, not the majority alone.
+  judges: 3
+  note: >
+    Whether model judges are adequate here is an open question. Record judge identity with the
+    labels so the choice can be revisited.
+
+reporting:
+  per_model: required        # a mean over models can hide one model carrying the result
+  per_condition: required
+  aggregate_only: forbidden
+
+invalidators:
+  - A task prompt naming a skill, plugin, or CLI. The probe measures selection; a prompt containing
+    the answer measures nothing.
+  - A fixture whose expected_delegates_to no longer resolves to an agent-providing plugin.
+  - Harness-on and harness-off conditions run from different context states.
+  - Reporting an aggregate across models without per-model figures.

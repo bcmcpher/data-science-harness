@@ -107,10 +107,11 @@ Each layer is independently useful:
 | Layer | Format | Who needs it |
 |-------|--------|-------------|
 | **1. Content** (source of truth) | Universal SKILL.md + `plugin.yaml` | Everyone — contributors only write Markdown |
-| **2. Installer** (convenience) | Python CLI (`ds-harness`) | Users who want automated multi-harness install |
-| **3. Manual fallback** | `bin/install.sh` + per-harness docs | Users in locked-down environments |
+| **2. Installer** (current convenience) | `bin/install.sh` | Users who want automated OpenCode / Claude Code file installs without extra dependencies |
+| **3. Package CLI** (planned) | Python CLI (`ds-harness`) | Users who want validation, update/remove state, and broader multi-harness translation |
+| **4. Manual fallback** | Per-harness docs + direct copies | Users in locked-down environments |
 
-The content layer is plain Markdown + YAML. The Python package is just an installer/translator — you can clone the repo and manually copy files to any harness without it.
+The content layer is plain Markdown + YAML. The shell installer is just a copier/translator for the supported on-disk layouts — you can clone the repo and manually copy files to any harness without it. The planned Python package adds validation and richer lifecycle commands, but is not required for install.
 
 ### Why Python over Node
 
@@ -343,10 +344,11 @@ Why this fits the architecture cleanly:
 
 ```
 data-science-harness/
-├── pyproject.toml                    # Python package: ds-harness CLI
 ├── README.md
-├── CLAUDE.md                         # Claude Code-specific contributor guidance
-├── harness.yaml                      # Root collection manifest (groups plugins by plane)
+├── bin/
+│   └── install.sh                    # OpenCode / Claude Code file installer
+├── .claude-plugin/
+│   └── marketplace.json              # Claude Code plugin marketplace manifest
 │
 ├── docs/
 │   ├── stamped.md                    # STAMPED principles distillation
@@ -362,92 +364,17 @@ data-science-harness/
 │   └── project.yaml                  # Worked ledger sample (used by skills/hooks/tests)
 │
 ├── templates/
-│   ├── skill/SKILL.md                # Universal skill template
-│   ├── executable-article/           # MyST myst.yml + binder/ + repo2data skeleton
-│   ├── agent-bundle/                 # plugin.yaml + SKILL.md + MCP-config skeleton
-│   └── liab/                         # liab-deployments (pyinfra) skeleton
+│   └── skill/SKILL.md                # Universal skill template
 │
 ├── plugins/
-│   │  ── capability plane (technical tool wrappers) ──
-│   ├── datalad/                      # T,S,M — provenance & content tracking
-│   │   ├── plugin.yaml               #   plane: capability
-│   │   ├── skills/{datalad-run,datalad-container-run,datalad-save,datalad-status,
-│   │   │           datalad-clone,datalad-get,datalad-push,datalad-log,checkpoint}/SKILL.md
-│   │   ├── hooks/scripts/datalad-checkpoint.sh
-│   │   └── references/               # yoda-layout, annex-content-states
-│   │
-│   ├── nipoppy/                      # S,T,M,A — dataset mgmt + pipeline running
-│   │   ├── plugin.yaml
-│   │   └── skills/{nipoppy-setup,nipoppy-bidsify,nipoppy-process,nipoppy-track}/SKILL.md
-│   │
-│   ├── bids/                         # S,M — BIDS validation & layout
-│   │   ├── plugin.yaml
-│   │   ├── skills/{bids-validate,bids-scaffold}/SKILL.md
-│   │   └── references/               # entities, datatypes, sidecars
-│   │
-│   ├── containers/                   # P,E — environment build/pin/run
-│   │   ├── plugin.yaml
-│   │   └── skills/{build-container,run-container}/SKILL.md
-│   │
-│   ├── publish/                      # D — external distribution mechanics
-│   │   ├── plugin.yaml
-│   │   ├── skills/{osf-push,zenodo-deposit,annex-remote}/SKILL.md
-│   │   └── references/               # osf-workflow, zenodo-workflow
-│   │
-│   ├── annotate/                     # T — variable/assessment standardization tools
-│   │   ├── plugin.yaml
-│   │   ├── skills/{neurobagel-annotate,snomed-lookup,nidm-annotate,reproschema-annotate}/SKILL.md
-│   │   └── references/               # neurobagel-schema, snomed-hierarchy, nidm-schema, reproschema
-│   │
-│   │  ── workflow plane (research process) ──
-│   ├── govern/                       # Stage 0 + Manage & Comply lane
-│   │   ├── plugin.yaml               #   plane: workflow
-│   │   ├── skills/{init-ledger,dmp,ethics-track,preregister,obligations,stamped-assess}/SKILL.md
-│   │   └── references/               # stamped, madmp-schema, hipaa-deid, clinicaltrials-fields
-│   │
-│   ├── project/                      # Stage 1, 8 + Manage & Comply lane
-│   │   ├── plugin.yaml
-│   │   ├── skills/{new-project,env-check,claude-config,log-decision,
-│   │   │           track-milestone,people,status-report}/SKILL.md
-│   │   └── hooks/scripts/obligations-due.sh
-│   │
-│   ├── curate/                       # Stage 2, 5, 7
-│   │   ├── plugin.yaml
-│   │   ├── skills/{raw-to-bids,merge-data,gen-data-dict,annotate-variables}/SKILL.md
-│   │   └── agents/merge-agent/SKILL.md
-│   │
-│   ├── analyze/                      # Stages 3–5 — comparison/product engine
-│   │   ├── plugin.yaml
-│   │   ├── skills/{plan-analysis,propose-comparison,run-comparison,
-│   │   │           gen-report,manage-product,literature-search}/SKILL.md
-│   │   └── references/               # r-patterns, python-patterns, qc-metrics, decision-tree
-│   │
-│   └── disseminate/                  # Stages 6–8 — publications + living products
-│       ├── plugin.yaml
-│       ├── skills/{draft-manuscript,reporting-checklist,submission-track,dataset-release,
-│       │           executable-article,agent-bundle,liab-deploy,link-outputs}/SKILL.md
-│       └── references/               # equator-guidelines, datacite-relations, cobidas,
-│                                     #   neurolibre-structure, paper2agent-bundle, liab-deployments
+│   ├── */.claude-plugin/plugin.json  # plugin manifests used by Claude Code and the installer
+│   ├── */skills/*/SKILL.md           # universal skill definitions
+│   ├── */agents/*.md                 # Claude Code agents / OpenCode subagents
+│   └── */references/                 # plugin reference material copied with bundles
 │
-├── src/ds_harness/                   # Python CLI (installer only)
-│   ├── cli.py
-│   ├── manifest.py
-│   ├── installer.py
-│   └── adapters/
-│       ├── base.py
-│       ├── claude_code.py            # → ~/.claude/skills/ + plugin.json
-│       ├── cursor.py                 # → .cursor/rules/*.mdc
-│       ├── copilot.py                # → .github/instructions/*.instructions.md
-│       ├── windsurf.py               # → .windsurf/rules/*.md
-│       └── opencode.py               # → TBD
-│
-├── config/                           # Harness-specific global config templates
-│   ├── claude/
-│   ├── cursor/
-│   └── copilot/
-│
-└── bin/
-    └── install.sh                    # Zero-dependency shell fallback
+└── tests/
+    ├── lint-plugins.py               # structural plugin/skill/agent lint
+    └── e2e-smoke.sh                  # DataLad provenance smoke test
 ```
 
 ---
@@ -582,11 +509,70 @@ hooks:
 
 ---
 
-## CLI Usage (`ds-harness`)
+## Install
+
+The current installer is `bin/install.sh`. It copies the existing Claude Code-compatible plugin content into the target harness's native file layout without changing the source plugins.
+
+OpenCode project install:
+
+```bash
+bin/install.sh --harness opencode --scope project
+```
+
+OpenCode global install:
+
+```bash
+bin/install.sh --harness opencode --scope global
+```
+
+Install selected plugins only:
+
+```bash
+bin/install.sh --harness opencode --scope project project analyze datalad datalad-cli
+```
+
+Preview an install:
+
+```bash
+bin/install.sh --harness opencode --scope project --dry-run
+```
+
+For OpenCode, the installer writes:
+
+| Scope | Skills | Subagents | Plugin bundles / references |
+|-------|--------|-----------|-----------------------------|
+| Project | `.opencode/skills/<name>/SKILL.md` | `.opencode/agents/<name>.md` | `.opencode/dsh/plugins/<plugin>/` |
+| Global | `~/.config/opencode/skills/<name>/SKILL.md` | `~/.config/opencode/agents/<name>.md` | `~/.config/opencode/dsh/plugins/<plugin>/` |
+
+OpenCode also discovers Claude-compatible skill paths such as `.claude/skills/`, but this installer writes to `.opencode/` explicitly so OpenCode installs are easy to inspect and remove. Installed skill and agent copies have prompt-visible reference paths rewritten to the installed bundle location; source files under `plugins/` are not rewritten.
+
+Claude Code still supports its native plugin install path:
+
+```bash
+claude plugin install ./plugins/project
+claude plugin install ./plugins/analyze
+claude plugin install ./plugins/datalad
+```
+
+The shell installer can also copy Claude Code-native skill and agent files for a project or globally:
+
+```bash
+bin/install.sh --harness claude-code --scope project
+bin/install.sh --harness claude-code --scope global project analyze datalad
+```
+
+For Claude Code copy installs, the installer writes `.claude/skills/`, `.claude/agents/`, and `.claude/dsh/plugins/` for project scope, or the matching `~/.claude/` directories for global scope. This does not remove or alter `.claude-plugin/plugin.json`, so existing `claude plugin install ./plugins/<name>` workflows continue to work.
+
+---
+
+## Future CLI (`ds-harness`)
+
+The planned Python CLI is not currently present in this repository. The intended interface is:
 
 ```bash
 # Install all plugins for a specific harness
 ds-harness install --harness=claude-code
+ds-harness install --harness=opencode
 ds-harness install --harness=cursor --scope=project
 
 # Install only the capability plane, or a single plugin
@@ -605,7 +591,7 @@ ds-harness remove analyze --harness=cursor
 ds-harness validate ./project.yaml
 ```
 
-Install the CLI:
+Once packaged, install the CLI with:
 
 ```bash
 pip install ds-harness
@@ -681,19 +667,83 @@ This project generalizes and re-partitions the Claude Code-specific plugins in [
 
 ---
 
-## Roadmap
+## Developing on this repo
 
-**Phase 1 — Capability plane.** Distill `datalad`, `nipoppy`, `bids` from the seed/reference plugins; author `containers`, `publish`, `annotate`. Universal frontmatter + `plane: capability` + `stamped:` tag + `requires:` on each.
+**Using the harness needs nothing installed.** `bin/install.sh` is a shell file copier and the
+content is plain Markdown — see [Install](#install). The toolchains below are for *checking and
+building this repository*, and each is pinned in a committed manifest, because STAMPED P.2/P.3 ask
+that computational environments be explicitly specified and version controlled and it would be odd
+to ask that of users and not of ourselves.
 
-**Phase 2 — Workflow plane.** `govern` (ledger + `stamped-assess`), `project` (new-project incl. optional Lab-in-a-Box infra), `curate`, `analyze` (comparison engine), `disseminate` (incl. `executable-article`, `agent-bundle`, `liab-deploy`). Workflow skills call capability skills only.
+| Toolchain | Manifest | Locked | Enables |
+|---|---|---|---|
+| Python | `pyproject.toml` | `uv.lock` | the four check scripts |
+| Node | `package.json` | `package-lock.json` | `openspec validate`, the `paper/` build |
+| e2e stack | `environment.yml` | *deliberately not* — see the file | `tests/e2e-smoke.sh` |
 
-**Phase 3 — Ledger & schema.** `project.yaml` + `schemas/project.schema.json` with `comparisons`, `liab`, and `infrastructure`; confirmatory-comparison → obligation derivation; the `obligations-due` hook.
+```bash
+# Python checks
+uv sync --group dev
+uv run python tests/lint-plugins.py --strict        # plugin/skill/agent structure
+uv run python tests/lint-plugins-selftest.py        # meta-test of the lint
+uv run python schemas/validate-ledger.py examples/project.yaml
+uv run python tests/check-bench-fixtures.py         # evaluation fixtures + routing ground truth
 
-**Phase 4 — Python CLI.** `ds-harness` with Claude Code and Cursor adapters first; ledger validation (`ds-harness validate`) and the plane/frontmatter checks.
+# Node CLIs (resolved from node_modules, not globally)
+npm ci
+npm run spec:validate     # openspec validate --all --strict
+npm run paper:check       # build paper/ and fail on any unresolved citation
 
-**Phase 5 — Remaining adapters & release.** Copilot, Windsurf, OpenCode, Gemini CLI; PyPI publish; harden the Lab-in-a-Box deployment recipe; community contribution guidelines.
+# End-to-end provenance smoke test (needs git-annex; apptainer is a system package)
+conda env create -f environment.yml && conda activate ds-harness-e2e
+bash tests/e2e-smoke.sh
+```
 
----
+Each check exits **2** when its own dependency is absent, so it degrades to a skip rather than a
+failure. [`.github/workflows/ci.yml`](.github/workflows/ci.yml) installs from the manifests and
+treats a 2 as an environment error, since the lock file should have supplied the dependency.
+
+CI checks **structure and specs, not agent behaviour** — see [Evaluating the harness](#evaluating-the-harness).
+
+## Planning & specs — `openspec/`
+
+The forward plan no longer lives in this README. It lives in [`openspec/`](openspec), where each
+proposed change is a validated record rather than a checkbox in a 55 KB file:
+
+- **[`openspec/specs/`](openspec/specs)** — 15 specs describing what the harness *does today*,
+  grounded in the checks that already enforce it (`tests/lint-plugins.py`, `tests/e2e-smoke.sh`,
+  `schemas/project.schema.json`).
+- **[`openspec/changes/`](openspec/changes)** — what we have decided to do next. The former
+  "deepening the capability plane" roadmap is now seven changes: `add-annotate-capability`,
+  `add-archive-toolbox`, `add-compendium-capability`, `deepen-bids-nipoppy`, `add-liab-capability`,
+  `pin-doer-models`, and `reconcile-docs-with-disk`.
+
+```bash
+openspec list            # proposed changes
+openspec list --specs    # current specs
+openspec show <id>       # a change or a spec
+openspec validate --all --strict
+```
+
+[`openspec/README.md`](openspec/README.md) covers the conventions — including the fact that OpenSpec
+calls a spec folder a "capability", which is *not* this repository's "capability plane".
+
+**Where the harness stands.** The workflow plane is complete: 22 planner skills across six workflow
+plugins, each naming concrete ledger fields, log-entry shapes, and delegations. The capability plane
+beneath them is uneven — `datalad` has 19 toolbox skills while `bids`, `containers`, and `archive`
+have none, so most steps can express what should happen but can only actually *do* the git-annex
+part. Closing that gap is what the changes above are for. The observable signal that one has shipped
+is a planner's `delegates_to:` growing beyond `[datalad]`.
+
+## Evaluating the harness
+
+[`docs/evaluation.md`](docs/evaluation.md) specifies four probes — routing accuracy, provenance
+completeness, end-to-end reproducibility, and cost — with declarative fixtures in
+[`bench/`](bench). **None has been run.** The protocol is written before the capabilities it would
+measure, deliberately.
+
+The paper describing all of this is drafted in [`paper/`](paper) as a MyST project; its motivating
+literature is tracked in [`docs/references/`](docs/references).
 
 ## Contributing
 
