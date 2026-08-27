@@ -133,7 +133,26 @@ jobs:
           activate-environment: ds-harness-e2e
           miniforge-version: latest
 
+      - name: Configure a git identity
+        # A fresh runner has none, and DataLad warns on every invocation without one — the warning
+        # even bleeds into `datalad --version` output. git's auto-detected fallback depends on the
+        # runner resolving a usable hostname, which is not something to rely on. The smoke test
+        # drives `datalad save` and `datalad push`, both of which want a real identity.
+        run: |
+          git config --global user.name  "data-science-harness CI"
+          git config --global user.email "ci@data-science-harness.invalid"
+
       - name: Smoke test
         # The container block self-skips when datalad-container or apptainer is absent; apptainer
         # is a system package outside conda's reach and is deliberately not installed here.
-        run: bash tests/e2e-smoke.sh
+        #
+        # On failure, re-run under `bash -x`. The script silences stderr on the commands `set -e`
+        # aborts on, so a bare failure prints nothing after the last PASS and is undiagnosable
+        # from the log alone.
+        run: |
+          if ! bash tests/e2e-smoke.sh; then
+            echo "::group::re-running under bash -x to locate the aborting command"
+            bash -x tests/e2e-smoke.sh 2>&1 | tail -80 || true
+            echo "::endgroup::"
+            exit 1
+          fi
