@@ -1,0 +1,139 @@
+# Structural CI for data-science-harness.
+#
+# SCOPE: this workflow checks STRUCTURE and SPECS. It does not check agent behaviour — nothing in
+# this repository does yet (see docs/evaluation.md). A green run means the plugins are well-formed,
+# the ledger schema accepts its example, the evaluation fixtures resolve, and the OpenSpec records
+# are valid. It does not mean the harness works.
+#
+# Every dependency is installed from a committed manifest, never from an inline floating
+# specifier, so a green run corresponds to a recorded version set:
+#   pyproject.toml + uv.lock          the Python check scripts
+#   package.json + package-lock.json  the Node CLIs (openspec, mystmd)
+#   environment.yml                   the end-to-end stack (deliberately unlocked; see the file)
+#
+# tests/e2e-smoke.sh is NOT on the push trigger: it needs DataLad, git-annex, and apptainer.
+# It runs on manual dispatch.
+
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Pin the interpreter separately: uv.lock pins a dependency resolution, not a Python version.
+  PYTHON_VERSION: "3.10"
+
+jobs:
+  structure:
+    name: plugin structure, ledger schema, evaluation fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Sync the locked Python toolchain
+        run: uv sync --locked --group dev --python "${PYTHON_VERSION}"
+
+      - name: Structural lint
+        # Exit codes: 0 clean, 1 errors (or warnings under --strict), 2 dependency absent.
+        # The dependency is installed from the lock file above, so a 2 here means the environment
+        # is wrong rather than that the check is legitimately skipped. Surface it.
+        run: |
+          set +e
+          uv run --group dev python tests/lint-plugins.py --strict
+          rc=$?
+          set -e
+          if [ "$rc" -eq 2 ]; then
+            echo "::error::lint reported a missing dependency (exit 2) despite a locked sync"
+            exit 1
+          fi
+          exit "$rc"
+
+      - name: Lint selftest
+        run: |
+          set +e
+          uv run --group dev python tests/lint-plugins-selftest.py
+          rc=$?
+          set -e
+          if [ "$rc" -eq 2 ]; then
+            echo "::error::selftest reported a missing dependency (exit 2) despite a locked sync"
+            exit 1
+          fi
+          exit "$rc"
+
+      - name: Validate the ledger example against its schema
+        run: uv run --group dev python schemas/validate-ledger.py examples/project.yaml
+
+      - name: Evaluation fixtures parse and routing ground truth resolves
+        # A routing task whose expected_delegates_to does not match the planner's declared value,
+        # or names a plugin that provides no agent, is broken ground truth — it would silently
+        # score every model wrong. Same rule tests/lint-plugins.py applies to skills.
+        run: uv run --group dev python tests/check-bench-fixtures.py
+
+  specs:
+    name: openspec specs and changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install the locked Node toolchain
+        run: npm ci
+
+      - name: Validate all specs and changes
+        run: npm run spec:validate
+
+  paper:
+    name: paper builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build the MyST project and check every reference resolves
+        # An unresolved citation is a myst WARNING, so `myst build --strict` alone would go green
+        # with a broken bibliography. tests/check-paper.sh fails on it. That is the failure mode
+        # that matters while the paper is a skeleton: docs/references/references.bib is the single
+        # bibliography and paper/ references it rather than carrying a copy.
+        run: npm run paper:check
+
+  e2e:
+    name: end-to-end provenance smoke test
+    # Needs DataLad, git-annex, and apptainer. Not worth installing on every push.
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}   # required for `conda activate` to take effect
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          environment-file: environment.yml
+          activate-environment: ds-harness-e2e
+          miniforge-version: latest
+
+      - name: Smoke test
+        # The container block self-skips when datalad-container or apptainer is absent; apptainer
+        # is a system package outside conda's reach and is deliberately not installed here.
+        run: bash tests/e2e-smoke.sh
