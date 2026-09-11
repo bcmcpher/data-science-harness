@@ -31,11 +31,13 @@ Every annexed file has two independent things that can exist or not exist:
 - The pointer (symlink) remains; the file path still shows up in `git ls-files`
 - **Content can be restored later** with `datalad get <path>` IF a remote copy exists
 - Fails by default if no other copy of the content exists (safety check)
-- Use `--nocheck` to override the safety check (risks data loss if truly no other copy)
+- Use `--reckless availability` to override the safety check (risks data loss if truly no
+  other copy). The older `--nocheck` spelling is deprecated in favour of it, and `--if-dirty`
+  is deprecated and ignored entirely.
 
 ```bash
 datalad drop <path>
-datalad drop --nocheck <path>   # skip remote-availability check
+datalad drop --reckless availability <path>   # skip remote-availability check
 ```
 
 ### `datalad remove` — delete pointer and content entirely
@@ -60,8 +62,8 @@ datalad save -m "remove <path>"
   ```bash
   git annex whereis <path>
   ```
-  If the output shows only `here`, dropping without `--nocheck` will be blocked.
-  Dropping with `--nocheck` when only one copy exists means permanent data loss.
+  If the output shows only `here`, dropping without `--reckless availability` will be
+  blocked. Dropping with it when only one copy exists means permanent data loss.
 
 ---
 
