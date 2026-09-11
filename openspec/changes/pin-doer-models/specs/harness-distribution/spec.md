@@ -28,4 +28,5 @@ to the harness default rather than failing to resolve.
 #### Scenario: Installing for Claude Code
 
 - **WHEN** the same agent is installed for Claude Code
-- **THEN** the authored value is used as written, because it is drawn from that harness's vocabulary
+- **THEN** the authored value is used as written, because the source layout is Claude Code-compatible
+  by definition and needs no translation for that target

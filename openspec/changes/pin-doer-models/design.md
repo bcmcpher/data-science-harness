@@ -2,8 +2,13 @@
 
 The harness targets several assistants with different model-identifier vocabularies. Claude Code
 accepts short aliases; OpenCode expects provider-prefixed strings. The authored content is written
-once, so any model reference has to be either harness-neutral and translated at install time, or
-absent.
+once, so any model reference has to be either translated at install time or absent.
+
+`harness-distribution` already settles which form "written once" means: the source layout is Claude
+Code-compatible and is the single authored form, and harness-specific variants are produced at
+install time rather than committed. `model:` follows `name:` and `tools:` — authored in the source
+vocabulary, adapted on the way out. An invented neutral vocabulary would be a third form to maintain
+and would make the Claude Code path translate a value it already accepts.
 
 `bin/install.sh`'s `install_agent_for_opencode` already demonstrates the translation pattern: an awk
 pass over the frontmatter that drops fields the target does not use and inserts ones it needs.
@@ -28,8 +33,11 @@ pass over the frontmatter that drops fields the target does not use and inserts 
 - **Validate against an allowed set, not a regex.** A regex would accept a well-formed identifier
   that does not exist. The set lives beside `STAMPED_LETTERS` and `PLANES` in
   `tests/lint-plugins.py`, which is where the other closed vocabularies already are.
-- **Authored values are harness-neutral; the installer translates.** This keeps the source layout the
-  single authored form, consistent with `harness-distribution`.
+- **Authored values use the source vocabulary; the installer translates outward.** The allowed set
+  holds the bare aliases Claude Code accepts, so the Claude Code path stays a plain copy and only
+  targets that differ from the source pay a translation cost. This is what `harness-distribution`
+  already requires of every other frontmatter field, and it is why the lint rejects an authored
+  provider-prefixed value: a value already in one target's syntax cannot be translated for the rest.
 - **When translation is not possible, strip rather than pass through.** An agent with no `model:`
   runs on the harness default, which works. An agent with an unresolvable `model:` fails at load.
   Degrading to the default is the safer failure.

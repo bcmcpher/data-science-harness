@@ -16,15 +16,19 @@ README's Universal Skill Format section MUST both describe it.
 - **WHEN** a contributor reads the skill template or the Universal Skill Format section
 - **THEN** `model:` is listed among the optional fields with its allowed values
 
-### Requirement: Authored model values are harness-neutral
+### Requirement: Authored model values use the source layout's vocabulary
 
-An authored `model:` value MUST be drawn from the harness's own allowed set and MUST NOT embed a
-single harness's identifier syntax. Translation to a target harness's form is the installer's job.
+An authored `model:` value MUST be drawn from the allowed set, which uses the bare-alias form the
+Claude Code source layout accepts, because `harness-distribution` makes that layout the single
+authored form. It MUST NOT be a provider-prefixed identifier: translating the authored value into a
+target harness's syntax is the installer's job, and an authored value that is already in one target's
+syntax cannot be translated for the others.
 
 #### Scenario: An author writes a provider-prefixed value
 
-- **WHEN** an agent declares a value in one harness's native identifier syntax
-- **THEN** the lint rejects it, because authored content is written once for all targets
+- **WHEN** an agent declares a value in a target harness's native identifier syntax rather than the
+  authored bare-alias form
+- **THEN** the lint rejects it, because the installer — not the author — produces target-specific forms
 
 ### Requirement: Only read-only agents are pinned
 

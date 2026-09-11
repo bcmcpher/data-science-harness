@@ -1,6 +1,8 @@
 ## 1. Validate before anything declares the field
 
 - [ ] 1.1 Add an allowed-model set to `tests/lint-plugins.py` beside `STAMPED_LETTERS` and `PLANES`.
+      The set holds the bare aliases the Claude Code source layout accepts, not a neutral vocabulary
+      and not a provider-prefixed form — see the design's source-vocabulary decision.
 - [ ] 1.2 Extend `check_agent` to error on a `model:` value outside the set.
 - [ ] 1.3 Extend `check_agent` to error when a mutating doer declares `model:` at all.
 - [ ] 1.4 Add a selftest case in `tests/lint-plugins-selftest.py` injecting an invalid value.
