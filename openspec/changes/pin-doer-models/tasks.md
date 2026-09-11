@@ -29,7 +29,8 @@
 
 - [ ] 5.1 `docs/writing/SPEC.md:72` declares `model: strong-writing`, which is not a real identifier.
       Either replace it with an allowed value or mark it explicitly as a placeholder in a spec that
-      is not a live file.
+      is not a live file. This change is now the sole owner of that decision -
+      `add-compendium-capability` carried a duplicate and it has been removed there.
 
 ## 6. Verify
 

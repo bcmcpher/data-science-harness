@@ -1,7 +1,7 @@
 ## Why
 
-The README is the harness's only top-level document and it has drifted from the repository it
-describes. The gaps are mechanical and measurable:
+The README and the end-to-end walkthrough are the harness's entry documents, and both have
+drifted from the repository they describe. The gaps are mechanical and measurable:
 
 - It says "**Eleven plugins**" (`README.md:171`); there are **13** on disk.
 - It references **`plugin.yaml` 8 times**, including in the Contributing steps that tell a new
@@ -23,6 +23,12 @@ describes. The gaps are mechanical and measurable:
 - The Repository Structure block omits `docs/writing/`, `docs/project-ledger.md`, `examples/`, and
   `tests/lint-plugins-selftest.py`.
 - The Install section does not mention OpenCode, although `bin/install.sh` defaults to it.
+- `docs/end-to-end-workflow.md` has the same problem and is worse for a newcomer, because it is the
+  document that reads as a walkthrough. Its Phase 0 opens with `pip install ds-harness` and
+  `ds-harness install --harness=claude-code`; that CLI does not exist, so the very first command a
+  new user runs fails. **28 of the 48 plugin-qualified skill references in the file are absent from
+  disk** — some never built (`curate/deidentify`, `analyze/plot`), some naming the wrong plugin
+  (`datalad/datalad-run` lives in `datalad-cli`).
 - `analyze/literature-search` is described at `README.md:228` but does not exist.
 
 Documentation that describes a different repository is worse than no documentation: it costs a

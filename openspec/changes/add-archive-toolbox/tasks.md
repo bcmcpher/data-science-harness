@@ -1,3 +1,13 @@
+## 0. Minimal working core
+
+**`zenodo` alone** (1.2, 1.4) plus the doer slimming (2.1-2.2) and its verification (4.1-4.3).
+Zenodo is the shortest path to a real DOI on a real product, and the doer slimming is the pattern
+the other two backends then follow rather than invent.
+
+Deferred: `osf` (1.1), `datacite` (1.3), and the `link-outputs` rewire (3.1-3.2), which depends on
+the `datacite` skill existing. Note that `datacite` is the one carrying `RelatedIdentifier`
+handling, so the `link-outputs` prose stays as it is until then.
+
 ## 1. The archive-cli toolbox
 
 - [ ] 1.1 `plugins/archive-cli/skills/osf/SKILL.md` — `datalad create-sibling-osf` + push, reading the

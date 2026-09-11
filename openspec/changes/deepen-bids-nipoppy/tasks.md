@@ -1,3 +1,11 @@
+## 0. Minimal working core
+
+**Section 1 alone.** It is already self-gating: 1.5 requires a clean lint before section 2 starts.
+
+Deferred: the `nipoppy-cli` split (section 2) and the guideline references (section 3). These are
+independent of section 1 and of each other. Section 3 in particular is a references change bundled
+into a toolbox change - if it grows, it belongs in its own change rather than here.
+
 ## 1. bids first, verified before moving on
 
 - [ ] 1.1 `plugins/bids-cli/skills/bids-validator/SKILL.md` — `user-invocable: true`, `argument-hint`,

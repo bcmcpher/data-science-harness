@@ -1,3 +1,15 @@
+## 0. Minimal working core
+
+The doer (1.1-1.3) plus **`myst` alone** (2.1, 2.5), with `executable-article` rewired and building
+(3.1-3.2). Section 3 already sequences the article path before the bundle path; the minimal core
+stops at 3.2.
+
+Deferred: `jupyter-book` (2.2), `repo2data` (2.3), `mcp-scaffold` (2.4), and the whole agent-bundle
+path (3.3-3.4).
+
+The article path has a real first target: `paper/` is already a MyST project, so the first
+executable article this harness produces should be its own paper.
+
 ## 1. The compendium doer
 
 - [ ] 1.1 Write `plugins/compendium/agents/compendium-doer.md`: parse request, check dependencies,
@@ -23,16 +35,16 @@
 - [ ] 3.3 Only then rewire `plugins/disseminate/skills/agent-bundle/SKILL.md`.
 - [ ] 3.4 e2e assertion: an emitted bundle passes `tests/lint-plugins.py`'s structural checks.
 
-## 4. Resolve the manuscript sub-agent
+## 4. Verify
 
-- [ ] 4.1 Decide `docs/writing/SPEC.md`'s `manuscript` sub-agent: build it as part of this cluster, or
-      mark it explicitly deferred in the SPEC.
-- [ ] 4.2 If built, relocate the writing reference bundle to `plugins/disseminate/references/writing/`
-      as the SPEC's build note describes, and replace the symbolic `model: strong-writing` with a real
-      value validated by `pin-doer-models`.
+- [ ] 4.1 `python3 tests/lint-plugins.py` — 0 errors.
+- [ ] 4.2 Neither planner still reads `delegates_to: [datalad]`.
+- [ ] 4.3 Both e2e assertions gated to skip cleanly when MyST or a container runtime is absent.
 
-## 5. Verify
+## Removed from this change
 
-- [ ] 5.1 `python3 tests/lint-plugins.py` — 0 errors.
-- [ ] 5.2 Neither planner still reads `delegates_to: [datalad]`.
-- [ ] 5.3 Both e2e assertions gated to skip cleanly when MyST or a container runtime is absent.
+The `manuscript` sub-agent decision (`docs/writing/SPEC.md`) was carried here as a section 4 and has
+been removed. It is a question about the writing reference bundle, not about compendium build
+mechanics, and `pin-doer-models` already owns the only part of it that blocks anything - the
+symbolic `model: strong-writing` value that no allowed set would accept. Two changes owning one
+decision is how a decision goes unmade.

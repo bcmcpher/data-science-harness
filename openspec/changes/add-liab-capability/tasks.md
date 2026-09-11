@@ -1,3 +1,12 @@
+## 0. Minimal working core
+
+The doer (1.1-1.4) plus **`pyinfra` in plan-only mode** (2.1, 2.3), with the planner rewired
+(3.1-3.2) and verified (4.1-4.3). A plan that names its target host and touches no network is the
+smallest thing that demonstrably works, and 4.3 already states that the apply path is exercised
+manually rather than by the suite.
+
+Deferred: `forgejo` (2.2).
+
 ## 1. The liab doer
 
 - [ ] 1.1 Write `plugins/liab/agents/liab-doer.md`: parse request, build inventory, plan, confirm

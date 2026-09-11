@@ -1,3 +1,13 @@
+## 0. Minimal working core
+
+The doer (1.1-1.3) plus **`bagel-cli` alone** (2.1, 2.5), with the planner rewired (3.1-3.3) and
+verified (4.1-4.3). Neurobagel is the most-named backend across planner bodies and the one that
+makes a dataset machine-queryable, which is this change's stated point.
+
+Deferred: `pynidm` (2.2), `reproschema` (2.3), `snomed-lookup` (2.4). Each adds a backend; none
+changes whether the capability works. Ship the core, confirm `curate/annotate` no longer reads
+`delegates_to: [datalad]`, then add backends one at a time.
+
 ## 1. The annotate doer
 
 - [ ] 1.1 Write `plugins/annotate/agents/annotate-doer.md` with the standard doer frontmatter and the
