@@ -8,6 +8,13 @@ removed from the installed copy. Specifically, `model:` MUST be translated to th
 identifier form, and MUST be stripped when no translation exists, so the installed agent falls back
 to the harness default rather than failing to resolve.
 
+#### Scenario: A field is passed through untranslated
+
+- **WHEN** an authored agent declares a field whose value form differs between harnesses, such as a
+  bare `model:` name where the target expects a provider-prefixed identifier
+- **THEN** the installer either translates or removes it, so the installed agent resolves in the
+  target harness
+
 #### Scenario: A model value has a known translation
 
 - **WHEN** an agent declaring an allowed `model:` value is installed for OpenCode

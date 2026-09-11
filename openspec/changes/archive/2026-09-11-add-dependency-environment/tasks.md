@@ -40,8 +40,19 @@
 
 ## 6. Catch the next undeclared import
 
-- [ ] 6.1 Add the import-versus-manifest check to `tests/lint-plugins.py`.
-- [ ] 6.2 Add the corresponding selftest case.
+- [x] 6.1 Add the import-versus-manifest check to `tests/lint-plugins.py`. `check_script_imports`
+      walks every `.py` under `tests/` and `schemas/`, resolves each imported top-level module
+      against `sys.stdlib_module_names` and the repo tree, and errors when the remainder is not
+      declared in `pyproject.toml`. The manifest is parsed by hand rather than with tomllib,
+      because `requires-python` is >=3.10 and tomllib arrived in 3.11. A hand-kept
+      `IMPORT_ALIASES` maps `yaml` -> `pyyaml`; there is no way to derive that without installing
+      the package. The check returns silently when `pyproject.toml` is absent, which is what the
+      selftest sandbox looks like.
+- [x] 6.2 Add the corresponding selftest case. `add_undeclared_import` builds a minimal manifest
+      declaring only `pyyaml` plus a script importing `os`, `yaml`, and `requests`, so the case
+      pins both halves: `requests` must error and `yaml` must not. Verified that the sandbox
+      raises exactly one `check-thing.py` error and that it names `requests` — without which the
+      alias table would be untested. Suite is 18/18.
 
 ## 7. Verify
 
