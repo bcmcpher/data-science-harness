@@ -1,0 +1,51 @@
+version = 1
+SPDX-PackageName = "data-science-harness"
+SPDX-PackageSupplier = "Brent McPherson <bcmcpher@gmail.com>"
+SPDX-PackageDownloadLocation = "https://github.com/bcmcpher/data-science-harness"
+
+# Two licences, split by what the file IS rather than by what reads it. A SKILL.md is prose that
+# instructs a model; treating it as software because a machine consumes it would put the boundary
+# in the wrong place.
+#
+# NOTE: there is deliberately no LICENSES/ directory, so `reuse lint` will report this package as
+# non-compliant. Full compliance requires the verbatim CC BY 4.0 legal code, which must be copied
+# from the canonical source rather than reconstructed. LICENSE-CONTENT.md carries the notice
+# Creative Commons specifies for marking a work, which is sufficient to apply the licence.
+
+# --- Content: CC BY 4.0 ---------------------------------------------------------------
+
+[[annotations]]
+path = [
+  "plugins/**/*.md",
+  "docs/**",
+  "templates/**",
+  "openspec/**",
+  "paper/**",
+  "bench/**",
+  "examples/**",
+  "README.md",
+  "LICENSE-CONTENT.md",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Brent McPherson"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+# --- Code: MIT ------------------------------------------------------------------------
+
+[[annotations]]
+path = [
+  "bin/**",
+  "tests/**",
+  "schemas/**",
+  "plugins/**/*.json",
+  "plugins/**/hooks/**",
+  ".claude-plugin/**",
+  ".github/**",
+  "pyproject.toml",
+  "package.json",
+  "environment.yml",
+  "REUSE.toml",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Brent McPherson"
+SPDX-License-Identifier = "MIT"
