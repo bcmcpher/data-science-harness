@@ -54,6 +54,20 @@ def add_orphan_skill(root):
         fh.write('---\nname: orphan\ndescription: "x"\n---\n')
 
 
+def add_undeclared_import(root):
+    """A manifest plus a check script importing something it does not declare.
+
+    Builds its own minimal pyproject.toml rather than copying the real one, so the case states
+    exactly what it assumes: `yaml` is declared (as pyyaml, via the alias table) and must pass;
+    `requests` is not and must error.
+    """
+    with open(os.path.join(root, "pyproject.toml"), "w") as fh:
+        fh.write('[dependency-groups]\ndev = ["pyyaml>=6.0"]\n')
+    os.makedirs(os.path.join(root, "tests"))
+    with open(os.path.join(root, "tests", "check-thing.py"), "w") as fh:
+        fh.write("import os\nimport yaml\nimport requests\n")
+
+
 WARN_CASES = [
     (
         "argument-hint parses as a list, not a string",
@@ -114,6 +128,7 @@ CASES = [
         "plugin.json name != its directory",
         lambda r: sub(f"{r}/plugins/bids/.claude-plugin/plugin.json", '"name": "bids"', '"name": "bidz"'),
     ),
+    ("check script imports a module pyproject.toml does not declare", add_undeclared_import),
     (
         "plugin.json lists a skill that does not exist",
         lambda r: sub(

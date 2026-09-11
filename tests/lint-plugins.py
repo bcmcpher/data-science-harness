@@ -4,7 +4,8 @@
 Static checks only — no dataset, no tools, no network. This catches the drift class that
 nothing else does: a skill whose `delegates_to` names a doer that does not exist, a skill
 added to disk but never registered in its plugin.json (so it never loads), a plugin missing
-from the marketplace, a `name:` that no longer matches its directory.
+from the marketplace, a `name:` that no longer matches its directory, a check script that
+imports a module no manifest declares.
 
 Two check severities:
   ERROR — the harness is broken or will silently not load something. Fails the run.
@@ -18,6 +19,7 @@ Exit codes: 0 = clean, 1 = errors found (or usage error), 2 = skipped (pyyaml no
 
 Usage: tests/lint-plugins.py [-v] [--strict] [repo_root]
 """
+import ast
 import json
 import os
 import re
@@ -34,6 +36,12 @@ PLANES = {"workflow", "capability"}
 KEBAB = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 PLANNER_SECTIONS = ("## When to use", "## Steps", "## Constraints")
 DESCRIPTION_MAX = 1024
+CHECK_SCRIPT_DIRS = ("tests", "schemas")
+
+# Third-party modules whose import name differs from the distribution providing it. There is no
+# way to derive this without installing the package, so it is a hand-kept list; extend it when a
+# check script imports something new.
+IMPORT_ALIASES = {"yaml": "pyyaml"}
 
 findings: list[tuple[str, str, str]] = []  # (severity, path, message)
 counts = {"skills": 0, "agents": 0, "plugins": 0}
@@ -303,6 +311,107 @@ def check_marketplace(root: str, plugin_dirs: list[str], declared_names: dict[st
             error(p, f"plugins/{os.path.basename(d)}/ exists but is not in the marketplace — it is not installable")
 
 
+_QUOTED = re.compile(r"\"([^\"]*)\"|'([^']*)'")
+_REQ_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
+
+
+def _requirement_names(chunk: str) -> set[str]:
+    names = set()
+    for m in _QUOTED.finditer(chunk):
+        name = _REQ_NAME.match((m.group(1) or m.group(2) or "").strip())
+        if name:
+            names.add(name.group(0).lower().replace("_", "-"))
+    return names
+
+
+def declared_distributions(text: str) -> set[str]:
+    """Distribution names from `[project] dependencies` and every `[dependency-groups]` array.
+
+    Hand-rolled rather than tomllib: `requires-python` is >=3.10 and tomllib arrived in 3.11, so
+    the lint has to read this on the interpreter CI pins.
+    """
+    names: set[str] = set()
+    section = ""
+    depth = 0
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if depth:
+            if "include-group" not in line:  # a group including another group, not a requirement
+                names |= _requirement_names(line)
+            depth += line.count("[") - line.count("]")
+            continue
+        if line.startswith("[") and "=" not in line:
+            section = line.strip("[]").strip()
+            continue
+        key, sep, rest = line.partition("=")
+        if not sep or not rest.strip().startswith("["):
+            continue
+        if key.strip() == "dependencies" or section == "dependency-groups":
+            names |= _requirement_names(rest)
+            depth = rest.count("[") - rest.count("]")
+    return names
+
+
+def imported_modules(tree: ast.AST) -> set[str]:
+    """Top-level module names, including imports nested in try/except optional-dependency guards."""
+    mods = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            mods.update(a.name.split(".")[0] for a in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            mods.add(node.module.split(".")[0])
+    return mods
+
+
+def _is_local(root: str, script_dir: str, mod: str) -> bool:
+    return any(
+        os.path.exists(os.path.join(d, mod + ".py")) or os.path.isdir(os.path.join(d, mod))
+        for d in (script_dir, root)
+    )
+
+
+def check_script_imports(root: str) -> None:
+    """Every third-party module a check script imports must be declared in pyproject.toml.
+
+    The failure this catches is a script that runs on the author's machine and exits 2 — "skipped,
+    dependency absent" — everywhere else, which reads as a pass. A skip must mean the environment
+    was not set up, never that the manifest is incomplete.
+    """
+    manifest = os.path.join(root, "pyproject.toml")
+    if not os.path.isfile(manifest):
+        return  # nothing to check against
+    with open(manifest) as fh:
+        declared = declared_distributions(fh.read())
+
+    for d in CHECK_SCRIPT_DIRS:
+        base = os.path.join(root, d)
+        if not os.path.isdir(base):
+            continue
+        for name in sorted(os.listdir(base)):
+            if not name.endswith(".py"):
+                continue
+            path = os.path.join(base, name)
+            with open(path) as fh:
+                source = fh.read()
+            try:
+                tree = ast.parse(source)
+            except SyntaxError as exc:
+                error(rel(root, path), f"does not parse: {exc}")
+                continue
+            for mod in sorted(imported_modules(tree)):
+                if mod in sys.stdlib_module_names or _is_local(root, base, mod):
+                    continue
+                dist = IMPORT_ALIASES.get(mod, mod).lower().replace("_", "-")
+                if dist not in declared:
+                    error(
+                        rel(root, path),
+                        f"imports `{mod}` but pyproject.toml declares no `{dist}` — "
+                        "a synced environment will not have it",
+                    )
+
+
 def main() -> None:
     argv = [a for a in sys.argv[1:] if not a.startswith("-")]
     flags = {a for a in sys.argv[1:] if a.startswith("-")}
@@ -336,6 +445,7 @@ def main() -> None:
         if declared:
             declared_names[os.path.basename(d)] = declared
     check_marketplace(root, plugin_dirs, declared_names)
+    check_script_imports(root)
 
     errors = [f for f in findings if f[0] == "ERROR"]
     warnings = [f for f in findings if f[0] == "WARN"]
