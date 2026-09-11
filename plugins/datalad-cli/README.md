@@ -1,7 +1,8 @@
 # datalad-cli
 
-Claude Code plugin that routes data processing and file changes through DataLad for
-provenance tracking. Follows YODA principles for reproducible local analysis projects.
+DataLad toolbox (capability plane): one skill per `datalad` subcommand, read by the `datalad` doer
+as reference material. Routes data processing and file changes through DataLad for provenance
+tracking, following YODA principles for reproducible local analysis projects.
 
 ## Skills
 

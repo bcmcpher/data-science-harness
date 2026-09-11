@@ -1,6 +1,13 @@
 # Introduction
 
-<!-- SKELETON. Each block below is the argument the paragraph must make and the evidence it needs. -->
+<!-- SKELETON. Each block below is the argument the paragraph must make and the evidence it needs.
+
+`docs/motivation.md` is the first written prose of this argument and is the repository's canonical
+statement of it. Draft from there rather than from scratch, and do not contradict it — but do not
+link to it either. A published paper must stand alone for a reader who cannot follow a repository
+link, so this section carries its own prose. -->
+
+<!-- Quoted passages in the source notes remain the authority for anything attributed. -->
 
 ## The problem
 

@@ -413,10 +413,81 @@ def check_script_imports(root: str) -> None:
                     )
 
 
-# The README's two mechanically checkable claims. Prose claims in general are not tractable to
-# check, and a check that half-worked would be its own drift — so this is deliberately narrow:
-# the manifest filename the Contributing steps send a new contributor to edit, and the plugin count.
+# The mechanically checkable doc claims. Prose claims in general are not tractable to check, and a
+# check that half-worked would be its own drift — so this is deliberately narrow: the manifest
+# filename the Contributing steps send a new contributor to edit, the plugin count, and the two
+# claims the marketplace description makes about the closed STAMPED set and the workflow plane.
 _PLUGIN_COUNT = re.compile(r"\*\*(\d+) plugins\*\*")
+_PLANNER_COUNT = re.compile(r"(\d+) workflow-plane planner skills")
+# "STAMPED Metadata" shipped in the marketplace for months because the closed-set check only ever
+# read skill frontmatter. Any capitalised word introduced as a STAMPED dimension is a candidate.
+_STAMPED_PROSE = re.compile(r"STAMPED[- ]([A-Z][a-z]+)")
+STAMPED_NAMES = {
+    "Self-containment": "S",
+    "Self": "S",
+    "Tracking": "T",
+    "Tracked": "T",
+    "Actionability": "A",
+    "Actionable": "A",
+    "Modularity": "M",
+    "Modular": "M",
+    "Portability": "P",
+    "Portable": "P",
+    "Ephemerality": "E",
+    "Ephemeral": "E",
+    "Distributability": "D",
+    "Distributable": "D",
+}
+
+
+def check_marketplace_claims(root: str, plugin_dirs: list[str]) -> None:
+    """The marketplace description is the first statement of the framework most readers meet, and
+    no other check reads it. Both claims below are the shape check_doc_claims already uses."""
+    path = os.path.join(root, ".claude-plugin", "marketplace.json")
+    p = rel(root, path)
+    if not os.path.isfile(path):
+        return  # check_marketplace already errored
+    with open(path) as fh:
+        text = fh.read()
+
+    for name in sorted({m.group(1) for m in _STAMPED_PROSE.finditer(text)}):
+        if name not in STAMPED_NAMES:
+            error(
+                p,
+                f"names `STAMPED {name}`, which is not one of the seven principles; valid names are "
+                "Self-containment, Tracking, Actionability, Modularity, Portability, Ephemerality, "
+                "Distributability",
+            )
+
+    workflow_dirs = [
+        d
+        for d in plugin_dirs
+        if any(
+            _has_workflow_skill(os.path.join(d, "skills", s))
+            for s in (os.listdir(os.path.join(d, "skills")) if os.path.isdir(os.path.join(d, "skills")) else [])
+        )
+    ]
+    claimed = _PLANNER_COUNT.search(text)
+    if not claimed:
+        warn(
+            p,
+            "states no planner count in the form `N workflow-plane planner skills`, so the "
+            "description's account of the workflow plane cannot be checked",
+        )
+    elif int(claimed.group(1)) != len(workflow_dirs):
+        error(
+            p,
+            f"claims {claimed.group(1)} workflow-plane planners; {len(workflow_dirs)} plugins on "
+            f"disk contain a `plane: workflow` skill ({', '.join(sorted(os.path.basename(d) for d in workflow_dirs))})",
+        )
+
+
+def _has_workflow_skill(skill_dir: str) -> bool:
+    path = os.path.join(skill_dir, "SKILL.md")
+    if not os.path.isfile(path):
+        return False
+    with open(path) as fh:
+        return any(line.strip() == "plane: workflow" for line in fh)
 
 
 def check_doc_claims(root: str, plugin_dirs: list[str]) -> None:
@@ -479,6 +550,7 @@ def main() -> None:
     check_marketplace(root, plugin_dirs, declared_names)
     check_script_imports(root)
     check_doc_claims(root, plugin_dirs)
+    check_marketplace_claims(root, plugin_dirs)
 
     errors = [f for f in findings if f[0] == "ERROR"]
     warnings = [f for f in findings if f[0] == "WARN"]

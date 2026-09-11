@@ -1,10 +1,14 @@
 # data-science-harness
 
-A community-driven, harness-agnostic collection of AI assistant configurations for academic data science work — skills, agents, commands, hooks, MCP configs, and planning templates that work across Claude Code, Cursor, GitHub Copilot, Windsurf, OpenCode, and Gemini CLI.
+A community-driven, harness-agnostic collection of AI assistant configurations for academic data science work — skills, agents, commands, hooks, MCP configs, and planning templates. The content is harness-neutral Markdown; `bin/install.sh` installs to **Claude Code and OpenCode today**, and Cursor, GitHub Copilot, Windsurf and Gemini CLI are the harnesses the format is designed to reach next (see [Install](#install)).
+
+> **Status:** the workflow plane is built, the capability plane is uneven — `datalad` has a 19-skill toolbox, `bids`, `containers` and `archive` have none — and the [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
 
 ---
 
 ## What this is
+
+**Governance should be a by-product of doing the work.** Assistants now execute analyses faster than the surrounding record can be maintained by hand, and anything that requires a separate act of discipline gets skipped under deadline. So the harness routes every computation and every administrative change through one provenance chain — the record is produced by doing the work, not by remembering to. [**Why this exists**](docs/motivation.md) makes the full argument: the problem, who the work is for, what it claims, how you would know, and what is not built.
 
 Most AI coding assistant configurations are designed for software products: ship a package, cut a release, deploy a service. Academic data science has a different end goal — **publish a research product**. But a research product is no longer just a static PDF or a frozen dataset. This project treats it as a **living research compendium**:
 
@@ -20,11 +24,11 @@ This project generalizes the best patterns from software development tooling for
 1. **STAMPED by default** — every research object is built toward the [STAMPED principles](docs/stamped.md) (Self-containment, Tracking, Actionability, Modularity, Portability, Ephemerality, Distributability). Tracking runs through DataLad, so the full chain from raw data to published result — *and every administrative change* — is recorded automatically.
 2. **External standards as first-class citizens** — STAMPED, BIDS, Neurobagel, SNOMED, OSF, Zenodo, NeuroLibre, Lab-in-a-Box, ORCID, CRediT, and reporting guidelines are integrated into the normal workflow, not bolted on at the end
 3. **Research products are living** — the default export re-executes (NeuroLibre), is agent-callable (Paper2Agent / MCP), and is self-hostable (Lab-in-a-Box), not a one-off artifact
-4. **Administration is first-class, not an afterthought** — funding, ethics, data-management plans, deadlines, people, and credit are tracked alongside the science, with the same provenance discipline
+4. **Administration is first-class** — funding, ethics, data-management plans, deadlines, people, and credit are tracked alongside the science, with the same provenance discipline. This is what the by-product commitment above delivers: administration stops being the part reconstructed after the fact
 
 **Two planes of configuration.** The content separates cleanly into a **capability plane** (thin wrappers over the technical tools — DataLad, Nipoppy, BIDS, containers, publishing, annotation) and a **workflow plane** (tool-agnostic research process that *orchestrates* those capabilities). This separation is STAMPED **Modularity** applied to the harness itself — and it is what makes the pieces recombine cleanly (see [Architecture](#architecture)).
 
-**Target harnesses**: Claude Code, Cursor, GitHub Copilot, Windsurf, OpenCode, Gemini CLI
+**Target harnesses**: Claude Code and OpenCode (installable today via `bin/install.sh`); Cursor, GitHub Copilot, Windsurf and Gemini CLI (designed for, not yet exercised — the content layer is harness-neutral, so a manual copy works anywhere)
 
 **Target workflows**: data analysis, experiment design, literature review, reproducibility, **project governance & compliance**, **administrative tracking & reporting**, **dissemination & living publications**, long-term planning
 
@@ -755,12 +759,12 @@ This project generalizes and re-partitions the Claude Code-specific plugins in [
 |--------------------|--------------------------------|-------|-------|
 | `stat-analysis` | `analyze` (+ `curate` merge/dict) | workflow | Add universal frontmatter; add comparison engine |
 | `project-init` | `project` | workflow | Data-analysis project type; adds tracking skills + optional LiaB infra |
-| `bids` | `bids` | capability | Validation/scaffold subset; workflow orchestration moves to `curate` |
+| `bids` | `bids` | capability | Validation subset only — the doer is read-only and never modifies the dataset; scaffolding and workflow orchestration move to `curate` |
 | `datalad-cli` | `datalad` | capability | Core subset (run, container-run, save, clone, get, push, log, checkpoint) |
 | `nipoppy-cli` | `nipoppy` | capability | Full CLI wrapper; orchestration moves to `curate`/`analyze` |
 | — | `containers` | capability | New — portability/ephemerality |
-| — | `publish` | capability | New — OSF/Zenodo/annex-remote mechanics |
-| — | `annotate` | capability | New — Neurobagel/SNOMED/NIDM/ReproSchema tool wrappers |
+| — | `disseminate/publish` + `archive` | workflow + capability | New — the planner skill is `disseminate/publish`; OSF/Zenodo/DataCite mechanics live in the `archive` doer |
+| — | `curate/annotate` + `annotate` *(planned)* | workflow + capability | New — the planner skill is `curate/annotate`; the Neurobagel/SNOMED/NIDM/ReproSchema wrappers are a planned capability plugin ([`add-annotate-capability`](openspec/changes/add-annotate-capability)) |
 | — | `govern` | workflow | DMP, ethics, pre-registration, STAMPED assessment |
 | — | `disseminate` | workflow | Manuscript, reporting guidelines, executable article, agent bundle, Lab-in-a-Box |
 

@@ -145,6 +145,22 @@ CASES = [
         lambda r: readme_with(r, "**11 plugins**, split across the two planes.\n"),
     ),
     (
+        "marketplace claims a STAMPED principle outside the closed set",
+        lambda r: sub(
+            f"{r}/.claude-plugin/marketplace.json",
+            "Advances STAMPED Distributability.",
+            "Advances STAMPED Metadata.",
+        ),
+    ),
+    (
+        "marketplace's workflow-planner count disagrees with disk",
+        lambda r: sub(
+            f"{r}/.claude-plugin/marketplace.json",
+            "6 workflow-plane planner skills",
+            "2 workflow-plane planner skills",
+        ),
+    ),
+    (
         "plugin.json lists a skill that does not exist",
         lambda r: sub(
             f"{r}/plugins/govern/.claude-plugin/plugin.json", '"./skills/qc-review"', '"./skills/qc-reviewww"'

@@ -1,7 +1,8 @@
 # nipoppy-cli
 
-Claude Code skill for the [nipoppy](https://nipoppy.readthedocs.io) neuroimaging
-dataset management CLI.
+Nipoppy toolbox (capability plane): reference material for the
+[nipoppy](https://nipoppy.readthedocs.io) neuroimaging dataset management CLI, read by the
+`nipoppy` doer. One skill covering the whole CLI, not yet split per command.
 
 ## What it does
 
