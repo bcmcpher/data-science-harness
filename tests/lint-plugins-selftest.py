@@ -68,6 +68,13 @@ def add_undeclared_import(root):
         fh.write("import os\nimport yaml\nimport requests\n")
 
 
+def readme_with(root, text):
+    """Write a sandbox README. The lint's doc-claims check is skipped when none exists, so a case
+    that exercises it has to supply one."""
+    with open(os.path.join(root, "README.md"), "w") as fh:
+        fh.write(text)
+
+
 WARN_CASES = [
     (
         "argument-hint parses as a list, not a string",
@@ -129,6 +136,14 @@ CASES = [
         lambda r: sub(f"{r}/plugins/bids/.claude-plugin/plugin.json", '"name": "bids"', '"name": "bidz"'),
     ),
     ("check script imports a module pyproject.toml does not declare", add_undeclared_import),
+    (
+        "README sends contributors to a plugin.yaml that does not exist",
+        lambda r: readme_with(r, "**13 plugins**\n\n4. Add the path to `plugin.yaml`\n"),
+    ),
+    (
+        "README's plugin count disagrees with disk",
+        lambda r: readme_with(r, "**11 plugins**, split across the two planes.\n"),
+    ),
     (
         "plugin.json lists a skill that does not exist",
         lambda r: sub(

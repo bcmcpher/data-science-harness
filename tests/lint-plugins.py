@@ -5,7 +5,8 @@ Static checks only — no dataset, no tools, no network. This catches the drift 
 nothing else does: a skill whose `delegates_to` names a doer that does not exist, a skill
 added to disk but never registered in its plugin.json (so it never loads), a plugin missing
 from the marketplace, a `name:` that no longer matches its directory, a check script that
-imports a module no manifest declares.
+imports a module no manifest declares, a README that tells contributors to edit a file that
+does not exist.
 
 Two check severities:
   ERROR — the harness is broken or will silently not load something. Fails the run.
@@ -412,6 +413,37 @@ def check_script_imports(root: str) -> None:
                     )
 
 
+# The README's two mechanically checkable claims. Prose claims in general are not tractable to
+# check, and a check that half-worked would be its own drift — so this is deliberately narrow:
+# the manifest filename the Contributing steps send a new contributor to edit, and the plugin count.
+_PLUGIN_COUNT = re.compile(r"\*\*(\d+) plugins\*\*")
+
+
+def check_doc_claims(root: str, plugin_dirs: list[str]) -> None:
+    readme = os.path.join(root, "README.md")
+    if not os.path.isfile(readme):
+        return
+    with open(readme) as fh:
+        text = fh.read()
+
+    if "plugin.yaml" in text:
+        error(
+            "README.md",
+            "references `plugin.yaml`, which does not exist — manifests are "
+            "`.claude-plugin/plugin.json`. A contributor following the Contributing steps would "
+            "edit a file that is not there",
+        )
+
+    claimed = _PLUGIN_COUNT.search(text)
+    if not claimed:
+        warn("README.md", "states no plugin count in the form `**N plugins**`, so the count cannot be checked")
+    elif int(claimed.group(1)) != len(plugin_dirs):
+        error(
+            "README.md",
+            f"claims {claimed.group(1)} plugins; {len(plugin_dirs)} are on disk",
+        )
+
+
 def main() -> None:
     argv = [a for a in sys.argv[1:] if not a.startswith("-")]
     flags = {a for a in sys.argv[1:] if a.startswith("-")}
@@ -446,6 +478,7 @@ def main() -> None:
             declared_names[os.path.basename(d)] = declared
     check_marketplace(root, plugin_dirs, declared_names)
     check_script_imports(root)
+    check_doc_claims(root, plugin_dirs)
 
     errors = [f for f in findings if f[0] == "ERROR"]
     warnings = [f for f in findings if f[0] == "WARN"]

@@ -2,7 +2,7 @@
   "name": "data-science-harness",
   "owner": { "name": "bcmcpher" },
   "metadata": {
-    "description": "A harness for reproducible, STAMPED-aligned data-science research. Workflow-plane planner skills (project, analyze) delegate to capability-plane doers (datalad, datalad-cli, nipoppy-cli) so every research object is Shareable, Tracked, Actionable, Metadata-rich, Provenanced, Executable, and Distributable.",
+    "description": "A harness for reproducible, STAMPED-aligned data-science research. Workflow-plane planner skills (project, analyze) delegate to capability-plane doers (datalad, nipoppy, bids, containers, archive) and their CLI toolboxes so every research object is Self-contained, Tracked, Actionable, Modular, Portable, Ephemeral, and Distributable (see docs/stamped.md).",
     "version": "0.1.0"
   },
   "plugins": [
