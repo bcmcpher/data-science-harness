@@ -1,0 +1,224 @@
+# Routing task suite — one task per built planner skill, plus near-miss discriminators.
+#
+# NOTHING HERE HAS BEEN RUN.
+#
+# Ground-truth rule: expected_delegates_to must match the planner's declared delegates_to and must
+# name plugins that actually provide an agent (plugins/<name>/agents/). Same rule
+# tests/lint-plugins.py applies at check_skill. When a capability lands and a planner is rewired,
+# update the affected task in the same change.
+#
+# Prompt rule: a prompt must not name a harness skill, plugin, or delegated CLI. Naming a *domain*
+# tool the researcher would say out loud (fMRIPrep, MRIQC, BIDS, a DOI) is fine and realistic;
+# naming the harness's own machinery (datalad, nipoppy, the doer) is not — it hands over the answer.
+
+probe: routing
+suite: lifecycle
+status: specified
+
+tasks:
+
+  # ---------------------------------------------------------------- 0. govern
+  - id: govern-prereg
+    prompt: >
+      Before we run this, I want to lock in the analysis plan and register it publicly so we can
+      show later that we didn't change the hypothesis after seeing the data.
+    expected_skill: govern/preregister
+    expected_delegates_to: [datalad]
+    rigor: confirmatory
+
+  - id: govern-obligations-list
+    prompt: What do we still owe on this project, and what's due first?
+    expected_skill: govern/obligations
+    expected_delegates_to: [datalad]
+
+  - id: govern-qc
+    prompt: >
+      Before we release anything, check the dataset is structurally sound and tell me how
+      reproducible this project actually is right now.
+    expected_skill: govern/qc-review
+    expected_delegates_to: [bids, datalad]
+    notes: >
+      Discriminator for capability@k — the only built planner reaching the bids doer. A route that
+      reaches datalad alone scores 0.5, not 0.
+
+  # ------------------------------------------------------------ 1. initialize
+  - id: project-new
+    prompt: >
+      I'm starting a new imaging study. Set me up somewhere sensible to work with the data organized
+      the way the field expects and a pinned environment.
+    expected_skill: project/new-project
+    expected_delegates_to: [datalad]
+
+  # ---------------------------------------------------------------- 2. curate
+  - id: curate-raw
+    prompt: I have a folder of DICOMs from the scanner. Get them into the standard layout.
+    expected_skill: curate/raw-to-bids
+    expected_delegates_to: [nipoppy, datalad]
+
+  - id: curate-annotate
+    prompt: >
+      Our participants table has columns nobody outside the lab would understand. Make the dataset
+      self-describing, with standard terms where they exist.
+    expected_skill: curate/annotate
+    expected_delegates_to: [datalad]
+    notes: >
+      Expected delegation is [datalad] TODAY. add-annotate-capability changes this to
+      [annotate, datalad] — update this task in that change, not before.
+
+  # --------------------------------------------------------------- 3. process
+  - id: process-pipeline
+    prompt: Run fMRIPrep over the participants we've curated so far.
+    expected_skill: process/run-pipeline
+    expected_delegates_to: [nipoppy, datalad]
+
+  # --------------------------------------------------------------- 3. analyze
+  - id: analyze-propose
+    prompt: >
+      I want to look at whether hippocampal volume differs between the two groups. Nothing formal
+      yet — I just want to see it.
+    expected_skill: analyze/propose-comparison
+    expected_delegates_to: [datalad]
+    rigor: exploratory
+
+  - id: analyze-run
+    prompt: >
+      I've written the script for that comparison. Execute it so we can reproduce exactly this
+      result later.
+    expected_skill: analyze/run-comparison
+    expected_delegates_to: [containers, datalad]
+    notes: >
+      Discriminator — the only built planner reaching the containers doer. "Reproduce exactly" is
+      the cue for a pinned environment rather than a bare run.
+
+  - id: analyze-product
+    prompt: These three analyses belong together as one paper. Track them as a unit.
+    expected_skill: analyze/manage-product
+    expected_delegates_to: [datalad]
+
+  - id: analyze-checkpoint
+    prompt: I'm done for the day — make sure nothing is left uncommitted.
+    expected_skill: analyze/checkpoint
+    expected_delegates_to: [datalad]
+
+  # ---------------------------------------------------------------- 8. manage
+  - id: project-status
+    prompt: Write me something I can send my program officer summarizing where the project is.
+    expected_skill: project/status-report
+    expected_delegates_to: [datalad]
+
+  - id: project-people
+    prompt: >
+      Add our new postdoc to the project — she did the preprocessing and wrote the first draft of
+      the methods.
+    expected_skill: project/people
+    expected_delegates_to: [datalad]
+
+  - id: project-decision
+    prompt: >
+      Record that we went with the 6mm smoothing kernel rather than 8mm, and why, so nobody
+      relitigates it in six months.
+    expected_skill: project/log-decision
+    expected_delegates_to: [datalad]
+
+  # ----------------------------------------------------------- 6-8. disseminate
+  - id: disseminate-publish
+    prompt: >
+      Push this somewhere a collaborator outside the lab could actually pull the data down from, and
+      confirm it works from their side.
+    expected_skill: disseminate/publish
+    expected_delegates_to: [datalad]
+
+  - id: disseminate-release
+    prompt: Cut version 1.0 of the dataset so the paper can cite a fixed version of it.
+    expected_skill: disseminate/dataset-release
+    expected_delegates_to: [datalad, archive]
+    notes: >
+      Discriminator — the only built planner reaching the archive doer. A model that treats this as a
+      plain checkpoint scores 0.5.
+
+  - id: disseminate-link
+    prompt: >
+      The dataset, the code, and the paper are all separate now. Connect them so someone landing on
+      any one of them can find the others.
+    expected_skill: disseminate/link-outputs
+    expected_delegates_to: [datalad]
+
+  - id: disseminate-manuscript
+    prompt: >
+      Start the write-up for this product. Fill in the methods and data availability from what we
+      actually did — I'll write the argument.
+    expected_skill: disseminate/draft-manuscript
+    expected_delegates_to: [datalad]
+
+  - id: disseminate-checklist
+    prompt: The journal wants a completed reporting checklist with the submission. Sort that out.
+    expected_skill: disseminate/reporting-checklist
+    expected_delegates_to: [datalad]
+
+  - id: disseminate-article
+    prompt: >
+      I want a version of the paper where the figures rebuild themselves from the data rather than
+      being pasted in.
+    expected_skill: disseminate/executable-article
+    expected_delegates_to: [datalad]
+
+  - id: disseminate-bundle
+    prompt: >
+      Package our methods so someone else's assistant could call them on their own data without
+      reading our code.
+    expected_skill: disseminate/agent-bundle
+    expected_delegates_to: [datalad]
+
+  - id: disseminate-liab
+    prompt: >
+      We can't put this data on someone else's cloud. Set up serving it from hardware we control.
+    expected_skill: disseminate/liab-deploy
+    expected_delegates_to: [datalad]
+
+  # ------------------------------------------------- near-miss discriminators
+  # Pairs that a keyword-matching model will confuse. These carry most of the
+  # signal in the suite; the one-per-skill tasks above mostly establish coverage.
+
+  - id: nearmiss-checkpoint-vs-release
+    prompt: Save where we are so we can come back to exactly this state.
+    expected_skill: analyze/checkpoint
+    expected_delegates_to: [datalad]
+    notes: >
+      "Exactly this state" reads like a version tag, but nothing here is being published or cited.
+      Routing to dataset-release is the expected failure.
+
+  - id: nearmiss-publish-vs-release
+    prompt: Make the data available to reviewers with something they can cite in the paper.
+    expected_skill: disseminate/dataset-release
+    expected_delegates_to: [datalad, archive]
+    notes: >
+      "Available" cues publish; "cite" requires a fixed, identified version. Release is correct and
+      publish is the expected failure.
+
+  - id: nearmiss-annotate-vs-qc
+    prompt: The sidecars are incomplete — sort out the metadata.
+    expected_skill: curate/annotate
+    expected_delegates_to: [datalad]
+    notes: >
+      qc-review would *report* incomplete sidecars; annotate fixes them. A read-only route here is
+      the expected failure.
+
+  - id: nearmiss-propose-vs-prereg
+    prompt: >
+      Set up the group comparison we described in the grant. It has to be defensible as confirmatory.
+    expected_skill: govern/preregister
+    expected_delegates_to: [datalad]
+    rigor: confirmatory
+    notes: >
+      Both ends of the rigor spectrum are reachable from "set up a comparison". "Defensible as
+      confirmatory" requires freezing the spec first; routing to propose-comparison is the expected
+      failure.
+
+  - id: nearmiss-status-vs-coordinator
+    prompt: Catch me up on this project.
+    expected_skill: project/status-report
+    expected_delegates_to: [datalad]
+    notes: >
+      Genuinely ambiguous — the coordinator agent claims these words too, and it is an agent rather
+      than a planner. Included as a known-ambiguous item; report it separately rather than folding
+      it into route@1.

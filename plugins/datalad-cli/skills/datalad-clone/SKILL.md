@@ -54,8 +54,14 @@ a subdataset inside an existing DataLad dataset (YODA-style nested layout).
      datalad clone -d . <source> <dest>
      ```
    When cloning on the same filesystem (e.g., HPC scratch → project directory),
-   `--reckless=shared-local` skips the safety copy and is substantially faster. Only use
-   on trusted local filesystems.
+   `--reckless=auto` hard-links annexed content between the clones instead of copying it,
+   which is substantially faster and consumes no extra space. The clone is marked
+   untrusted, and because the content is hard-linked, modifying a file in place in either
+   clone alters the other's annex content. Only use on trusted local filesystems.
+   (`--reckless=ephemeral` symlinks to the origin's annex instead, for when hard-links are
+   unavailable or inodes are scarce. `--reckless=shared-<mode>` is a different thing
+   entirely — it sets multi-user permissions, where `<mode>` is a `git init --shared=`
+   value such as `group` or `all`.)
    Always show the full command before executing.
 
 5. **Execute** — run the command. Report the installed path and the commit SHA recorded.

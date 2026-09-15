@@ -1,0 +1,71 @@
+# Python toolchain for data-science-harness.
+#
+# SCOPE: this pins the tooling that CHECKS and BUILDS this repository. It is not a dependency of
+# the harness content — skills and agents are plain Markdown, and bin/install.sh is a shell file
+# copier. A user installing plugins needs none of this.
+#
+# STAMPED P.2/P.3 (docs/stamped.md) require computational environments to be explicitly specified
+# and version controlled. This repository asks that of its users; it should hold itself to it.
+#
+#   uv sync --group dev     # the four check scripts
+#   uv sync --group e2e     # adds DataLad for tests/e2e-smoke.sh
+#
+# Sibling manifests, each owning a different toolchain:
+#   package.json      Node CLIs — openspec (spec validation), mystmd (paper build)
+#   environment.yml   the end-to-end stack — DataLad, git-annex, datalad-container
+
+[project]
+name = "ds-harness"
+version = "0.0.0"
+description = "Harness-agnostic AI assistant configurations for academic data science work"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+authors = [{ name = "Brent McPherson" }]
+keywords = ["reproducibility", "provenance", "datalad", "bids", "research-data-management"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering",
+]
+
+# Intentionally empty. The repository is not yet an installable package — the checks under tests/
+# and schemas/ are standalone scripts, and bin/install.sh has no Python dependency at all.
+# This is reserved for the planned `ds-harness` CLI (see the README's "Future CLI" section), so
+# that when it exists it does not need a second manifest.
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/bcmcpher/data-science-harness"
+Repository = "https://github.com/bcmcpher/data-science-harness"
+
+# PEP 735 dependency groups. These are development tooling, not package extras: they are what the
+# repository's own checks need, and they must not become install-time requirements of ds-harness.
+[dependency-groups]
+
+# Everything needed to run the four check scripts:
+#   tests/lint-plugins.py           structural lint over plugins/ and .claude-plugin/
+#   tests/lint-plugins-selftest.py  meta-test that the lint still catches injected drift
+#   tests/check-bench-fixtures.py   structural check over bench/ evaluation fixtures
+#   schemas/validate-ledger.py      project.yaml against schemas/project.schema.json
+# Each exits 2 when its dependency is absent, so they degrade to a skip rather than a failure —
+# but CI installs from here, where a 2 means the environment is wrong.
+dev = [
+    "pyyaml>=6.0",
+    "jsonschema>=4.20",
+]
+
+# tests/e2e-smoke.sh additionally needs DataLad. git-annex and a container runtime are system
+# packages outside pip's reach — see environment.yml, which is the practical route to all three.
+e2e = [
+    { include-group = "dev" },
+    "datalad>=1.0",
+]
+
+[tool.uv]
+# There is no package to build yet; this manifest exists for its dependency groups and as the
+# seed for ds-harness. Drop this when [project.dependencies] is populated and a build backend
+# is added.
+package = false

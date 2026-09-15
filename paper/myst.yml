@@ -1,0 +1,59 @@
+# MyST project for the data-science-harness paper.
+#
+# Build:  npm install -g mystmd  &&  cd paper && myst build --html
+#
+# The bibliography is referenced, not copied. docs/references/references.bib is the single
+# citation source of truth; adding a source there makes it citable here with no second edit.
+
+version: 1
+
+project:
+  id: data-science-harness-paper
+  title: >
+    A lifecycle harness for governable, re-executable research products
+  # TODO: title is a placeholder. Settle it after the argument in 01-intro.md is stable.
+  description: >
+    Describes the data-science-harness: a harness-agnostic set of AI-assistant configurations that
+    make provenance, administrative record-keeping, and living-compendium export the by-product of
+    ordinary academic data-science work rather than a step applied at the end.
+  keywords:
+    - reproducibility
+    - provenance
+    - research data management
+    - agentic AI
+    - neuroimaging
+    - DataLad
+    - STAMPED
+
+  authors:
+    - name: Brent McPherson
+      orcid: 0000-0001-8378-8136
+      email: bcmcpher@gmail.com    # TODO: confirm the right corresponding address for submission
+      corresponding: true
+      roles:
+        - Conceptualization
+        - Software
+        - Writing – original draft
+  # TODO: author list is incomplete. The work began at an OHBM hackathon; add collaborators with
+  # ORCID iDs and CRediT roles before circulating. Once project/people is used on this repo's own
+  # ledger, this list should be generated from contributors[] rather than maintained by hand.
+
+  bibliography:
+    - ../docs/references/references.bib
+
+  license:
+    content: CC-BY-4.0
+    code: MIT
+  # Aperture Neuro publishes under CC BY 4.0; matching it now avoids a relicensing step later.
+  # The repository's code is MIT (see LICENSE).
+
+  toc:
+    - file: main.md
+    - file: sections/01-intro.md
+    - file: sections/02-related.md
+    - file: sections/03-architecture.md
+    - file: sections/04-evaluation.md
+    - file: sections/05-discussion.md
+
+site:
+  template: book-theme

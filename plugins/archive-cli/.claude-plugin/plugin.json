@@ -1,0 +1,13 @@
+{
+  "name": "archive-cli",
+  "description": "Archive skill toolbox: one skill per archive backend (OSF, Zenodo, DataCite) plus an offline readiness check, read by the archive doer as reference material. Deposit, DOI minting, and RelatedIdentifier mechanics live here; the never-fabricate and confirm-before-publish rules stay with the doer.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["archive", "doi", "zenodo", "osf", "datacite", "related-identifier", "toolbox"],
+  "skills": [
+    "./skills/osf",
+    "./skills/zenodo",
+    "./skills/datacite"
+  ]
+}

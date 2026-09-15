@@ -1,10 +1,14 @@
 # data-science-harness
 
-A community-driven, harness-agnostic collection of AI assistant configurations for academic data science work — skills, agents, commands, hooks, MCP configs, and planning templates that work across Claude Code, Cursor, GitHub Copilot, Windsurf, OpenCode, and Gemini CLI.
+A community-driven, harness-agnostic collection of AI assistant configurations for academic data science work — skills, agents, commands, hooks, MCP configs, and planning templates. The content is harness-neutral Markdown; `bin/install.sh` installs to **Claude Code and OpenCode today**, and Cursor, GitHub Copilot, Windsurf and Gemini CLI are the harnesses the format is designed to reach next (see [Install](#install)).
+
+> **Status:** the workflow plane is built, the capability plane is uneven — `datalad` has a 19-skill toolbox and `archive` a 3-skill one, while `bids` and `containers` have none — and the [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
 
 ---
 
 ## What this is
+
+**Governance should be a by-product of doing the work.** Assistants now execute analyses faster than the surrounding record can be maintained by hand, and anything that requires a separate act of discipline gets skipped under deadline. So the harness routes every computation and every administrative change through one provenance chain — the record is produced by doing the work, not by remembering to. [**Why this exists**](docs/motivation.md) makes the full argument: the problem, who the work is for, what it claims, how you would know, and what is not built.
 
 Most AI coding assistant configurations are designed for software products: ship a package, cut a release, deploy a service. Academic data science has a different end goal — **publish a research product**. But a research product is no longer just a static PDF or a frozen dataset. This project treats it as a **living research compendium**:
 
@@ -20,11 +24,11 @@ This project generalizes the best patterns from software development tooling for
 1. **STAMPED by default** — every research object is built toward the [STAMPED principles](docs/stamped.md) (Self-containment, Tracking, Actionability, Modularity, Portability, Ephemerality, Distributability). Tracking runs through DataLad, so the full chain from raw data to published result — *and every administrative change* — is recorded automatically.
 2. **External standards as first-class citizens** — STAMPED, BIDS, Neurobagel, SNOMED, OSF, Zenodo, NeuroLibre, Lab-in-a-Box, ORCID, CRediT, and reporting guidelines are integrated into the normal workflow, not bolted on at the end
 3. **Research products are living** — the default export re-executes (NeuroLibre), is agent-callable (Paper2Agent / MCP), and is self-hostable (Lab-in-a-Box), not a one-off artifact
-4. **Administration is first-class, not an afterthought** — funding, ethics, data-management plans, deadlines, people, and credit are tracked alongside the science, with the same provenance discipline
+4. **Administration is first-class** — funding, ethics, data-management plans, deadlines, people, and credit are tracked alongside the science, with the same provenance discipline. This is what the by-product commitment above delivers: administration stops being the part reconstructed after the fact
 
 **Two planes of configuration.** The content separates cleanly into a **capability plane** (thin wrappers over the technical tools — DataLad, Nipoppy, BIDS, containers, publishing, annotation) and a **workflow plane** (tool-agnostic research process that *orchestrates* those capabilities). This separation is STAMPED **Modularity** applied to the harness itself — and it is what makes the pieces recombine cleanly (see [Architecture](#architecture)).
 
-**Target harnesses**: Claude Code, Cursor, GitHub Copilot, Windsurf, OpenCode, Gemini CLI
+**Target harnesses**: Claude Code and OpenCode (installable today via `bin/install.sh`); Cursor, GitHub Copilot, Windsurf and Gemini CLI (designed for, not yet exercised — the content layer is harness-neutral, so a manual copy works anywhere)
 
 **Target workflows**: data analysis, experiment design, literature review, reproducibility, **project governance & compliance**, **administrative tracking & reporting**, **dissemination & living publications**, long-term planning
 
@@ -106,11 +110,12 @@ Each layer is independently useful:
 
 | Layer | Format | Who needs it |
 |-------|--------|-------------|
-| **1. Content** (source of truth) | Universal SKILL.md + `plugin.yaml` | Everyone — contributors only write Markdown |
-| **2. Installer** (convenience) | Python CLI (`ds-harness`) | Users who want automated multi-harness install |
-| **3. Manual fallback** | `bin/install.sh` + per-harness docs | Users in locked-down environments |
+| **1. Content** (source of truth) | Universal SKILL.md + `.claude-plugin/plugin.json` | Everyone — contributors only write Markdown |
+| **2. Installer** (current convenience) | `bin/install.sh` | Users who want automated OpenCode / Claude Code file installs without extra dependencies |
+| **3. Package CLI** (planned) | Python CLI (`ds-harness`) | Users who want validation, update/remove state, and broader multi-harness translation |
+| **4. Manual fallback** | Per-harness docs + direct copies | Users in locked-down environments |
 
-The content layer is plain Markdown + YAML. The Python package is just an installer/translator — you can clone the repo and manually copy files to any harness without it.
+The content layer is plain Markdown + YAML. The shell installer is just a copier/translator for the supported on-disk layouts — you can clone the repo and manually copy files to any harness without it. The planned Python package adds validation and richer lifecycle commands, but is not required for install.
 
 ### Why Python over Node
 
@@ -152,6 +157,21 @@ category: datalad
 ---
 ```
 
+An agent may pin the model it runs on with an optional `model:`. Without it, the agent runs on the
+harness default. The value must be one of the bare aliases `haiku`, `sonnet`, `opus` or `fable`, and
+the lint checks it. A provider-prefixed value such as `anthropic/claude-haiku-4-5` is rejected,
+because producing target-specific forms is the installer's job. Only read-only agents (`bids-doer`,
+`coordinator`) may pin a model. A doer that can change a dataset or publish runs on the session
+default.
+
+```yaml
+---
+name: bids-doer
+tools: Read, Bash, Grep, Glob
+model: haiku               # read-only: validates and reports
+---
+```
+
 **Harness translation map:**
 
 | Universal field | Claude Code | Cursor (.mdc) | Copilot (.instructions.md) | Windsurf |
@@ -162,84 +182,134 @@ category: datalad
 | `when.always` | (user-invocable) | `alwaysApply:` | always-loaded | global rules |
 | `tools` | `allowed-tools:` | (ignored) | (ignored) | (ignored) |
 | `plane`, `stamped` | (metadata, validated) | (metadata) | (metadata) | (metadata) |
+| `model` (agents) | `model:` as written | — | — | — |
+
+For OpenCode, the installer maps `model:` to `anthropic/claude-haiku-4-5`, `anthropic/claude-sonnet-5`,
+`anthropic/claude-opus-5` or `anthropic/claude-fable-5-1`. These resolve only when OpenCode has the
+Anthropic provider configured. A value with no mapping is stripped, so the agent inherits the invoking
+agent's model rather than failing to load.
 
 ---
 
 ## Plugins
 
-Eleven plugins, split across the two planes. Six **capability** plugins wrap the technical tools; five **workflow** plugins encode the research process and call down into the capabilities.
+**14 plugins**, split across the two planes: 8 **capability** plugins wrap the technical tools, and
+6 **workflow** plugins encode the research process and call down into them.
+
+Tables below separate what is **built** from what is **planned**. Planned entries are kept because
+they carry design intent, but nothing in them exists on disk — the authoritative list of planned
+work is [`openspec/changes/`](openspec/changes), where each item has a proposal and a task list.
+Within the per-plugin skill lists, an unbuilt skill is marked *(planned)*.
 
 ### Capability plugins (technical plane)
 
-| Plugin | Wraps | Core skills (v1) | STAMPED | Distilled from |
-|--------|-------|------------------|---------|----------------|
-| `datalad` | DataLad / git-annex | `datalad-run`, `datalad-container-run`, `datalad-save`, `datalad-status`, `datalad-clone`, `datalad-get`, `datalad-push`, `datalad-log`, `checkpoint` | T, S, M | seed `datalad-cli` (19 → core) |
-| `nipoppy` | Nipoppy | `nipoppy-setup`, `nipoppy-bidsify`, `nipoppy-process`, `nipoppy-track` | S, T, M, A | seed `nipoppy-cli` |
-| `bids` | bids-validator | `bids-validate`, `bids-scaffold` | S, M | my-skills `bids` |
-| `containers` | Apptainer / Docker | `build-container`, `run-container` | P, E | new |
-| `publish` | osfclient / zenodraft / git-annex special remotes | `osf-push`, `zenodo-deposit`, `annex-remote` | D | new |
-| `annotate` | bagel-cli / pynidm / reproschema / SNOMED API | `neurobagel-annotate`, `snomed-lookup`, `nidm-annotate`, `reproschema-annotate` | T | new |
+A capability plugin is either a **doer** (a subagent owning tool mechanics) or a **toolbox** (a
+`*-cli` plugin of one skill per command, which the doer reads as reference material). The
+`datalad` pair is the reference shape the others are growing toward.
 
-Capability plugins are deliberately thin: they hold tool mechanics and the STAMPED primitives, nothing about *why* or *when* you run them. The verbatim seed `datalad-cli` (19 skills) and `nipoppy-cli` are treated as **reference material** and distilled into the trimmed cores above; rarely-used skills (e.g. `datalad-addurls`, `datalad-fsck`) move to an optional "extended" set rather than v1.
+**Built:**
+
+| Plugin | Kind | Wraps | Contents | STAMPED |
+|--------|------|-------|----------|---------|
+| `datalad` | doer | DataLad / git-annex | `datalad-doer` | T, S, M |
+| `datalad-cli` | toolbox | DataLad CLI | 19 skills, one per command | T, S, M |
+| `nipoppy` | doer | Nipoppy | `nipoppy-doer` | S, T, M, A |
+| `nipoppy-cli` | toolbox | Nipoppy CLI | 1 skill covering the whole CLI | S, T, M, A |
+| `bids` | doer | bids-validator | `bids-doer` — no toolbox yet | S, M |
+| `containers` | doer | Apptainer / Docker | `containers-doer` — no toolbox yet | P, E |
+| `archive` | doer | OSF / Zenodo / DataCite | `archive-doer` | D |
+| `archive-cli` | toolbox | OSF / Zenodo / DataCite APIs | 3 skills, one per backend, + offline readiness check | D |
+
+**Planned** — each has an OpenSpec change:
+
+| Plugin | Wraps | Change |
+|--------|-------|--------|
+| `annotate` + `annotate-cli` | bagel-cli / pynidm / reproschema / SNOMED | [`add-annotate-capability`](openspec/changes/add-annotate-capability) |
+| `compendium` + `compendium-cli` | MyST / Jupyter Book / repo2data / MCP | [`add-compendium-capability`](openspec/changes/add-compendium-capability) |
+| `liab` + `liab-cli` | pyinfra / Forgejo | [`add-liab-capability`](openspec/changes/add-liab-capability) |
+| `bids-cli` | bids-validator as a first-class skill | [`deepen-bids-nipoppy`](openspec/changes/deepen-bids-nipoppy) |
+
+The capability plane is the uneven half of the harness. `datalad` has 19 toolbox skills and
+`archive` has 3; `bids` and `containers` have none, so a planner above them can express what should
+happen and can only actually do the parts a toolbox covers. The archive skills were written against
+the live OSF, Zenodo, and DataCite APIs, but no deposit has yet been run through them against a live
+archive. Closing that is what the changes above are for, and the
+observable signal that one has shipped is a planner's `delegates_to:` growing beyond `[datalad]`.
+
+Capability plugins are deliberately thin: they hold tool mechanics and the STAMPED primitives,
+nothing about *why* or *when* you run them.
 
 **Nipoppy as a cross-stage capability.** If a project adopts [Nipoppy](https://nipoppy.readthedocs.io) as its dataset-management framework, it is more than a one-shot BIDS converter: it provides a standard CLI and config files (`global_config.json`, a manifest) that span **Initialize → Curate → Analyze → QC** — organizing the dataset, converting raw → BIDS, running preprocessing pipelines (fMRIPrep, QSIPrep, …) through containers, and tracking processing status. A project that declares its expected preprocessing pipelines at setup (see `project/new-project`) wires them into the Nipoppy config so each runs through the `datalad` capability's `container-run` with provenance intact.
 
 ### Workflow plugins (conceptual plane)
 
-| Plugin | Lifecycle stages | Skills (orchestrate capabilities) |
-|--------|------------------|-----------------------------------|
-| `govern` | 0 + Manage & Comply lane | `init-ledger`, `dmp`, `ethics-track`, `preregister`, `obligations`, `stamped-assess` |
-| `project` | 1, 8 + Manage & Comply lane | `new-project`, `env-check`, `claude-config`, `log-decision`, `track-milestone`, `people`, `status-report` |
-| `curate` | 2, 5, 7 | `raw-to-bids`, `merge-data`, `gen-data-dict`, `annotate-variables` |
-| `analyze` | 3–5 | `plan-analysis`, `propose-comparison`, `run-comparison`, `gen-report`, `manage-product`, `literature-search` |
-| `disseminate` | 6, 7, 8 | `draft-manuscript`, `reporting-checklist`, `submission-track`, `dataset-release`, `executable-article`, `agent-bundle`, `liab-deploy`, `link-outputs` |
+| Plugin | Lifecycle stages | Built skills |
+|--------|------------------|--------------|
+| `govern` | 0 + Manage & Comply lane | `obligations`, `preregister`, `qc-review` |
+| `project` | 1, 8 + Manage & Comply lane | `new-project`, `log-decision`, `people`, `status-report` |
+| `curate` | 2, 5, 7 | `raw-to-bids`, `annotate` |
+| `analyze` | 3–5 | `propose-comparison`, `run-comparison`, `checkpoint`, `manage-product` |
+| `process` | 2–3 | `run-pipeline` |
+| `disseminate` | 6, 7, 8 | `draft-manuscript`, `reporting-checklist`, `dataset-release`, `publish`, `link-outputs`, `executable-article`, `agent-bundle`, `liab-deploy` |
+
+22 planner skills across the six. The lists below describe each, including the ones not yet built.
 
 **`govern`** — Stand up and maintain the administrative + compliance backbone (stage 0 and the Manage & Comply lane).
-- `init-ledger` — scaffold `project.yaml` (called by / extends `project/new-project`)
-- `dmp` — author/update a Data Management Plan against the RDA DMP Common Standard (maDMP) or a funder template; record obligations into the ledger
-- `ethics-track` — record IRB/IACUC protocol, approval, expiry, and amendments; flag upcoming renewals
+- `obligations` — surface and resolve deadlines, compliance requirements, and confirmatory-comparison commitments recorded in the ledger
 - `preregister` — register the study (OSF Registrations / ClinicalTrials.gov / PROSPERO); record the registration ID into the ledger; used to freeze a **confirmatory comparison**'s spec
-- `stamped-assess` — score a research object against the [STAMPED checklist](docs/stamped.md) (the paper's LinkML schema); **subsumes the earlier compliance-audit + reproducibility-audit** into one graded readout of Self-containment / Tracking / … coverage, including ledger obligations, de-identification, DUA data-scope, and pre-registration adherence
-- References: `references/stamped.md`, `references/madmp-schema.md`, `references/hipaa-deid.md`, `references/clinicaltrials-fields.md`
+- `qc-review` — review a dataset's quality and completeness before it moves downstream
+- `init-ledger` *(planned)* — scaffold `project.yaml` (called by / extends `project/new-project`)
+- `dmp` *(planned)* — author/update a Data Management Plan against the RDA DMP Common Standard (maDMP) or a funder template; record obligations into the ledger
+- `ethics-track` *(planned)* — record IRB/IACUC protocol, approval, expiry, and amendments; flag upcoming renewals
+- `stamped-assess` *(planned)* — score a research object against the [STAMPED checklist](docs/stamped.md) (the paper's LinkML schema); **would subsume compliance-audit + reproducibility-audit** into one graded readout of Self-containment / Tracking / … coverage, including ledger obligations, de-identification, DUA data-scope, and pre-registration adherence
+- References: `references/stamped.md`
 
 **`project`** — Scaffold a new research project **and** run the ongoing Manage & Comply lane.
 - `new-project` — YODA-structured DataLad dataset (via `datalad`), BIDS layout (via `bids`), a basic scientific-Python container (via `containers`), a declared list of expected preprocessing pipelines wired into the Nipoppy config, CLAUDE.md, the project ledger — **and, optionally, self-hosted Lab-in-a-Box infrastructure** (Forgejo git host, HedgeDoc notes, dumpthings metadata) so the project lives on data-sovereign infra from day one
-- `env-check` — verify the executable dependencies declared in each plugin's `requires:` are present
-- `claude-config` — generate CLAUDE.md, settings, MCP stubs
 - `log-decision` — append to a decision / lab-notebook log, then `datalad save`
-- `track-milestone` — add/update milestones & deadlines in the ledger
 - `status-report` — generate a progress / funder-RPPR-style summary from the ledger + `datalad log` + git history
 - `people` — manage collaborators / ORCID / CRediT contributor roles in the ledger
-- `obligations` shares the harness-agnostic reminder core with `govern`. Hook: `obligations-due.sh` (Claude Code `SessionStart`) surfaces obligations due within N days; degrades to the on-demand `obligations` skill on harnesses without hooks. Mirrors the `datalad` checkpoint-hook mechanism.
+- `env-check` *(planned)* — verify the executable dependencies declared in each plugin's `requires:` are present
+- `claude-config` *(planned)* — generate CLAUDE.md, settings, MCP stubs
+- `track-milestone` *(planned)* — add/update milestones & deadlines in the ledger
+- `coordinator` — a read-only orientation **agent**, not a skill: it reports where a project stands so a fresh session can get oriented without reconstructing state by hand
 
-**`curate`** — Get raw data into a standardized, annotated form (calls `nipoppy`, `bids`, `annotate`).
-- `raw-to-bids` — convert raw acquisitions into BIDS (via `nipoppy/nipoppy-bidsify` or `bids/bids-scaffold`), then validate (via `bids/bids-validate`)
-- `merge-data` — combine tabular phenotypic/clinical sources (Agent: `merge-agent`)
-- `gen-data-dict` — generate a data dictionary
-- `annotate-variables` — decide *which* variables to standardize and drive `annotate`'s tool skills (Neurobagel, SNOMED, NIDM, ReproSchema)
+**`curate`** — Get raw data into a standardized, annotated form.
+- `raw-to-bids` — convert raw acquisitions into BIDS (via the `nipoppy` doer), then validate (via the `bids` doer)
+- `annotate` — enrich metadata so the dataset is self-describing: `dataset_description.json`, a `participants.json` data dictionary, BIDS sidecars, and optionally controlled terms once the `annotate` capability exists
+- `deidentify` *(planned)* — remove PHI as a recorded, provenanced step rather than an untracked fixup ([`add-deidentify-skill`](openspec/changes/add-deidentify-skill))
+- `merge-data` *(planned)* — combine tabular phenotypic/clinical sources
+- `gen-data-dict` *(planned)* — generate a data dictionary
 
-**`analyze`** — The comparison/product engine (calls `datalad`, `nipoppy`).
-- `plan-analysis` — guided statistical-test selection with QC checks
+**`process`** — Run established preprocessing pipelines under provenance.
+- `run-pipeline` — execute a preprocessing pipeline (fMRIPrep, QSIPrep, …) through the `nipoppy` and `datalad` doers, so the run is containerized and recorded
+
+**`analyze`** — The comparison/product engine (calls `datalad`, `containers`).
 - `propose-comparison` — create a comparison record; pick the rigor mode (quick query vs pre-registered)
-- `run-comparison` — execute a comparison via `datalad/datalad-run` on its own branch; check confirmatory results against the registered spec
-- `gen-report` — scaffold an analysis report (results tables, QC metrics)
+- `run-comparison` — execute a comparison via the `datalad` doer on its own branch; check confirmatory results against the registered spec
+- `checkpoint` — take a described, clean snapshot of the dataset state
 - `manage-product` — group kept comparisons into a product
-- `literature-search` — *(scope deliberately thin; pending participant feedback)* a lightweight BibTeX-collection helper (PubMed / Semantic Scholar), **not** a synthesis engine; the clearer value is connecting to meta-analytic tooling (NeuroSynth Compose / NiMARE)
+- `plan-analysis` *(planned)* — guided statistical-test selection with QC checks
+- `scaffold-analysis` *(planned)* — emit a runnable, provenance-wrapped script stub for the chosen test
+- `plot` *(planned)* — consistent exploratory and publication figures
+- `gen-report` *(planned)* — scaffold an analysis report (results tables, QC metrics)
+- `literature-search` *(planned)* — *(scope deliberately thin; pending participant feedback)* a lightweight BibTeX-collection helper (PubMed / Semantic Scholar), **not** a synthesis engine; the clearer value is connecting to meta-analytic tooling (NeuroSynth Compose / NiMARE)
 
-**`disseminate`** — Turn the finished, provenanced work into publications and living products (calls `publish`, `datalad`).
+**`disseminate`** — Turn the finished, provenanced work into publications and living products.
 
 *Classic outputs:*
 - `draft-manuscript` — IMRaD scaffold; auto-fill Methods / Data-availability / provenance from `datalad log` + the ledger
 - `reporting-checklist` — apply the right EQUATOR guideline (CONSORT / STROBE / PRISMA / ARRIVE) or, with the neuro pack, COBIDAS
-- `submission-track` — track target journal, submission, revisions, reviewer responses in the ledger
-- `dataset-release` — bump `dataset_description.json`, write a BIDS `CHANGES` entry, `datalad` git tag, optional Zenodo DOI (via `publish`)
+- `dataset-release` — bump `dataset_description.json`, write a BIDS `CHANGES` entry, `datalad` git tag, optional Zenodo DOI (via the `archive` doer)
+- `publish` — push a released product to an archive and record the identifier it returns
+- `submission-track` *(planned)* — track target journal, submission, revisions, reviewer responses in the ledger
 
 *Living research compendium:*
-- `executable-article` — scaffold a **NeuroLibre-style reproducible preprint**: MyST `myst.yml` + Jupyter Book content, a `binder/` environment from the DataLad container digest, and a `repo2data` file pointing at the OSF/DataLad-published dataset; wire figures to regenerate from the provenanced pipeline
-- `agent-bundle` — **Paper2Agent-style**: synthesize an MCP server + parameterized tools from the project's scripts + data dictionary, emitted as the harness's *own* universal `SKILL.md` + `plugin.yaml` + MCP config, with result-reproduction tests. This dogfoods the project's own content format
-- `liab-deploy` — **Lab-in-a-Box-style**: scaffold a `liab-deployments` (pyinfra) config that stands up self-hosted Forgejo + git-annex data serving and publishes the provenanced DataLad dataset via git-annex remotes — a **data-sovereign distribution channel** alongside the cloud-hosted article and agent bundle
+- `executable-article` — scaffold a **NeuroLibre-style reproducible preprint**: MyST `myst.yml` + Jupyter Book content, a `binder/` environment from the DataLad container digest, and a `repo2data` file pointing at the OSF/DataLad-published dataset; wire figures to regenerate from the provenanced pipeline. *Currently delegates only to `datalad` — it can describe the tree and commit it; see [`add-compendium-capability`](openspec/changes/add-compendium-capability).*
+- `agent-bundle` — **Paper2Agent-style**: synthesize an MCP server + parameterized tools from the project's scripts + data dictionary, emitted as the harness's *own* universal `SKILL.md` + `plugin.json` + MCP config, with result-reproduction tests. This dogfoods the project's own content format. *Same status as `executable-article`.*
+- `liab-deploy` — **Lab-in-a-Box-style**: scaffold a `liab-deployments` (pyinfra) config that stands up self-hosted Forgejo + git-annex data serving and publishes the provenanced DataLad dataset via git-annex remotes — a **data-sovereign distribution channel** alongside the cloud-hosted article and agent bundle. *Currently delegates only to `datalad`; see [`add-liab-capability`](openspec/changes/add-liab-capability).*
 - `link-outputs` — cross-link dataset / code / paper / preprint / pre-registration / executable-article / agent-bundle / Lab-in-a-Box DOIs & URLs using DataCite `RelatedIdentifier` relation types; write back to the ledger `products:` and `dataset_description.json`
-- References: `references/equator-guidelines.md`, `references/datacite-relations.md`, `references/cobidas.md` (neuro), `references/neurolibre-structure.md`, `references/paper2agent-bundle.md`, `references/liab-deployments.md`
+- References: `references/equator-guidelines.md`, `references/datacite-relations.md`
 
 ---
 
@@ -248,74 +318,81 @@ Capability plugins are deliberately thin: they hold tool mechanics and the STAMP
 The administrative source of truth is a single machine-actionable file at the dataset root, sibling to `dataset_description.json`, and **`datalad save`-d like any other artifact** — so administrative metadata gets *provenance by default* too: every IRB amendment, DMP revision, milestone change, confirmatory-comparison obligation, or new DOI is a tracked commit. Every workflow skill reads/writes it; it auto-fills reports, drives the obligations/reminder surface, and powers STAMPED assessment. A human-readable `PROJECT.md` is generated *from* it on demand and never hand-edited.
 
 ```yaml
-# project.yaml — administrative ledger (validated against schemas/project.schema.json)
-study:
-  title: "Effect of X on Y in cohort Z"
-  short_name: xyz-study
-  affiliation_ror: https://ror.org/00xxxx
-  start: 2026-01-15
-  end: 2028-01-14
+# project.yaml — the project ledger, as schemas/project.schema.json accepts it today.
+# This block is examples/project.yaml; `python3 schemas/validate-ledger.py examples/project.yaml` passes.
+project:
+  name: demo-study
+  description: "Effect of X on outcome Y in cohort Z"
+  created: 2026-07-10T14:30:00Z
+  dataset_root: .
+  stack: python
 
-funding:
-  - funder_id: https://doi.org/10.13039/100000002   # Crossref Funder Registry (NIH)
-    award_number: R01-XX000000
-    period: { start: 2026-01-15, end: 2028-01-14 }
-    reporting:
-      - { type: RPPR, due: 2026-12-01, status: pending }
+products:
+  # Named deliverables grouped from kept comparisons (analyze/manage-product), released and
+  # cross-linked by disseminate/*. Empty at new-project; populated as the story takes shape.
+  - id: main-paper
+    kind: paper
+    title: "X reduces Y in cohort Z"
+    status: in-progress
+    comparisons: [cmp/group-diff-y]
+    outputs: [derivatives/cmp-group-diff-y/]
+    dois: []
+    relations:
+      - { relation: IsSupplementedBy, target: data-release }
+  - id: data-release
+    kind: dataset
+    title: "Cohort Z curated BIDS dataset"
+    status: planned
+    comparisons: []
+    outputs: [.]
+    dois: []
+    relations: []
 
-ethics:
-  - body: IRB
-    protocol_id: "2025-12345"
-    approved: 2025-11-01
-    expires: 2026-11-01          # → drives a renewal obligation
-    status: approved
-    amendments: []
+obligations:
+  # Manage & Comply commitments (govern/*). Resolved by flipping status, never by deletion.
+  - id: prereg-h1
+    kind: preregistration
+    description: "Primary hypothesis (group difference in Y) frozen before data lock"
+    due: 2026-09-01
+    status: pending
+    ref: https://osf.io/xxxxx
 
-agreements:                       # DUAs / MTAs
-  - { type: DUA, party: "Site B", signed: 2026-01-10, expires: 2028-01-10, data_scope: "de-identified imaging" }
+contributors:
+  # People + CRediT credit (project/people); mirrored to dataset_description.json Authors.
+  - name: Ada Researcher
+    orcid: https://orcid.org/0000-0002-1825-0097
+    affiliation_ror: https://ror.org/00xxxxx
+    roles: [Conceptualization, Formal analysis, Writing – original draft]
 
-dmp:
-  standard: RDA-maDMP
-  location: docs/dmp.md
-  version: "1.2"
-  obligations:
-    - { req: "Deposit data within 6 months of collection", due: 2026-09-01, status: pending }
+log:
+  # Append-only. Each entry: { ts, op, stage, note, branch? }.
+  # Never rewrite or reorder prior entries — corrections are new entries.
+  - { ts: 2026-07-10T14:30:00Z, op: new-project, stage: initialize,
+      note: "scaffolded YODA+BIDS dataset + container recipe", branch: main }
 
-registration:
-  - { platform: OSF, id: ab12c, url: https://osf.io/ab12c, type: prereg }
+  - { ts: 2026-07-10T15:05:00Z, op: propose-comparison, stage: analyze,
+      note: "cmp: group difference in outcome Y (exploratory quick query)", branch: cmp/group-diff-y }
 
-people:
-  - { name: "B. McPherson", orcid: 0000-0000-0000-0000, roles: [Conceptualization, Software], affiliation_ror: https://ror.org/00xxxx }
+  - { ts: 2026-07-10T15:40:00Z, op: run-comparison, stage: analyze,
+      note: "container-run stats.py; recorded commit a1b2c3d; outputs derivatives/cmp-group-diff-y/",
+      branch: cmp/group-diff-y }
 
-milestones:
-  - { name: "Data collection complete", due: 2026-06-30, status: in_progress, deliverable: "raw BIDS dataset" }
+  - { ts: 2026-07-10T16:00:00Z, op: checkpoint, stage: analyze,
+      note: "datalad save end-of-session; decision log updated", branch: cmp/group-diff-y }
 
-comparisons:                      # ONLY confirmatory (pre-registered) or promoted comparisons
-  - { id: cmp-primary-01, what: "group diff in outcome Y", rigor: confirmatory,
-      prereg_id: ab12c, status: registered, product: paper-main, branch: cmp/primary-01 }
-  # exploratory quick queries are NOT listed here — they live only as DataLad branches
-  # until promoted into a product.
-
-products:                         # cross-linked, DOI-bearing outputs
-  - { type: dataset,            doi: 10.xxxx/dataset, status: published, relation: IsSourceOf }
-  - { type: paper,              doi: 10.xxxx/paper,   status: submitted, relation: IsDocumentedBy }
-  - { type: executable-article, url: https://neurolibre.org/..., status: planned, relation: IsSupplementTo }
-  - { type: agent-bundle,       doi: 10.xxxx/agent,   status: planned, relation: IsDerivedFrom }
-  - { type: liab,               url: https://data.mylab.org/xyz,   status: planned, relation: IsVariantFormOf }
-
-infrastructure:                   # optional — a Lab-in-a-Box deployment
-  liab:
-    host: mylab.org
-    services: [forgejo, gitannex_staticwww, hedgedoc, dumpthings]
-    deployment: liab-deployments
-
-obligations:                      # explicit + derived (from ethics/dmp/funder/milestones/comparisons)
-  - { what: "Renew IRB protocol 2025-12345",       due: 2026-11-01, source: ethics,     status: pending }
-  - { what: "Submit RPPR",                          due: 2026-12-01, source: funder,     status: pending }
-  - { what: "Complete pre-registered comparison cmp-primary-01", source: comparison,     status: pending }
+  - { ts: 2026-07-10T16:30:00Z, op: manage-product, stage: analyze,
+      note: "grouped cmp/group-diff-y into product main-paper", branch: main }
 ```
 
-The ledger ships with a JSON Schema (`schemas/project.schema.json`) so `ds-harness` and editors can validate it. All sections are optional and additive — a project that only needs milestones and people can ignore the rest. **Confirmatory comparisons are the only ones that enter the ledger** (mirrored into `obligations:` as work "to be completed"); exploratory quick queries stay branch-only until promoted into a product.
+**The schema is strict and small on purpose.** `additionalProperties: false` everywhere, so a typo
+is an error rather than a silently ignored key, and it accepts exactly five top-level sections:
+`project`, `products`, `obligations`, `contributors`, `log`. The richer shape this README used to
+show — `study`, `funding`, `ethics`, `agreements`, `dmp`, `registration`, `people`, `milestones`,
+`comparisons`, `infrastructure` — is **design intent, not the current schema**; a ledger written that
+way fails validation. The schema grows one section at a time, in the same change that introduces the
+skill which writes to it.
+
+The ledger ships with a JSON Schema (`schemas/project.schema.json`) so editors and CI can validate it; `schemas/validate-ledger.py` is the checker. Only `project` and `log` are required, the rest are additive — a project that only needs milestones and people can ignore the rest. **Confirmatory comparisons are the only ones that enter the ledger** (mirrored into `obligations:` as work "to be completed"); exploratory quick queries stay branch-only until promoted into a product.
 
 ---
 
@@ -327,7 +404,7 @@ Stage 8 produces a **living research compendium**: four coupled artifacts, all g
 |----------|-----------|----------------|------------------|
 | **Provenanced dataset** | Versioned, citable data + analysis record | DataLad + BIDS, pushed via `publish` | OSF / Zenodo |
 | **Executable article** | A reproducible preprint that re-runs its own figures/results | `disseminate/executable-article` — MyST/Jupyter Book + `binder/` env (from the DataLad container digest) + `repo2data` pointing at the published dataset | NeuroLibre (MyST, Jupyter Book, BinderHub, repo2data) |
-| **Agent bundle** | An MCP server exposing the work's methods as callable, tested tools | `disseminate/agent-bundle` — tools synthesized from the project's scripts + data dictionary, emitted as the harness's own `SKILL.md` + `plugin.yaml` + MCP config | Paper2Agent pattern + Model Context Protocol |
+| **Agent bundle** | An MCP server exposing the work's methods as callable, tested tools | `disseminate/agent-bundle` — tools synthesized from the project's scripts + data dictionary, emitted as the harness's own `SKILL.md` + `plugin.json` + MCP config | Paper2Agent pattern + Model Context Protocol |
 | **Self-hosted deployment** | A data-sovereign home serving the dataset + lab services | `disseminate/liab-deploy` — a `liab-deployments` (pyinfra) config that stands up Forgejo + git-annex data serving and publishes the DataLad dataset via git-annex remotes | Lab-in-a-Box (pyinfra, Podman, Forgejo, git-annex) |
 
 Why this fits the architecture cleanly:
@@ -343,111 +420,62 @@ Why this fits the architecture cleanly:
 
 ```
 data-science-harness/
-├── pyproject.toml                    # Python package: ds-harness CLI
 ├── README.md
-├── CLAUDE.md                         # Claude Code-specific contributor guidance
-├── harness.yaml                      # Root collection manifest (groups plugins by plane)
+├── LICENSE                           # MIT
+├── pyproject.toml / uv.lock          # Python toolchain for the check scripts
+├── package.json / package-lock.json  # Node toolchain — openspec, mystmd
+├── environment.yml                   # conda env for the end-to-end stack
+├── .nvmrc
+├── bin/
+│   └── install.sh                    # OpenCode / Claude Code file installer
+├── .claude-plugin/
+│   └── marketplace.json              # plugin marketplace manifest
 │
 ├── docs/
 │   ├── stamped.md                    # STAMPED principles distillation
-│   └── end-to-end-workflow.md        # Full lifecycle walkthrough
+│   ├── end-to-end-workflow.md        # full lifecycle walkthrough
+│   ├── project-ledger.md             # ledger conventions every planner reuses
+│   ├── evaluation.md                 # evaluation protocol (nothing run yet)
+│   ├── references/                   # motivating literature — references.bib, index, notes
+│   └── writing/                      # manuscript craft reference bundle
 │
-├── resources/
-│   └── Macdonald_STAMPED_2026.pdf    # STAMPED source paper
+├── openspec/
+│   ├── specs/<capability>/spec.md    # requirements as they stand today
+│   └── changes/<change-id>/          # proposed work; archive/ holds merged changes
+│
+├── paper/                            # the manuscript, as a MyST project
+│   ├── myst.yml
+│   └── sections/
+│
+├── bench/                            # evaluation fixtures — probes, tasks, rubrics
+│
+├── resources/                        # source PDFs (git-ignored)
 │
 ├── schemas/
-│   └── project.schema.json           # JSON Schema for the project ledger
+│   ├── project.schema.json           # JSON Schema for the project ledger
+│   └── validate-ledger.py            # the validator
 │
 ├── examples/
-│   └── project.yaml                  # Worked ledger sample (used by skills/hooks/tests)
+│   └── project.yaml                  # worked ledger sample (used by skills/hooks/tests)
 │
 ├── templates/
-│   ├── skill/SKILL.md                # Universal skill template
-│   ├── executable-article/           # MyST myst.yml + binder/ + repo2data skeleton
-│   ├── agent-bundle/                 # plugin.yaml + SKILL.md + MCP-config skeleton
-│   └── liab/                         # liab-deployments (pyinfra) skeleton
+│   └── skill/SKILL.md                # universal skill template
 │
 ├── plugins/
-│   │  ── capability plane (technical tool wrappers) ──
-│   ├── datalad/                      # T,S,M — provenance & content tracking
-│   │   ├── plugin.yaml               #   plane: capability
-│   │   ├── skills/{datalad-run,datalad-container-run,datalad-save,datalad-status,
-│   │   │           datalad-clone,datalad-get,datalad-push,datalad-log,checkpoint}/SKILL.md
-│   │   ├── hooks/scripts/datalad-checkpoint.sh
-│   │   └── references/               # yoda-layout, annex-content-states
-│   │
-│   ├── nipoppy/                      # S,T,M,A — dataset mgmt + pipeline running
-│   │   ├── plugin.yaml
-│   │   └── skills/{nipoppy-setup,nipoppy-bidsify,nipoppy-process,nipoppy-track}/SKILL.md
-│   │
-│   ├── bids/                         # S,M — BIDS validation & layout
-│   │   ├── plugin.yaml
-│   │   ├── skills/{bids-validate,bids-scaffold}/SKILL.md
-│   │   └── references/               # entities, datatypes, sidecars
-│   │
-│   ├── containers/                   # P,E — environment build/pin/run
-│   │   ├── plugin.yaml
-│   │   └── skills/{build-container,run-container}/SKILL.md
-│   │
-│   ├── publish/                      # D — external distribution mechanics
-│   │   ├── plugin.yaml
-│   │   ├── skills/{osf-push,zenodo-deposit,annex-remote}/SKILL.md
-│   │   └── references/               # osf-workflow, zenodo-workflow
-│   │
-│   ├── annotate/                     # T — variable/assessment standardization tools
-│   │   ├── plugin.yaml
-│   │   ├── skills/{neurobagel-annotate,snomed-lookup,nidm-annotate,reproschema-annotate}/SKILL.md
-│   │   └── references/               # neurobagel-schema, snomed-hierarchy, nidm-schema, reproschema
-│   │
-│   │  ── workflow plane (research process) ──
-│   ├── govern/                       # Stage 0 + Manage & Comply lane
-│   │   ├── plugin.yaml               #   plane: workflow
-│   │   ├── skills/{init-ledger,dmp,ethics-track,preregister,obligations,stamped-assess}/SKILL.md
-│   │   └── references/               # stamped, madmp-schema, hipaa-deid, clinicaltrials-fields
-│   │
-│   ├── project/                      # Stage 1, 8 + Manage & Comply lane
-│   │   ├── plugin.yaml
-│   │   ├── skills/{new-project,env-check,claude-config,log-decision,
-│   │   │           track-milestone,people,status-report}/SKILL.md
-│   │   └── hooks/scripts/obligations-due.sh
-│   │
-│   ├── curate/                       # Stage 2, 5, 7
-│   │   ├── plugin.yaml
-│   │   ├── skills/{raw-to-bids,merge-data,gen-data-dict,annotate-variables}/SKILL.md
-│   │   └── agents/merge-agent/SKILL.md
-│   │
-│   ├── analyze/                      # Stages 3–5 — comparison/product engine
-│   │   ├── plugin.yaml
-│   │   ├── skills/{plan-analysis,propose-comparison,run-comparison,
-│   │   │           gen-report,manage-product,literature-search}/SKILL.md
-│   │   └── references/               # r-patterns, python-patterns, qc-metrics, decision-tree
-│   │
-│   └── disseminate/                  # Stages 6–8 — publications + living products
-│       ├── plugin.yaml
-│       ├── skills/{draft-manuscript,reporting-checklist,submission-track,dataset-release,
-│       │           executable-article,agent-bundle,liab-deploy,link-outputs}/SKILL.md
-│       └── references/               # equator-guidelines, datacite-relations, cobidas,
-│                                     #   neurolibre-structure, paper2agent-bundle, liab-deployments
+│   ├── */.claude-plugin/plugin.json  # plugin manifests used by Claude Code and the installer
+│   ├── */skills/*/SKILL.md           # universal skill definitions
+│   ├── */agents/*.md                 # Claude Code agents / OpenCode subagents
+│   ├── */references/                 # plugin reference material copied with bundles
+│   └── */hooks/                      # optional; only datalad-cli ships one
 │
-├── src/ds_harness/                   # Python CLI (installer only)
-│   ├── cli.py
-│   ├── manifest.py
-│   ├── installer.py
-│   └── adapters/
-│       ├── base.py
-│       ├── claude_code.py            # → ~/.claude/skills/ + plugin.json
-│       ├── cursor.py                 # → .cursor/rules/*.mdc
-│       ├── copilot.py                # → .github/instructions/*.instructions.md
-│       ├── windsurf.py               # → .windsurf/rules/*.md
-│       └── opencode.py               # → TBD
+├── tests/
+│   ├── lint-plugins.py               # structural plugin/skill/agent lint
+│   ├── lint-plugins-selftest.py      # proves the lint still catches injected drift
+│   ├── check-bench-fixtures.py       # structural check over bench/
+│   ├── check-paper.sh                # builds paper/, fails on an unresolved citation
+│   └── e2e-smoke.sh                  # DataLad provenance smoke test
 │
-├── config/                           # Harness-specific global config templates
-│   ├── claude/
-│   ├── cursor/
-│   └── copilot/
-│
-└── bin/
-    └── install.sh                    # Zero-dependency shell fallback
+└── .github/workflows/ci.yml          # structure, specs, paper; e2e on dispatch
 ```
 
 ---
@@ -503,14 +531,16 @@ data-science-harness/
 
 **Standards vs. dependencies.** Most entries in the tables above are *reference-only standards* (STAMPED principles, BIDS conventions, SNOMED / NIDM / Neurobagel schemas, COBIDAS, EQUATOR, DataCite, maDMP, CRediT, ROR, ORCID, …). These need no installation — they live as Markdown in each plugin's `references/` and are baked into skill prompts. Only a smaller set are *executable dependencies* that must actually be installed — and those live almost entirely in the **capability plane**.
 
-**Per-plugin dependency declaration.** Each `plugin.yaml` declares a `requires:` block so dependency requirements stay tracked per module:
+**Per-plugin dependency declaration.** Each plugin's `.claude-plugin/plugin.json` would gain a
+`requires` block, so dependency requirements stay tracked per module. No manifest carries one today:
 
-```yaml
-requires:
-  system:    [git, git-annex, datalad]          # OS / non-language tools
-  python:    [bagel-cli, pynidm, reproschema]   # pip-installable
-  npm:       [bids-validator]                    # Node tools
-  reference: [stamped, bids, snomed-ct]          # no install — references/ only
+```json
+"requires": {
+  "system":    ["git", "git-annex", "datalad"],          // OS / non-language tools
+  "python":    ["bagel-cli", "pynidm", "reproschema"],   // pip-installable
+  "npm":       ["bids-validator"],                       // Node tools
+  "reference": ["stamped", "bids", "snomed-ct"]          // no install — references/ only
+}
 ```
 
 Executable dependencies fall into three tiers:
@@ -523,7 +553,7 @@ Dependencies span pip, npm/Node, and system packages, so `ds-harness` **detects 
 
 **What `ds-harness` does beyond copying files.** Translating and installing the Markdown/YAML content is the package's primary job; on top of that it adds a thin layer of *deterministic* support:
 
-- **Validation** (schema-driven, runs as CI on PRs): `project.yaml`, the `requires:` blocks, plugin.yaml/harness.yaml cross-references, and the universal `SKILL.md` superset frontmatter — including a **plane check** (workflow skills must not declare tool dependencies; capability skills must declare a `stamped:` tag) and cross-harness translation-loss warnings.
+- **Validation** (schema-driven, runs as CI on PRs): `project.yaml`, the `requires` blocks, plugin-manifest and root-manifest cross-references, and the universal `SKILL.md` superset frontmatter — including a **plane check** (workflow skills must not declare tool dependencies; capability skills must declare a `stamped:` tag) and cross-harness translation-loss warnings.
 - **Environment doctor** against the declared `requires:`.
 - **Ledger read/query:** `ds-harness obligations | status | validate` provide deterministic reads that back the `obligations-due` hook and status reports. Ledger *edits* stay with the skills/LLM.
 - **Install-state tracking** for clean `update` / `remove` and drift detection.
@@ -532,61 +562,138 @@ Dependencies span pip, npm/Node, and system packages, so `ds-harness` **detects 
 
 ---
 
-## Plugin Manifest (`plugin.yaml`)
+## Plugin Manifest (`.claude-plugin/plugin.json`)
 
-Human-readable, no tooling required to understand or contribute. A capability plugin declares its `plane`, the STAMPED letters it serves, and its `requires:`:
+Each plugin carries one manifest at `plugins/<name>/.claude-plugin/plugin.json`. It is the
+registration list: it declares the plugin's identity and enumerates the skills and agents that ship
+with it. A skill or agent on disk but absent from the manifest **will not load**, which is a silent
+failure — `tests/lint-plugins.py` checks the relationship in both directions and errors on either
+side of the mismatch.
 
-```yaml
-name: datalad
-plane: capability
-description: DataLad-based Tracking primitives for all analysis steps
-stamped: [T, S, M]
-version: "0.1.0"
-author: { name: bcmcpher, email: bcmcpher@gmail.com }
-license: MIT
-keywords: [datalad, tracking, provenance, reproducibility, YODA]
-requires:
-  system: [git, git-annex, datalad]
-skills:
-  - ./skills/datalad-run
-  - ./skills/datalad-container-run
-  - ./skills/datalad-save
-  - ./skills/checkpoint
-hooks:
-  stop: ./hooks/scripts/datalad-checkpoint.sh
-harnesses: [all]
+A capability plugin providing a doer:
+
+```json
+{
+  "name": "datalad",
+  "description": "DataLad doer (capability plane): the tool subagent that executes all DataLad / git-annex operations with provenance — create datasets, run/container-run commands, save, inspect status/log, push to siblings. Workflow-plane planner skills delegate here instead of calling the CLI directly.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["datalad", "git-annex", "provenance", "reproducibility", "doer", "capability"],
+  "agents": ["./agents/datalad-doer.md"]
+}
 ```
 
-A workflow plugin declares `plane: workflow` and the capability plugins it orchestrates:
+A workflow plugin listing its planner skills:
+
+```json
+{
+  "name": "govern",
+  "description": "Governance planner (workflow plane): the Manage & Comply lane + QC/review. …",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["data-science", "govern", "preregistration", "obligations", "compliance", "workflow"],
+  "skills": [
+    "./skills/preregister",
+    "./skills/obligations",
+    "./skills/qc-review"
+  ]
+}
+```
+
+**The manifest does not carry harness metadata.** `plane`, `stamped` and `delegates_to` live in each
+skill's own frontmatter, not in the manifest, so a skill is self-describing wherever it is installed:
 
 ```yaml
-name: analyze
+---
+name: run-comparison
+description: >
+  Execute a proposed comparison's analysis script with full DataLad provenance, on its branch,
+  inside the project container. Trigger on "run the comparison", …
 plane: workflow
-description: Comparison/product engine — plan, propose, run, and group analyses
-calls: [datalad, nipoppy]           # capability plugins this workflow invokes
-skills:
-  - ./skills/plan-analysis
-  - ./skills/propose-comparison
-  - ./skills/run-comparison
-  - ./skills/gen-report
-  - ./skills/manage-product
-harnesses: [all]
+stamped: [A, T, P, E]
+delegates_to: [containers, datalad]
+---
 ```
 
-The `project` workflow plugin adds a `sessionstart` hook for the obligations reminder:
+That split is deliberate. The manifest is what a harness reads to load files; the frontmatter is what
+the harness-agnostic content says about itself. Putting `plane` in the manifest would mean a skill
+copied out of its plugin no longer knows which plane it belongs to.
 
-```yaml
-hooks:
-  sessionstart: ./hooks/scripts/obligations-due.sh   # surfaces due obligations (Claude Code)
+Every plugin must also appear in the top-level `.claude-plugin/marketplace.json`, or it is not
+installable. The lint checks that too.
+
+A plugin may ship a `hooks/` directory — `datalad-cli` is the only one that currently does.
+
+## Install
+
+The current installer is `bin/install.sh`. It copies the existing Claude Code-compatible plugin content into the target harness's native file layout without changing the source plugins.
+
+It takes `--harness opencode|claude-code` and `--scope project|global`, plus `--target` to override the resolved directory and `--dry-run` to print the copies it would make without touching the filesystem. **With no arguments it installs every plugin for OpenCode at project scope** — OpenCode is the default target, because Claude Code has its own native `claude plugin install` path and OpenCode does not.
+
+The installer is deliberately a small file copier and translator, so someone in a locked-down environment can reproduce what it does by hand.
+
+OpenCode project install:
+
+```bash
+bin/install.sh --harness opencode --scope project
 ```
+
+OpenCode global install:
+
+```bash
+bin/install.sh --harness opencode --scope global
+```
+
+Install selected plugins only:
+
+```bash
+bin/install.sh --harness opencode --scope project project analyze datalad datalad-cli
+```
+
+Preview an install:
+
+```bash
+bin/install.sh --harness opencode --scope project --dry-run
+```
+
+For OpenCode, the installer writes:
+
+| Scope | Skills | Subagents | Plugin bundles / references |
+|-------|--------|-----------|-----------------------------|
+| Project | `.opencode/skills/<name>/SKILL.md` | `.opencode/agents/<name>.md` | `.opencode/dsh/plugins/<plugin>/` |
+| Global | `~/.config/opencode/skills/<name>/SKILL.md` | `~/.config/opencode/agents/<name>.md` | `~/.config/opencode/dsh/plugins/<plugin>/` |
+
+OpenCode also discovers Claude-compatible skill paths such as `.claude/skills/`, but this installer writes to `.opencode/` explicitly so OpenCode installs are easy to inspect and remove. Installed skill and agent copies have prompt-visible reference paths rewritten to the installed bundle location; source files under `plugins/` are not rewritten.
+
+Claude Code still supports its native plugin install path:
+
+```bash
+claude plugin install ./plugins/project
+claude plugin install ./plugins/analyze
+claude plugin install ./plugins/datalad
+```
+
+The shell installer can also copy Claude Code-native skill and agent files for a project or globally:
+
+```bash
+bin/install.sh --harness claude-code --scope project
+bin/install.sh --harness claude-code --scope global project analyze datalad
+```
+
+For Claude Code copy installs, the installer writes `.claude/skills/`, `.claude/agents/`, and `.claude/dsh/plugins/` for project scope, or the matching `~/.claude/` directories for global scope. This does not remove or alter `.claude-plugin/plugin.json`, so existing `claude plugin install ./plugins/<name>` workflows continue to work.
 
 ---
 
-## CLI Usage (`ds-harness`)
+## Future CLI (`ds-harness`)
+
+The planned Python CLI is not currently present in this repository. The intended interface is:
 
 ```bash
 # Install all plugins for a specific harness
 ds-harness install --harness=claude-code
+ds-harness install --harness=opencode
 ds-harness install --harness=cursor --scope=project
 
 # Install only the capability plane, or a single plugin
@@ -605,7 +712,7 @@ ds-harness remove analyze --harness=cursor
 ds-harness validate ./project.yaml
 ```
 
-Install the CLI:
+Once packaged, install the CLI with:
 
 ```bash
 pip install ds-harness
@@ -615,7 +722,12 @@ uv tool install ds-harness
 
 ---
 
-## Root Manifest (`harness.yaml`)
+## Root Manifest (`harness.yaml`) — planned
+
+> **Not built.** There is no `harness.yaml` on disk. What registers the plugin set today is
+> [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json), which `bin/install.sh` reads
+> and `tests/lint-plugins.py` checks every plugin against. The sketch below is the intended shape
+> for a root manifest that also records the plane split and the supported harnesses.
 
 ```yaml
 name: data-science-harness
@@ -670,28 +782,115 @@ This project generalizes and re-partitions the Claude Code-specific plugins in [
 |--------------------|--------------------------------|-------|-------|
 | `stat-analysis` | `analyze` (+ `curate` merge/dict) | workflow | Add universal frontmatter; add comparison engine |
 | `project-init` | `project` | workflow | Data-analysis project type; adds tracking skills + optional LiaB infra |
-| `bids` | `bids` | capability | Validation/scaffold subset; workflow orchestration moves to `curate` |
+| `bids` | `bids` | capability | Validation subset only — the doer is read-only and never modifies the dataset; scaffolding and workflow orchestration move to `curate` |
 | `datalad-cli` | `datalad` | capability | Core subset (run, container-run, save, clone, get, push, log, checkpoint) |
 | `nipoppy-cli` | `nipoppy` | capability | Full CLI wrapper; orchestration moves to `curate`/`analyze` |
 | — | `containers` | capability | New — portability/ephemerality |
-| — | `publish` | capability | New — OSF/Zenodo/annex-remote mechanics |
-| — | `annotate` | capability | New — Neurobagel/SNOMED/NIDM/ReproSchema tool wrappers |
+| — | `disseminate/publish` + `archive` | workflow + capability | New — the planner skill is `disseminate/publish`; OSF/Zenodo/DataCite mechanics live in the `archive` doer |
+| — | `curate/annotate` + `annotate` *(planned)* | workflow + capability | New — the planner skill is `curate/annotate`; the Neurobagel/SNOMED/NIDM/ReproSchema wrappers are a planned capability plugin ([`add-annotate-capability`](openspec/changes/add-annotate-capability)) |
 | — | `govern` | workflow | DMP, ethics, pre-registration, STAMPED assessment |
 | — | `disseminate` | workflow | Manuscript, reporting guidelines, executable article, agent bundle, Lab-in-a-Box |
 
 ---
 
-## Roadmap
+## Developing on this repo
 
-**Phase 1 — Capability plane.** Distill `datalad`, `nipoppy`, `bids` from the seed/reference plugins; author `containers`, `publish`, `annotate`. Universal frontmatter + `plane: capability` + `stamped:` tag + `requires:` on each.
+**Using the harness needs nothing installed.** `bin/install.sh` is a shell file copier and the
+content is plain Markdown — see [Install](#install). The toolchains below are for *checking and
+building this repository*, and each is pinned in a committed manifest, because STAMPED P.2/P.3 ask
+that computational environments be explicitly specified and version controlled and it would be odd
+to ask that of users and not of ourselves.
 
-**Phase 2 — Workflow plane.** `govern` (ledger + `stamped-assess`), `project` (new-project incl. optional Lab-in-a-Box infra), `curate`, `analyze` (comparison engine), `disseminate` (incl. `executable-article`, `agent-bundle`, `liab-deploy`). Workflow skills call capability skills only.
+| Toolchain | Manifest | Locked | Enables |
+|---|---|---|---|
+| Python | `pyproject.toml` | `uv.lock` | the four check scripts |
+| Node | `package.json` | `package-lock.json` | `openspec validate`, the `paper/` build |
+| e2e stack | `environment.yml` | *deliberately not* — see the file | `tests/e2e-smoke.sh` |
 
-**Phase 3 — Ledger & schema.** `project.yaml` + `schemas/project.schema.json` with `comparisons`, `liab`, and `infrastructure`; confirmatory-comparison → obligation derivation; the `obligations-due` hook.
+```bash
+# Python checks
+uv sync --group dev
+uv run python tests/lint-plugins.py --strict        # plugin/skill/agent structure
+uv run python tests/lint-plugins-selftest.py        # meta-test of the lint
+uv run python schemas/validate-ledger.py examples/project.yaml
+uv run python tests/check-bench-fixtures.py         # evaluation fixtures + routing ground truth
 
-**Phase 4 — Python CLI.** `ds-harness` with Claude Code and Cursor adapters first; ledger validation (`ds-harness validate`) and the plane/frontmatter checks.
+# Node CLIs (resolved from node_modules, not globally)
+npm ci
+npm run spec:validate     # openspec validate --all --strict
+npm run paper:check       # build paper/ and fail on any unresolved citation
 
-**Phase 5 — Remaining adapters & release.** Copilot, Windsurf, OpenCode, Gemini CLI; PyPI publish; harden the Lab-in-a-Box deployment recipe; community contribution guidelines.
+# End-to-end provenance smoke test (needs git-annex; apptainer is a system package)
+conda env create -f environment.yml && conda activate ds-harness-e2e
+bash tests/e2e-smoke.sh
+```
+
+Each check exits **2** when its own dependency is absent, so it degrades to a skip rather than a
+failure. [`.github/workflows/ci.yml`](.github/workflows/ci.yml) installs from the manifests and
+treats a 2 as an environment error, since the lock file should have supplied the dependency.
+
+CI checks **structure and specs, not agent behaviour** — see [Evaluating the harness](#evaluating-the-harness).
+
+## Planning & specs — `openspec/`
+
+The forward plan no longer lives in this README. It lives in [`openspec/`](openspec), where each
+proposed change is a validated record rather than a checkbox in a 55 KB file:
+
+- **[`openspec/specs/`](openspec/specs)** — 19 specs describing what the harness *does today*,
+  grounded in the checks that already enforce it (`tests/lint-plugins.py`, `tests/e2e-smoke.sh`,
+  `schemas/project.schema.json`).
+- **[`openspec/changes/`](openspec/changes)** — what we have decided to do next. The former
+  "deepening the capability plane" roadmap is now five open changes: `add-annotate-capability`,
+  `add-compendium-capability`, `add-deidentify-skill`, `add-liab-capability`, and
+  `deepen-bids-nipoppy`.
+- **[`openspec/changes/archive/`](openspec/changes/archive)** — changes that shipped. A change leaves
+  `changes/` only when its tasks are done and its spec delta has been merged into `specs/`, so the
+  open list stays an accurate account of what is *not* built.
+
+```bash
+openspec list            # proposed changes
+openspec list --specs    # current specs
+openspec show <id>       # a change or a spec
+openspec validate --all --strict
+```
+
+[`openspec/README.md`](openspec/README.md) covers the conventions — including the fact that OpenSpec
+calls a spec folder a "capability", which is *not* this repository's "capability plane".
+
+**Where the harness stands.** The workflow plane is complete: 22 planner skills across six workflow
+plugins, each naming concrete ledger fields, log-entry shapes, and delegations. The capability plane
+beneath them is uneven — `datalad` has 19 toolbox skills and `archive` has 3, while `bids` and
+`containers` have none, so most steps can express what should happen but can only actually *do* the
+git-annex and archive parts. Closing that gap is what the changes above are for. The observable signal that one has shipped
+is a planner's `delegates_to:` growing beyond `[datalad]`.
+
+## Evaluating the harness
+
+[`docs/evaluation.md`](docs/evaluation.md) specifies four probes — routing accuracy, provenance
+completeness, end-to-end reproducibility, and cost — with declarative fixtures in
+[`bench/`](bench). **None has been run.** The protocol is written before the capabilities it would
+measure, deliberately.
+
+The paper describing all of this is drafted in [`paper/`](paper) as a MyST project; its motivating
+literature is tracked in [`docs/references/`](docs/references).
+
+## License
+
+Two licences, split by what the file is rather than by what reads it:
+
+| Covers | Licence | SPDX |
+|--------|---------|------|
+| **Content** — `plugins/**/*.md`, `docs/`, `templates/`, `openspec/`, `paper/`, `bench/`, `examples/`, this README | Creative Commons Attribution 4.0 International | `CC-BY-4.0` |
+| **Code** — `bin/`, `tests/`, `schemas/`, the JSON manifests, `.github/`, the dependency manifests | MIT | `MIT` |
+
+See [`LICENSE`](LICENSE), [`LICENSE-CONTENT.md`](LICENSE-CONTENT.md), and
+[`REUSE.toml`](REUSE.toml) for the path-by-path mapping. `paper/myst.yml` declares the same split
+for the manuscript.
+
+A `SKILL.md` is prose that instructs a model. Licensing it as software because a machine consumes it
+would put the boundary in the wrong place — so it is content, and reuse requires attribution.
+STAMPED **D.3** asks that each module carry an explicit licence with a resolvable identifier; this
+is the repository holding itself to the principle it publishes.
 
 ---
 
@@ -702,7 +901,7 @@ Contributions are Markdown-first. To add a new skill:
 1. Decide the **plane**: is this **tool mechanics** (→ a `capability` plugin) or **research process** (→ a `workflow` plugin)? Tool mechanics wrap a single CLI and declare a `stamped:` tag; process logic orchestrates capability skills and must not call a CLI directly.
 2. Pick the right plugin (or propose a new one in an issue)
 3. Copy `templates/skill/SKILL.md`, fill in the universal frontmatter (including `plane`) and instruction body
-4. Add the path to `plugin.yaml`
+4. Add the path to the plugin's `.claude-plugin/plugin.json` (`skills[]` or `agents[]`) — the lint errors if you skip this, because an unregistered skill silently never loads
 5. Open a PR
 
 No Python knowledge required. The adapter layer is maintained by core contributors.

@@ -1,0 +1,44 @@
+# End-to-end toolchain for data-science-harness.
+#
+# tests/e2e-smoke.sh runs the raw DataLad commands the doers would execute and asserts the
+# provenance outcomes at each step. It needs DataLad, git-annex, and (for the container block) an
+# Apptainer/Singularity runtime. git-annex in particular is not reliably pip-installable, which is
+# why this is a conda environment and not another dependency group in pyproject.toml.
+#
+#   conda env create -f environment.yml
+#   conda activate ds-harness-e2e
+#   bash tests/e2e-smoke.sh
+#
+# DELIBERATELY UNLOCKED. conda-lock output is platform-specific, and every block in the smoke test
+# that depends on this stack already self-skips when its tool is absent — so the cost of a floating
+# resolution here is bounded, and the cost of maintaining per-platform lock files for a gated,
+# dispatch-triggered test is not. The Python and Node toolchains ARE locked (uv.lock,
+# package-lock.json); this one is the deliberate exception, not an oversight.
+#
+# APPTAINER IS NOT HERE. It is a system package (`apt install apptainer`, or the Singularity
+# equivalent) and is outside conda's reach. Without it the container-run block skips and the rest of
+# the smoke test still runs. tests/e2e-smoke.sh accepts a prebuilt image via DSH_SIF=/path/to.sif.
+#
+# Sibling manifests, each owning a different toolchain:
+#   pyproject.toml    the four Python check scripts (locked: uv.lock)
+#   package.json      Node CLIs — openspec, mystmd (locked: package-lock.json)
+
+name: ds-harness-e2e
+
+channels:
+  - conda-forge
+  - nodefaults
+
+dependencies:
+  # git-annex must be >= 10.20230126 for the smoke test's assertions to hold; see the
+  # requirements note at the top of tests/e2e-smoke.sh.
+  - python >=3.10
+  - git
+  - git-annex >=10.20230126
+  - datalad >=1.0
+  - datalad-container      # container-run + containers-add; the block skips without it
+
+  # Same versions the Python checks pin in pyproject.toml's `dev` group, so one activated
+  # environment covers a full local run: the four checks and the smoke test.
+  - pyyaml >=6.0
+  - jsonschema >=4.20

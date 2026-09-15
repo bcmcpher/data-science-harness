@@ -21,10 +21,15 @@
 # from the local Docker `hello-world:latest` image (via `docker save` -> docker-archive://,
 # because apptainer 1.1.x speaks too old a Docker API to read the daemon directly).
 #
-# Requirements: git, python3, and a DataLad whose git-annex is >= 10.20230126.
+# Requirements: git (with user.name/user.email set — DataLad needs an identity and `push`
+# fails without one), python3, and a DataLad whose git-annex is >= 10.20230126.
+#
+# Exit codes: 0 = all assertions passed, 1 = a failure, 2 = cannot run here (missing tool or
+# unset git identity). Setup commands go through `step`, which surfaces the failing command
+# and its output; anything unwrapped is caught by an ERR trap that reports the line.
 # Usage: tests/e2e-smoke.sh [workdir]     (workdir defaults to a fresh mktemp dir)
 
-set -euo pipefail
+set -Eeuo pipefail
 
 # ---------------------------------------------------------------------------- helpers
 PASS=0; FAIL=0
@@ -32,12 +37,65 @@ ok()   { printf '  \033[32mPASS\033[0m %s\n' "$1"; PASS=$((PASS+1)); }
 bad()  { printf '  \033[31mFAIL\033[0m %s\n' "$1"; FAIL=$((FAIL+1)); }
 assert()      { if eval "$2"; then ok "$1"; else bad "$1  [check: $2]"; fi; }
 assert_grep() { if grep -qE "$2" "$3" 2>/dev/null; then ok "$1"; else bad "$1  [/$2/ not in $3]"; fi; }
+# The ledger validator exits 2 when pyyaml/jsonschema are absent. That is a skip, not a failure:
+# only the first validation site handled it, so a missing jsonschema (with pyyaml present, which
+# passes the `import yaml` gate on the blocks below) produced a wall of spurious FAILs.
+skip() { printf '  SKIP: %s\n' "$1"; }
+assert_ledger() { if [ "$2" -eq 2 ]; then skip "$1 — ledger validator dependency absent"; else assert "$1" "[ $2 -eq 0 ]"; fi; }
 
 WORKDIR="${1:-$(mktemp -d "${TMPDIR:-/tmp}/dsh-e2e.XXXXXX")}"
 cleanup() { chmod -R u+w "$WORKDIR" 2>/dev/null || true; rm -rf "$WORKDIR"; }
 trap cleanup EXIT
 mkdir -p "$WORKDIR"
 REPO="$(cd "$(dirname "$0")/.." && pwd)"   # repo root, for schemas/ + examples/
+STEP_LOG="$WORKDIR/.step-output"
+
+# `step` wraps a state-building command (as opposed to an assertion). Setup commands used to be
+# written `cmd >/dev/null 2>&1`, which meant a failure under `set -e` killed the script with the
+# log ending at the last PASS and no diagnostic whatsoever — the failure mode that made a real CI
+# failure undiagnosable.
+#
+# Captures stdout AND stderr, not just stderr: DataLad reports failures as result records on
+# stdout, so a failing `datalad push` leaves stderr empty and every useful detail on the stream a
+# naive wrapper throws away. Output is shown only when the command fails, so a passing run stays
+# as quiet as it was before.
+step() {
+  local desc="$1"; shift
+  local rc=0
+  "$@" >"$STEP_LOG" 2>&1 || rc=$?
+  if [ "$rc" -ne 0 ]; then
+    printf '\n  \033[31mABORT\033[0m %s (exit %d)\n' "$desc" "$rc" >&2
+    printf '    command: %s\n' "$*" >&2
+    if [ -s "$STEP_LOG" ]; then
+      printf '    output (last 25 lines):\n' >&2
+      tail -n 25 "$STEP_LOG" | sed 's/^/      /' >&2
+    else
+      printf '    (command produced no output)\n' >&2
+    fi
+    exit 1
+  fi
+}
+
+# Backstop for anything not wrapped in `step` — reports where the script died rather than
+# stopping mid-stream in silence.
+on_err() {
+  local rc=$? line="${1:-?}"
+  printf '\n  \033[31mABORT\033[0m unhandled failure at %s line %s (exit %d)\n' \
+         "$(basename "$0")" "$line" "$rc" >&2
+  printf '    Re-run with: bash -x %s\n' "$0" >&2
+  exit "$rc"
+}
+trap 'on_err $LINENO' ERR
+
+# `rc_of CMD...` runs a command whose EXIT CODE is the thing being asserted, and echoes that code
+# instead of letting `set -e` abort. `cmd; RC=$?` does NOT work under `set -e`: the shell exits on
+# the failing command before the assignment runs, which silently made every exit-2 skip path below
+# unreachable.
+rc_of() {
+  local rc=0
+  "$@" >/dev/null 2>&1 || rc=$?
+  printf '%s' "$rc"
+}
 
 # ---------------------------------------------------------- preflight: tool availability
 command -v datalad >/dev/null || { echo "SKIP: datalad not on PATH"; exit 2; }
@@ -47,14 +105,25 @@ if [ -z "${GA_VER:-}" ] || [ "$GA_VER" -lt 20230126 ]; then
   echo "SKIP: need git-annex >= 10.20230126 for modern DataLad (found: $(git-annex version 2>/dev/null | head -1))"
   exit 2
 fi
-echo "Using $(datalad --version 2>&1 | head -1) / git-annex 10.${GA_VER}"
+if [ -z "$(git config --get user.email || true)" ] || [ -z "$(git config --get user.name || true)" ]; then
+  echo "SKIP: git user.name/user.email are unset. DataLad warns on every invocation without them" >&2
+  echo "      and \`datalad push\` fails, with the failure surfacing far from its cause. Set:" >&2
+  echo "        git config --global user.name  'Your Name'" >&2
+  echo "        git config --global user.email 'you@example.org'" >&2
+  exit 2
+fi
+# stdout only: DataLad writes warnings to stderr, so `2>&1 | head -1` would report a warning as
+# the version string — which is exactly what a runner with no git identity produced.
+DL_VER="$(datalad --version 2>/dev/null | head -1)"
+echo "Using ${DL_VER:-datalad <unknown>} / git-annex 10.${GA_VER}"   # DL_VER already reads "datalad X.Y.Z"
 echo "Workdir: $WORKDIR"; echo
 
 DS="$WORKDIR/demo-study"
 
 # =========================================================== M2: new-project
 echo "## new-project (create YODA+text2git dataset, BIDS scaffold, project.yaml)"
-datalad create -c text2git -c yoda --description "e2e demo study" "$DS" >/dev/null
+step "create YODA+text2git dataset" \
+  datalad create -c text2git -c yoda --description "e2e demo study" "$DS"
 cd "$DS"
 
 cat > dataset_description.json <<'JSON'
@@ -91,7 +160,7 @@ log:
   - { ts: 2026-07-10T14:30:00Z, op: new-project, stage: initialize, note: "scaffold", branch: main }
 YAML
 
-datalad save -m "scaffold YODA+BIDS project demo-study" >/dev/null
+step "save scaffold" datalad save -m "scaffold YODA+BIDS project demo-study"
 
 assert "dataset created (.datalad/ present)"          '[ -d .datalad ]'
 assert "project.yaml is a real writable git file (not an annex symlink)" \
@@ -101,31 +170,32 @@ git log --oneline > "$WORKDIR/log1.txt"
 assert_grep "scaffold commit recorded" "scaffold YODA\+BIDS" "$WORKDIR/log1.txt"
 
 # ledger schema validation (Phase 1) — gated on pyyaml + jsonschema
-python3 "$REPO/schemas/validate-ledger.py" project.yaml > "$WORKDIR/ledger.txt" 2>&1; LRC=$?
+LRC=0; python3 "$REPO/schemas/validate-ledger.py" project.yaml > "$WORKDIR/ledger.txt" 2>&1 || LRC=$?
 if [ "$LRC" -eq 2 ]; then
   echo "  SKIP: ledger schema validation — $(cat "$WORKDIR/ledger.txt")"
 else
-  assert "scaffolded project.yaml validates against schemas/project.schema.json" "[ $LRC -eq 0 ]"
-  python3 "$REPO/schemas/validate-ledger.py" "$REPO/examples/project.yaml" >/dev/null 2>&1; ERC=$?
-  assert "examples/project.yaml validates against schemas/project.schema.json" "[ $ERC -eq 0 ]"
+  assert_ledger "scaffolded project.yaml validates against schemas/project.schema.json" "$LRC"
+  ERC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" "$REPO/examples/project.yaml")
+  assert_ledger "examples/project.yaml validates against schemas/project.schema.json" "$ERC"
 fi
 
 # =========================================================== M3: propose-comparison
 echo; echo "## propose-comparison (named cmp/* branch + log entry)"
-git checkout -q -b cmp/group-diff-y
+step "branch cmp/group-diff-y" git checkout -q -b cmp/group-diff-y
 printf '  - { ts: 2026-07-10T15:05:00Z, op: propose-comparison, stage: analyze, note: "group diff", branch: cmp/group-diff-y }\n' >> project.yaml
-datalad save -m "propose-comparison: cmp/group-diff-y" >/dev/null
+step "save propose-comparison" datalad save -m "propose-comparison: cmp/group-diff-y"
 assert "on comparison branch cmp/group-diff-y" '[ "$(git rev-parse --abbrev-ref HEAD)" = "cmp/group-diff-y" ]'
 
 # =========================================================== M3: run-comparison
 echo; echo "## run-comparison (provenanced datalad run)"
-datalad run -m "run cmp/group-diff-y: group age difference" \
+step "provenanced datalad run" \
+  datalad run -m "run cmp/group-diff-y: group age difference" \
   -i participants.tsv \
   -o derivatives/cmp-group-diff-y/result.json \
-  "python3 code/stats.py" >/dev/null
+  "python3 code/stats.py"
 RUNSHA=$(git rev-parse --short HEAD)
 printf '  - { ts: 2026-07-10T15:40:00Z, op: run-comparison, stage: analyze, note: "commit %s", branch: cmp/group-diff-y }\n' "$RUNSHA" >> project.yaml
-datalad save -m "run-comparison: log entry for $RUNSHA" >/dev/null
+step "save run-comparison log entry" datalad save -m "run-comparison: log entry for $RUNSHA"
 
 assert "result.json produced"       '[ -f derivatives/cmp-group-diff-y/result.json ]'
 assert "computed diff == 7.0"       'grep -q "\"diff\": 7.0" derivatives/cmp-group-diff-y/result.json'
@@ -158,12 +228,14 @@ elif [ -z "$SIF" ] || [ ! -f "$SIF" ]; then
   echo "  SKIP: no .sif available (set DSH_SIF=/path/to.sif, or make hello-world:latest available to Docker)"
 else
   echo "  using runtime $(basename "$CR_RUNTIME"), image $SIF"
-  datalad containers-add demo-env --url "$SIF" \
-    --call-fmt "$(basename "$CR_RUNTIME") exec {img} {cmd}" >/dev/null 2>&1
+  step "containers-add demo-env" \
+    datalad containers-add demo-env --url "$SIF" \
+    --call-fmt "$(basename "$CR_RUNTIME") exec {img} {cmd}"
   # hello-world has no shell/python; the outer shell redirects the banner to a tracked output file
-  datalad containers-run -m "containers-run: hello banner (image-capture demo)" \
+  step "containers-run demo-env" \
+    datalad containers-run -m "containers-run: hello banner (image-capture demo)" \
     --container-name demo-env -o container-hello.txt \
-    "/hello > container-hello.txt" >/dev/null 2>&1
+    "/hello > container-hello.txt"
   datalad containers-list > "$WORKDIR/containers.txt" 2>/dev/null || true
   git show -s --format='%B' HEAD > "$WORKDIR/crbody.txt"
 
@@ -180,11 +252,11 @@ fi
 # =========================================================== M4: checkpoint
 echo; echo "## checkpoint (clean described snapshot)"
 echo "session notes" > code/NOTES.md
-datalad save -m "checkpoint: session notes" >/dev/null
+step "save checkpoint" datalad save -m "checkpoint: session notes"
 assert "working tree clean after checkpoint" '[ -z "$(git status --porcelain)" ]'
 # ledger stayed schema-valid through all appended log entries (Phase 1)
-python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; FRC=$?
-[ "$FRC" -eq 2 ] || assert "project.yaml still schema-valid after log appends" "[ $FRC -eq 0 ]"
+FRC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
+assert_ledger "project.yaml still schema-valid after log appends" "$FRC"
 
 # =========================================================== manage-product (Phase 2: products[])
 echo; echo "## manage-product (group a comparison into a product) [gated on pyyaml]"
@@ -207,9 +279,9 @@ doc.setdefault("products", []).append({
 with open(path, "w") as fh:
     yaml.safe_dump(doc, fh, sort_keys=False)
 PY
-  datalad save -m "manage-product: main-paper groups cmp/group-diff-y" >/dev/null
-  python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; MRC=$?
-  assert "ledger valid after grouping a product" "[ $MRC -eq 0 ]"
+  step "save manage-product" datalad save -m "manage-product: main-paper groups cmp/group-diff-y"
+  MRC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
+  assert_ledger "ledger valid after grouping a product" "$MRC"
   assert_grep "product 'main-paper' recorded in products[]" "id: main-paper"      "project.yaml"
   assert_grep "product groups the comparison branch"        "cmp/group-diff-y"    "project.yaml"
   assert "product save recorded as a tracked commit" \
@@ -235,9 +307,9 @@ doc.setdefault("obligations", []).append({
 with open(path, "w") as fh:
     yaml.safe_dump(doc, fh, sort_keys=False)
 PY
-  datalad save -m "preregister cmp/group-diff-y: pending obligation" >/dev/null
-  python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; ORC=$?
-  assert "ledger valid after adding a pending obligation" "[ $ORC -eq 0 ]"
+  step "save preregister" datalad save -m "preregister cmp/group-diff-y: pending obligation"
+  ORC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
+  assert_ledger "ledger valid after adding a pending obligation" "$ORC"
   assert_grep "confirmatory obligation recorded as pending" "status: pending" "project.yaml"
   python3 - project.yaml <<'PY'
 import sys, yaml
@@ -250,9 +322,9 @@ for ob in doc.get("obligations", []):
 with open(path, "w") as fh:
     yaml.safe_dump(doc, fh, sort_keys=False)
 PY
-  datalad save -m "obligations: met prereg-group-diff-y" >/dev/null
-  python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; ORC2=$?
-  assert "ledger valid after resolving obligation to met" "[ $ORC2 -eq 0 ]"
+  step "save obligation resolution" datalad save -m "obligations: met prereg-group-diff-y"
+  ORC2=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
+  assert_ledger "ledger valid after resolving obligation to met" "$ORC2"
   assert_grep "obligation resolved forward to met"        "status: met" "project.yaml"
 fi
 
@@ -274,9 +346,9 @@ doc.setdefault("contributors", []).append({
 with open(path, "w") as fh:
     yaml.safe_dump(doc, fh, sort_keys=False, allow_unicode=True)
 PY
-  datalad save -m "people: credit Ada Researcher" >/dev/null
-  python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; PRC=$?
-  assert "ledger valid after crediting a contributor" "[ $PRC -eq 0 ]"
+  step "save contributor credit" datalad save -m "people: credit Ada Researcher"
+  PRC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
+  assert_ledger "ledger valid after crediting a contributor" "$PRC"
   assert_grep "contributor recorded with an ORCID" "orcid:" "project.yaml"
 fi
 
@@ -300,13 +372,74 @@ for prod in doc.get("products", []):
 with open(path, "w") as fh:
     yaml.safe_dump(doc, fh, sort_keys=False)
 PY
-  datalad save -m "release main-paper v$REL_VER" --version-tag "v$REL_VER" >/dev/null
-  python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; RRC=$?
-  assert "ledger valid after release (status -> released)" "[ $RRC -eq 0 ]"
+  step "save release + version tag" \
+    datalad save -m "release main-paper v$REL_VER" --version-tag "v$REL_VER"
+  RRC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
+  assert_ledger "ledger valid after release (status -> released)" "$RRC"
   assert "BIDS CHANGES entry written"                      '[ -s CHANGES ]'
   git tag -l > "$WORKDIR/tags.txt"
   assert_grep "immutable version tag created via datalad save --version-tag" "v0\.1\.0" "$WORKDIR/tags.txt"
   assert_grep "product marked released in ledger"          "status: released"  "project.yaml"
+  NDOI=$(python3 -c 'import yaml; print(sum(len(p.get("dois") or []) for p in yaml.safe_load(open("project.yaml")).get("products", []) if p.get("id") == "main-paper"))')
+  assert "release recorded without a DOI (unminted, none fabricated)" "[ $NDOI -eq 0 ]"
+fi
+
+# =========================================================== archive readiness gate
+echo; echo "## archive readiness gate (unminted without credentials)"
+# The archive doer is an agent prompt, so this asserts the deterministic step it runs before any
+# deposit: the toolbox's presence check. Without credentials it must refuse and name what is
+# missing; with a credential present it must pass without echoing the secret.
+READY="$REPO/plugins/archive-cli/scripts/check-readiness.sh"
+URC=$(rc_of env -u ZENODO_TOKEN bash "$READY" zenodo)
+assert "zenodo readiness exits 1 without ZENODO_TOKEN" "[ $URC -eq 1 ]"
+env -u ZENODO_TOKEN bash "$READY" zenodo > "$WORKDIR/ready.txt" 2>&1 || true
+assert_grep "readiness reports result: unminted"      "^result: unminted$"     "$WORKDIR/ready.txt"
+assert_grep "readiness names the missing credential"  "^missing: ZENODO_TOKEN$" "$WORKDIR/ready.txt"
+PRC=$(rc_of env ZENODO_TOKEN=dsh-sentinel-secret bash "$READY" zenodo)
+assert "zenodo readiness exits 0 with a token present" "[ $PRC -eq 0 ]"
+env ZENODO_TOKEN=dsh-sentinel-secret bash "$READY" zenodo > "$WORKDIR/ready-ok.txt" 2>&1 || true
+assert "readiness never prints the credential value" '! grep -q dsh-sentinel-secret "$WORKDIR/ready-ok.txt"'
+BRC=$(rc_of bash "$READY" figshare)
+assert "unknown backend is a usage error (exit 2)" "[ $BRC -eq 2 ]"
+
+# The credentialed branch publishes a real record, so it runs only against the Zenodo sandbox and
+# only when DSH_ZENODO_SANDBOX_TOKEN is set. Sandbox DOIs carry the 10.5072 test prefix and resolve
+# nowhere public, so the assertion checks the prefix rather than resolution. The token goes through a
+# header file so a failing `step` cannot print it in its command echo.
+if [ -z "${DSH_ZENODO_SANDBOX_TOKEN:-}" ]; then
+  echo "  SKIP: Zenodo sandbox deposit (set DSH_ZENODO_SANDBOX_TOKEN to run it)"
+elif ! command -v curl >/dev/null; then
+  echo "  SKIP: Zenodo sandbox deposit — curl not on PATH"
+else
+  ZAPI=https://sandbox.zenodo.org/api
+  ZAUTH="$WORKDIR/zenodo-auth.header"
+  ( umask 077; printf 'Authorization: Bearer %s\n' "$DSH_ZENODO_SANDBOX_TOKEN" > "$ZAUTH" )
+  step "sandbox: create deposition" \
+    curl -fsS -X POST -H @"$ZAUTH" -H 'Content-Type: application/json' -d '{}' \
+         -o "$WORKDIR/zdep.json" "$ZAPI/deposit/depositions"
+  ZID=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["id"])' "$WORKDIR/zdep.json")
+  ZBUCKET=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["links"]["bucket"])' "$WORKDIR/zdep.json")
+  printf 'data-science-harness e2e sandbox deposit\n' > "$WORKDIR/deposit.txt"
+  step "sandbox: upload file to bucket" \
+    curl -fsS -X PUT -H @"$ZAUTH" --upload-file "$WORKDIR/deposit.txt" -o /dev/null "$ZBUCKET/deposit.txt"
+  python3 - "$WORKDIR/zmeta.json" <<'PY'
+import json, sys
+json.dump({"metadata": {
+    "upload_type": "dataset",
+    "title": "data-science-harness e2e sandbox deposit",
+    "creators": [{"name": "Harness, Test"}],
+    "description": "Created by tests/e2e-smoke.sh against the Zenodo sandbox.",
+    "access_right": "open",
+    "license": "cc-by-4.0",
+}}, open(sys.argv[1], "w"))
+PY
+  step "sandbox: set metadata" \
+    curl -fsS -X PUT -H @"$ZAUTH" -H 'Content-Type: application/json' --data @"$WORKDIR/zmeta.json" \
+         -o /dev/null "$ZAPI/deposit/depositions/$ZID"
+  step "sandbox: publish" \
+    curl -fsS -X POST -H @"$ZAUTH" -o "$WORKDIR/zpub.json" "$ZAPI/deposit/depositions/$ZID/actions/publish"
+  ZDOI=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("doi", ""))' "$WORKDIR/zpub.json")
+  assert "sandbox publish returned a test-prefix DOI (10.5072)" '[[ "$ZDOI" == 10.5072/* ]]'
 fi
 
 # =========================================================== link-outputs (Phase 2 capstone)
@@ -333,9 +466,9 @@ by_id["data-release"].setdefault("relations", []).append({"relation": "IsSupplem
 with open(path, "w") as fh:
     yaml.safe_dump(doc, fh, sort_keys=False)
 PY
-  datalad save -m "link-outputs: main-paper <-> data-release (DataCite relations)" >/dev/null
-  python3 "$REPO/schemas/validate-ledger.py" project.yaml >/dev/null 2>&1; KRC=$?
-  assert "ledger valid after cross-linking products" "[ $KRC -eq 0 ]"
+  step "save link-outputs" datalad save -m "link-outputs: main-paper <-> data-release (DataCite relations)"
+  KRC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
+  assert_ledger "ledger valid after cross-linking products" "$KRC"
   NPROD=$(python3 -c 'import yaml; print(len(yaml.safe_load(open("project.yaml")).get("products",[])))')
   assert "ledger holds multiple products (>=2)"            "[ $NPROD -ge 2 ]"
   assert_grep "forward DataCite relation recorded (IsSupplementedBy)" "IsSupplementedBy" "project.yaml"
@@ -345,19 +478,21 @@ fi
 # =========================================================== Distributability (D)
 echo; echo "## distributability (push to sibling -> clone -> datalad get)"
 SIB="$WORKDIR/sibling"; CLONE="$WORKDIR/clone"
-datalad create-sibling -s localsib "$SIB" >/dev/null 2>&1
-datalad push --to localsib >/dev/null 2>&1
+step "create sibling 'localsib'" datalad create-sibling -s localsib "$SIB"
+step "push to sibling" datalad push --to localsib
 # NB: dump to a file and grep the file — piping into `grep -q` makes grep exit on first match,
 # which SIGPIPEs the producer and, under `set -o pipefail`, falsely fails the assertion.
 datalad siblings > "$WORKDIR/sibs.txt" 2>/dev/null || true
 assert_grep "sibling 'localsib' registered" "localsib" "$WORKDIR/sibs.txt"
-datalad clone "$SIB" "$CLONE" >/dev/null 2>&1
+step "clone the sibling independently" datalad clone "$SIB" "$CLONE"
 # the run commit lives on cmp/group-diff-y; check all distributed refs, not just default HEAD
-git -C "$CLONE" log --oneline --all > "$WORKDIR/clonelog.txt"
+step "read the clone's history" \
+  bash -c 'git -C "$1" log --oneline --all > "$2"' _ "$CLONE" "$WORKDIR/clonelog.txt"
 assert_grep "independent clone has the run history (across all pushed branches)" \
             "DATALAD RUNCMD" "$WORKDIR/clonelog.txt"
-git -C "$CLONE" checkout -q cmp/group-diff-y
-datalad -C "$CLONE" get derivatives/cmp-group-diff-y/result.json >/dev/null 2>&1
+step "check out cmp/group-diff-y in the clone" git -C "$CLONE" checkout -q cmp/group-diff-y
+step "datalad get the annexed result" \
+  datalad -C "$CLONE" get derivatives/cmp-group-diff-y/result.json
 assert "annexed result retrievable from sibling (datalad get)" \
        'grep -q "\"diff\": 7.0" "$CLONE/derivatives/cmp-group-diff-y/result.json"'
 

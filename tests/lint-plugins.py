@@ -4,7 +4,9 @@
 Static checks only — no dataset, no tools, no network. This catches the drift class that
 nothing else does: a skill whose `delegates_to` names a doer that does not exist, a skill
 added to disk but never registered in its plugin.json (so it never loads), a plugin missing
-from the marketplace, a `name:` that no longer matches its directory.
+from the marketplace, a `name:` that no longer matches its directory, a check script that
+imports a module no manifest declares, a README that tells contributors to edit a file that
+does not exist.
 
 Two check severities:
   ERROR — the harness is broken or will silently not load something. Fails the run.
@@ -18,6 +20,7 @@ Exit codes: 0 = clean, 1 = errors found (or usage error), 2 = skipped (pyyaml no
 
 Usage: tests/lint-plugins.py [-v] [--strict] [repo_root]
 """
+import ast
 import json
 import os
 import re
@@ -31,9 +34,21 @@ except ImportError as exc:  # optional dep -> skip, don't fail a test suite
 
 STAMPED_LETTERS = set("STAMPED")
 PLANES = {"workflow", "capability"}
+# Bare aliases the Claude Code source layout accepts for an agent's `model:`. bin/install.sh maps each
+# to OpenCode's provider-prefixed form; a value missing from that map is stripped on install.
+MODELS = {"haiku", "sonnet", "opus", "fable"}
+# Agents that only read and report. Only these may pin `model:`; a doer that can mutate a dataset or
+# publish runs on the session default.
+PINNABLE_AGENTS = {"bids-doer", "coordinator"}
 KEBAB = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 PLANNER_SECTIONS = ("## When to use", "## Steps", "## Constraints")
 DESCRIPTION_MAX = 1024
+CHECK_SCRIPT_DIRS = ("tests", "schemas")
+
+# Third-party modules whose import name differs from the distribution providing it. There is no
+# way to derive this without installing the package, so it is a hand-kept list; extend it when a
+# check script imports something new.
+IMPORT_ALIASES = {"yaml": "pyyaml"}
 
 findings: list[tuple[str, str, str]] = []  # (severity, path, message)
 counts = {"skills": 0, "agents": 0, "plugins": 0}
@@ -205,6 +220,13 @@ def check_agent(root: str, path: str) -> None:
     if not fm.get("tools"):
         warn(p, "no `tools:` declared — the doer will inherit the full tool set")
 
+    model = fm.get("model")
+    if model is not None:
+        if str(model) not in MODELS:
+            error(p, f"`model: {model}` is not an allowed value ({', '.join(sorted(MODELS))})")
+        if stem not in PINNABLE_AGENTS:
+            error(p, f"declares `model: {model}` but only read-only agents may pin a model")
+
 
 # ----------------------------------------------------------------------------- plugins
 def check_plugin(root: str, plugin_dir: str, doers: dict[str, list[str]]) -> str | None:
@@ -303,6 +325,209 @@ def check_marketplace(root: str, plugin_dirs: list[str], declared_names: dict[st
             error(p, f"plugins/{os.path.basename(d)}/ exists but is not in the marketplace — it is not installable")
 
 
+_QUOTED = re.compile(r"\"([^\"]*)\"|'([^']*)'")
+_REQ_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
+
+
+def _requirement_names(chunk: str) -> set[str]:
+    names = set()
+    for m in _QUOTED.finditer(chunk):
+        name = _REQ_NAME.match((m.group(1) or m.group(2) or "").strip())
+        if name:
+            names.add(name.group(0).lower().replace("_", "-"))
+    return names
+
+
+def declared_distributions(text: str) -> set[str]:
+    """Distribution names from `[project] dependencies` and every `[dependency-groups]` array.
+
+    Hand-rolled rather than tomllib: `requires-python` is >=3.10 and tomllib arrived in 3.11, so
+    the lint has to read this on the interpreter CI pins.
+    """
+    names: set[str] = set()
+    section = ""
+    depth = 0
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if depth:
+            if "include-group" not in line:  # a group including another group, not a requirement
+                names |= _requirement_names(line)
+            depth += line.count("[") - line.count("]")
+            continue
+        if line.startswith("[") and "=" not in line:
+            section = line.strip("[]").strip()
+            continue
+        key, sep, rest = line.partition("=")
+        if not sep or not rest.strip().startswith("["):
+            continue
+        if key.strip() == "dependencies" or section == "dependency-groups":
+            names |= _requirement_names(rest)
+            depth = rest.count("[") - rest.count("]")
+    return names
+
+
+def imported_modules(tree: ast.AST) -> set[str]:
+    """Top-level module names, including imports nested in try/except optional-dependency guards."""
+    mods = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            mods.update(a.name.split(".")[0] for a in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            mods.add(node.module.split(".")[0])
+    return mods
+
+
+def _is_local(root: str, script_dir: str, mod: str) -> bool:
+    return any(
+        os.path.exists(os.path.join(d, mod + ".py")) or os.path.isdir(os.path.join(d, mod))
+        for d in (script_dir, root)
+    )
+
+
+def check_script_imports(root: str) -> None:
+    """Every third-party module a check script imports must be declared in pyproject.toml.
+
+    The failure this catches is a script that runs on the author's machine and exits 2 — "skipped,
+    dependency absent" — everywhere else, which reads as a pass. A skip must mean the environment
+    was not set up, never that the manifest is incomplete.
+    """
+    manifest = os.path.join(root, "pyproject.toml")
+    if not os.path.isfile(manifest):
+        return  # nothing to check against
+    with open(manifest) as fh:
+        declared = declared_distributions(fh.read())
+
+    for d in CHECK_SCRIPT_DIRS:
+        base = os.path.join(root, d)
+        if not os.path.isdir(base):
+            continue
+        for name in sorted(os.listdir(base)):
+            if not name.endswith(".py"):
+                continue
+            path = os.path.join(base, name)
+            with open(path) as fh:
+                source = fh.read()
+            try:
+                tree = ast.parse(source)
+            except SyntaxError as exc:
+                error(rel(root, path), f"does not parse: {exc}")
+                continue
+            for mod in sorted(imported_modules(tree)):
+                if mod in sys.stdlib_module_names or _is_local(root, base, mod):
+                    continue
+                dist = IMPORT_ALIASES.get(mod, mod).lower().replace("_", "-")
+                if dist not in declared:
+                    error(
+                        rel(root, path),
+                        f"imports `{mod}` but pyproject.toml declares no `{dist}` — "
+                        "a synced environment will not have it",
+                    )
+
+
+# The mechanically checkable doc claims. Prose claims in general are not tractable to check, and a
+# check that half-worked would be its own drift — so this is deliberately narrow: the manifest
+# filename the Contributing steps send a new contributor to edit, the plugin count, and the two
+# claims the marketplace description makes about the closed STAMPED set and the workflow plane.
+_PLUGIN_COUNT = re.compile(r"\*\*(\d+) plugins\*\*")
+_PLANNER_COUNT = re.compile(r"(\d+) workflow-plane planner skills")
+# "STAMPED Metadata" shipped in the marketplace for months because the closed-set check only ever
+# read skill frontmatter. Any capitalised word introduced as a STAMPED dimension is a candidate.
+_STAMPED_PROSE = re.compile(r"STAMPED[- ]([A-Z][a-z]+)")
+STAMPED_NAMES = {
+    "Self-containment": "S",
+    "Self": "S",
+    "Tracking": "T",
+    "Tracked": "T",
+    "Actionability": "A",
+    "Actionable": "A",
+    "Modularity": "M",
+    "Modular": "M",
+    "Portability": "P",
+    "Portable": "P",
+    "Ephemerality": "E",
+    "Ephemeral": "E",
+    "Distributability": "D",
+    "Distributable": "D",
+}
+
+
+def check_marketplace_claims(root: str, plugin_dirs: list[str]) -> None:
+    """The marketplace description is the first statement of the framework most readers meet, and
+    no other check reads it. Both claims below are the shape check_doc_claims already uses."""
+    path = os.path.join(root, ".claude-plugin", "marketplace.json")
+    p = rel(root, path)
+    if not os.path.isfile(path):
+        return  # check_marketplace already errored
+    with open(path) as fh:
+        text = fh.read()
+
+    for name in sorted({m.group(1) for m in _STAMPED_PROSE.finditer(text)}):
+        if name not in STAMPED_NAMES:
+            error(
+                p,
+                f"names `STAMPED {name}`, which is not one of the seven principles; valid names are "
+                "Self-containment, Tracking, Actionability, Modularity, Portability, Ephemerality, "
+                "Distributability",
+            )
+
+    workflow_dirs = [
+        d
+        for d in plugin_dirs
+        if any(
+            _has_workflow_skill(os.path.join(d, "skills", s))
+            for s in (os.listdir(os.path.join(d, "skills")) if os.path.isdir(os.path.join(d, "skills")) else [])
+        )
+    ]
+    claimed = _PLANNER_COUNT.search(text)
+    if not claimed:
+        warn(
+            p,
+            "states no planner count in the form `N workflow-plane planner skills`, so the "
+            "description's account of the workflow plane cannot be checked",
+        )
+    elif int(claimed.group(1)) != len(workflow_dirs):
+        error(
+            p,
+            f"claims {claimed.group(1)} workflow-plane planners; {len(workflow_dirs)} plugins on "
+            f"disk contain a `plane: workflow` skill ({', '.join(sorted(os.path.basename(d) for d in workflow_dirs))})",
+        )
+
+
+def _has_workflow_skill(skill_dir: str) -> bool:
+    path = os.path.join(skill_dir, "SKILL.md")
+    if not os.path.isfile(path):
+        return False
+    with open(path) as fh:
+        return any(line.strip() == "plane: workflow" for line in fh)
+
+
+def check_doc_claims(root: str, plugin_dirs: list[str]) -> None:
+    readme = os.path.join(root, "README.md")
+    if not os.path.isfile(readme):
+        return
+    with open(readme) as fh:
+        text = fh.read()
+
+    if "plugin.yaml" in text:
+        error(
+            "README.md",
+            "references `plugin.yaml`, which does not exist — manifests are "
+            "`.claude-plugin/plugin.json`. A contributor following the Contributing steps would "
+            "edit a file that is not there",
+        )
+
+    claimed = _PLUGIN_COUNT.search(text)
+    if not claimed:
+        warn("README.md", "states no plugin count in the form `**N plugins**`, so the count cannot be checked")
+    elif int(claimed.group(1)) != len(plugin_dirs):
+        error(
+            "README.md",
+            f"claims {claimed.group(1)} plugins; {len(plugin_dirs)} are on disk",
+        )
+
+
 def main() -> None:
     argv = [a for a in sys.argv[1:] if not a.startswith("-")]
     flags = {a for a in sys.argv[1:] if a.startswith("-")}
@@ -336,6 +561,9 @@ def main() -> None:
         if declared:
             declared_names[os.path.basename(d)] = declared
     check_marketplace(root, plugin_dirs, declared_names)
+    check_script_imports(root)
+    check_doc_claims(root, plugin_dirs)
+    check_marketplace_claims(root, plugin_dirs)
 
     errors = [f for f in findings if f[0] == "ERROR"]
     warnings = [f for f in findings if f[0] == "WARN"]
