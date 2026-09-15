@@ -74,7 +74,15 @@ install_agent_for_opencode() {
   fi
   mkdir -p -- "$(dirname -- "$dest")"
   awk '
-    BEGIN { fm = 0; inserted = 0 }
+    BEGIN {
+      fm = 0; inserted = 0
+      # Authored alias -> OpenCode provider/model-id. Keys match MODELS in tests/lint-plugins.py;
+      # a value with no entry is stripped, so the agent falls back to the OpenCode default.
+      model["haiku"] = "anthropic/claude-haiku-4-5"
+      model["sonnet"] = "anthropic/claude-sonnet-5"
+      model["opus"] = "anthropic/claude-opus-5"
+      model["fable"] = "anthropic/claude-fable-5-1"
+    }
     $0 == "---" {
       fm++
       if (fm == 2 && inserted == 0) {
@@ -86,6 +94,15 @@ install_agent_for_opencode() {
     }
     fm == 1 && $0 ~ /^name:[[:space:]]*/ { next }
     fm == 1 && $0 ~ /^tools:[[:space:]]*/ { next }
+    fm == 1 && $0 ~ /^model:[[:space:]]*/ {
+      v = $0
+      sub(/^model:[[:space:]]*/, "", v)
+      sub(/[[:space:]]*#.*$/, "", v)
+      sub(/[[:space:]]+$/, "", v)
+      gsub(/["\047]/, "", v)
+      if (v in model) print "model: " model[v]
+      next
+    }
     fm == 1 && $0 ~ /^mode:[[:space:]]*/ { inserted = 1; print; next }
     { print }
   ' "$src" > "$dest"

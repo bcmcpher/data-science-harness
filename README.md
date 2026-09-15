@@ -157,6 +157,21 @@ category: datalad
 ---
 ```
 
+An agent may pin the model it runs on with an optional `model:`. Without it, the agent runs on the
+harness default. The value must be one of the bare aliases `haiku`, `sonnet`, `opus` or `fable`, and
+the lint checks it. A provider-prefixed value such as `anthropic/claude-haiku-4-5` is rejected,
+because producing target-specific forms is the installer's job. Only read-only agents (`bids-doer`,
+`coordinator`) may pin a model. A doer that can change a dataset or publish runs on the session
+default.
+
+```yaml
+---
+name: bids-doer
+tools: Read, Bash, Grep, Glob
+model: haiku               # read-only: validates and reports
+---
+```
+
 **Harness translation map:**
 
 | Universal field | Claude Code | Cursor (.mdc) | Copilot (.instructions.md) | Windsurf |
@@ -167,6 +182,12 @@ category: datalad
 | `when.always` | (user-invocable) | `alwaysApply:` | always-loaded | global rules |
 | `tools` | `allowed-tools:` | (ignored) | (ignored) | (ignored) |
 | `plane`, `stamped` | (metadata, validated) | (metadata) | (metadata) | (metadata) |
+| `model` (agents) | `model:` as written | — | — | — |
+
+For OpenCode, the installer maps `model:` to `anthropic/claude-haiku-4-5`, `anthropic/claude-sonnet-5`,
+`anthropic/claude-opus-5` or `anthropic/claude-fable-5-1`. These resolve only when OpenCode has the
+Anthropic provider configured. A value with no mapping is stripped, so the agent inherits the invoking
+agent's model rather than failing to load.
 
 ---
 

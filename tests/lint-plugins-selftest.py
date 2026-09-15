@@ -47,6 +47,15 @@ def drop_manifest_agent(root, plugin, entry):
     json.dump(m, open(p, "w"), indent=2)
 
 
+def set_agent_model(root, plugin, agent, value):
+    """Declare `model: <value>` on an agent, replacing any model it already pins."""
+    p = os.path.join(root, "plugins", plugin, "agents", f"{agent}.md")
+    _, fm, body = open(p).read().split("---", 2)
+    fm = "".join(ln for ln in fm.splitlines(keepends=True) if not ln.startswith("model:"))
+    with open(p, "w") as fh:
+        fh.write(f"---{fm}model: {value}\n---{body}")
+
+
 def add_orphan_skill(root):
     d = os.path.join(root, "plugins", "analyze", "skills", "orphan")
     os.makedirs(d)
@@ -166,6 +175,8 @@ CASES = [
             f"{r}/plugins/govern/.claude-plugin/plugin.json", '"./skills/qc-review"', '"./skills/qc-reviewww"'
         ),
     ),
+    ("agent declares a model outside the allowed set", lambda r: set_agent_model(r, "bids", "bids-doer", "haikoo")),
+    ("mutating doer declares a model", lambda r: set_agent_model(r, "datalad", "datalad-doer", "haiku")),
 ]
 
 

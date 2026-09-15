@@ -8,6 +8,7 @@ description: >
   validator directly. Give it a plain-language request ("validate this dataset", "is this BIDS-valid",
   "what BIDS errors are there") and it returns a structured result. It never modifies the dataset.
 tools: Read, Bash, Grep, Glob
+model: haiku
 ---
 
 # Doer: bids

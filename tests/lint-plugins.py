@@ -34,6 +34,12 @@ except ImportError as exc:  # optional dep -> skip, don't fail a test suite
 
 STAMPED_LETTERS = set("STAMPED")
 PLANES = {"workflow", "capability"}
+# Bare aliases the Claude Code source layout accepts for an agent's `model:`. bin/install.sh maps each
+# to OpenCode's provider-prefixed form; a value missing from that map is stripped on install.
+MODELS = {"haiku", "sonnet", "opus", "fable"}
+# Agents that only read and report. Only these may pin `model:`; a doer that can mutate a dataset or
+# publish runs on the session default.
+PINNABLE_AGENTS = {"bids-doer", "coordinator"}
 KEBAB = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 PLANNER_SECTIONS = ("## When to use", "## Steps", "## Constraints")
 DESCRIPTION_MAX = 1024
@@ -213,6 +219,13 @@ def check_agent(root: str, path: str) -> None:
         error(p, "frontmatter is missing `description` (this is how the doer gets selected)")
     if not fm.get("tools"):
         warn(p, "no `tools:` declared — the doer will inherit the full tool set")
+
+    model = fm.get("model")
+    if model is not None:
+        if str(model) not in MODELS:
+            error(p, f"`model: {model}` is not an allowed value ({', '.join(sorted(MODELS))})")
+        if stem not in PINNABLE_AGENTS:
+            error(p, f"declares `model: {model}` but only read-only agents may pin a model")
 
 
 # ----------------------------------------------------------------------------- plugins

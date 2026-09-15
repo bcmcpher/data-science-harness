@@ -46,7 +46,7 @@ pattern generalizes — which is what a catalytic fund is buying.
 
 | Evidence | Source | Status |
 |---|---|---|
-| [`tests/lint-plugins-selftest.py`](../../tests/lint-plugins-selftest.py) injects one kind of drift per case into a throwaway copy of the repository to prove the lint still reacts — a test of the test. The suite runs 22 cases, one of which is a pristine-repo control that must stay clean | repo | **built** |
+| [`tests/lint-plugins-selftest.py`](../../tests/lint-plugins-selftest.py) injects one kind of drift per case into a throwaway copy of the repository to prove the lint still reacts — a test of the test. The suite runs 24 cases, one of which is a pristine-repo control that must stay clean | repo | **built** |
 | CI was verified **red as well as green**: a throwaway branch carrying one fault per job (a requirement stripped of its SHALL, a stale routing fixture, an unresolvable citation key) failed all three, each for the right reason — recorded at `openspec/changes/archive/2026-09-11-add-research-communication/tasks.md` task 6.4 | repo | **built** |
 | Every probe in [`bench/probes/`](../../bench/probes) declares a `control` and an `invalidators` block naming what would falsify its result. [`docs/evaluation.md`](../evaluation.md): *a probe that cannot state its control measures nothing* | repo | **specified** |
 | Routing ground truth is **machine-derived** from each skill's `delegates_to` field — not hand-labelled, not model-generated. Anti-circularity at the fixture level | repo | **specified** |

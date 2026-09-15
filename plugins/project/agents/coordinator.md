@@ -7,6 +7,7 @@ description: >
   the sensible next action. Read-only situational awareness — it recommends planner skills, it
   does not run tools itself.
 tools: Read, Bash, Grep, Glob
+model: sonnet
 ---
 
 # Agent: coordinator
