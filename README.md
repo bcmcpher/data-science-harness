@@ -193,7 +193,7 @@ agent's model rather than failing to load.
 
 ## Plugins
 
-**13 plugins**, split across the two planes: 7 **capability** plugins wrap the technical tools, and
+**14 plugins**, split across the two planes: 8 **capability** plugins wrap the technical tools, and
 6 **workflow** plugins encode the research process and call down into them.
 
 Tables below separate what is **built** from what is **planned**. Planned entries are kept because
@@ -217,7 +217,8 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | `nipoppy-cli` | toolbox | Nipoppy CLI | 1 skill covering the whole CLI | S, T, M, A |
 | `bids` | doer | bids-validator | `bids-doer` — no toolbox yet | S, M |
 | `containers` | doer | Apptainer / Docker | `containers-doer` — no toolbox yet | P, E |
-| `archive` | doer | OSF / Zenodo / DataCite | `archive-doer` — no toolbox yet | D |
+| `archive` | doer | OSF / Zenodo / DataCite | `archive-doer` | D |
+| `archive-cli` | toolbox | Zenodo REST API | `zenodo` skill + offline readiness check | D |
 
 **Planned** — each has an OpenSpec change:
 

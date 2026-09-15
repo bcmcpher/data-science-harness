@@ -18,11 +18,11 @@ because `tests/e2e-smoke.sh` runs commands and cannot observe an agent.
 
 - [ ] 1.1 `plugins/archive-cli/skills/osf/SKILL.md` — `datalad create-sibling-osf` + push, reading the
       DOI from the OSF project; cross-reference `datalad-cli/skills/datalad-siblings`.
-- [ ] 1.2 `plugins/archive-cli/skills/zenodo/SKILL.md` — create deposition, upload, publish, read `doi`.
+- [x] 1.2 `plugins/archive-cli/skills/zenodo/SKILL.md` — create deposition, upload, publish, read `doi`.
 - [ ] 1.3 `plugins/archive-cli/skills/datacite/SKILL.md` — REST minting under a registered prefix,
       `RelatedIdentifier` creation, and public lookup with `relationType` values.
-- [ ] 1.4 `plugins/archive-cli/.claude-plugin/plugin.json` and a `.claude-plugin/marketplace.json` entry.
-- [ ] 1.5 `plugins/archive-cli/scripts/check-readiness.sh <osf|zenodo|datacite>` — presence-only,
+- [x] 1.4 `plugins/archive-cli/.claude-plugin/plugin.json` and a `.claude-plugin/marketplace.json` entry.
+- [x] 1.5 `plugins/archive-cli/scripts/check-readiness.sh <osf|zenodo|datacite>` — presence-only,
       offline, never prints a secret; exit 0 ready, 1 unminted, 2 usage.
 - [ ] 1.6 Relation write paths: `related_identifiers` in the `zenodo` skill; the `datacite` skill for
       own-prefix DOIs; any other owner answers `ledger-only`.
@@ -31,7 +31,7 @@ because `tests/e2e-smoke.sh` runs commands and cannot observe an agent.
 
 - [ ] 2.1 Replace the inline backend detail in `plugins/archive/agents/archive-doer.md` with a
       toolbox table pointing at the three skills, matching how `datalad-doer` references `datalad-cli`.
-- [ ] 2.2 Keep the five-step procedure, the `unminted` contract, and the pre-publish confirmation in
+- [x] 2.2 Keep the five-step procedure, the `unminted` contract, and the pre-publish confirmation in
       the doer unchanged; take readiness from `check-readiness.sh`, which also covers DataCite.
 
 ## 3. Rewire link-outputs
@@ -43,11 +43,12 @@ because `tests/e2e-smoke.sh` runs commands and cannot observe an agent.
 
 ## 4. Verify
 
-- [ ] 4.1 `python3 tests/lint-plugins.py` — 0 errors.
-- [ ] 4.2 `tests/e2e-smoke.sh`: with credentials cleared, `check-readiness.sh zenodo` reports
+- [x] 4.1 `python3 tests/lint-plugins.py` — 0 errors.
+- [x] 4.2 `tests/e2e-smoke.sh`: with credentials cleared, `check-readiness.sh zenodo` reports
       `unminted` naming the missing item, and the release is recorded without a DOI.
-- [ ] 4.3 Gate the credentialed branch behind `DSH_ZENODO_SANDBOX_TOKEN` and the Zenodo sandbox, so
-      the test never creates a permanent public record by default.
+- [x] 4.3 Gate the credentialed branch behind `DSH_ZENODO_SANDBOX_TOKEN` and the Zenodo sandbox, so
+      the test never creates a permanent public record by default. *(The gate is verified to skip;
+      the sandbox branch itself has not been run against the live sandbox.)*
 
 ## 5. Documentation
 

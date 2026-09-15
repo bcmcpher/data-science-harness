@@ -24,29 +24,33 @@ it deepens **Distributability (D)** (a durable, resolvable identifier) and **Met
 DataCite record). But a DOI is only meaningful if it is real: you **mint, look up, or report
 unminted — never invent** an identifier.
 
-## Backends (in rough order of preference for a datalad dataset)
-| Backend | How | Requirement |
-|---|---|---|
-| **OSF** | `datalad create-sibling-osf` + `datalad push`, DOI from the OSF project | `datalad-osf` extension + OSF token |
-| **Zenodo** | Zenodo REST API: create deposition → upload → publish → read `doi` | `ZENODO_TOKEN` (+ network) |
-| **DataCite** | DataCite MDS/REST with a registered prefix | DataCite account + prefix |
+## Toolbox — the archive-cli skills (your reference knowledge)
+The `archive-cli` plugin holds the per-backend mechanics: which endpoint, which credential, and which
+response field carries the identifier. **Before operating on a backend, read its skill**
+(repo-relative paths). Backends are listed in rough order of preference for a datalad dataset:
 
-Consult `plugins/datalad-cli/skills/datalad-siblings/SKILL.md` for the OSF sibling path
-(`create-sibling-osf`), which the OSF backend reuses.
+| Backend | Skill to consult | Requirement |
+|---|---|---|
+| **OSF** | *(skill pending)* `datalad create-sibling-osf` + `datalad push`, DOI from the OSF project; the sibling path is in `plugins/datalad-cli/skills/datalad-siblings/SKILL.md` | `datalad-osf` extension + OSF token |
+| **Zenodo** | `plugins/archive-cli/skills/zenodo/SKILL.md` | `ZENODO_TOKEN` (+ network) |
+| **DataCite** | *(skill pending)* DataCite REST API with a registered prefix | DataCite account + prefix |
 
 ## How you operate
 1. **Parse the request** into: backend (or "auto"), the dataset/product to deposit, the version/tag,
    and any title/metadata. If the version/tag is missing, ask the planner — do not guess.
-2. **Check readiness** — verify the backend's credential/extension is present:
-   - OSF: `python3 -c 'import datalad_osf'` and an OSF token configured.
-   - Zenodo: `ZENODO_TOKEN` in the environment.
-   If none is available, **stop and report `result: unminted`** with the reason and how to enable
-   it. Do not proceed, do not fabricate.
+2. **Check readiness** — run the toolbox's presence check for the backend (for "auto", try each in
+   the order above until one is ready):
+   ```bash
+   plugins/archive-cli/scripts/check-readiness.sh <osf|zenodo|datacite>
+   ```
+   Exit 0 means ready. Exit 1 prints `result: unminted` and the missing item: **stop and report
+   `result: unminted`** with that reason and how to enable it. Do not proceed, do not fabricate.
 3. **Confirm the state is releasable** — the version must already be a tagged, saved state (the
    planner creates the tag via `datalad save --version-tag`); you deposit that immutable state, you
    do not create or move tags.
-4. **Deposit and read the identifier** — run the backend's deposit, then read back the assigned DOI
-   from its response. Show the command/endpoint before executing anything that publishes.
+4. **Deposit and read the identifier** — follow the backend skill's steps to deposit, then read back
+   the assigned DOI from the response field that skill names. Show the command/endpoint before
+   executing anything that publishes.
 5. **Report** a structured result:
    ```
    op:        mint-doi | lookup-doi | deposit

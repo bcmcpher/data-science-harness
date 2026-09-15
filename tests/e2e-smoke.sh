@@ -380,6 +380,66 @@ PY
   git tag -l > "$WORKDIR/tags.txt"
   assert_grep "immutable version tag created via datalad save --version-tag" "v0\.1\.0" "$WORKDIR/tags.txt"
   assert_grep "product marked released in ledger"          "status: released"  "project.yaml"
+  NDOI=$(python3 -c 'import yaml; print(sum(len(p.get("dois") or []) for p in yaml.safe_load(open("project.yaml")).get("products", []) if p.get("id") == "main-paper"))')
+  assert "release recorded without a DOI (unminted, none fabricated)" "[ $NDOI -eq 0 ]"
+fi
+
+# =========================================================== archive readiness gate
+echo; echo "## archive readiness gate (unminted without credentials)"
+# The archive doer is an agent prompt, so this asserts the deterministic step it runs before any
+# deposit: the toolbox's presence check. Without credentials it must refuse and name what is
+# missing; with a credential present it must pass without echoing the secret.
+READY="$REPO/plugins/archive-cli/scripts/check-readiness.sh"
+URC=$(rc_of env -u ZENODO_TOKEN bash "$READY" zenodo)
+assert "zenodo readiness exits 1 without ZENODO_TOKEN" "[ $URC -eq 1 ]"
+env -u ZENODO_TOKEN bash "$READY" zenodo > "$WORKDIR/ready.txt" 2>&1 || true
+assert_grep "readiness reports result: unminted"      "^result: unminted$"     "$WORKDIR/ready.txt"
+assert_grep "readiness names the missing credential"  "^missing: ZENODO_TOKEN$" "$WORKDIR/ready.txt"
+PRC=$(rc_of env ZENODO_TOKEN=dsh-sentinel-secret bash "$READY" zenodo)
+assert "zenodo readiness exits 0 with a token present" "[ $PRC -eq 0 ]"
+env ZENODO_TOKEN=dsh-sentinel-secret bash "$READY" zenodo > "$WORKDIR/ready-ok.txt" 2>&1 || true
+assert "readiness never prints the credential value" '! grep -q dsh-sentinel-secret "$WORKDIR/ready-ok.txt"'
+BRC=$(rc_of bash "$READY" figshare)
+assert "unknown backend is a usage error (exit 2)" "[ $BRC -eq 2 ]"
+
+# The credentialed branch publishes a real record, so it runs only against the Zenodo sandbox and
+# only when DSH_ZENODO_SANDBOX_TOKEN is set. Sandbox DOIs carry the 10.5072 test prefix and resolve
+# nowhere public, so the assertion checks the prefix rather than resolution. The token goes through a
+# header file so a failing `step` cannot print it in its command echo.
+if [ -z "${DSH_ZENODO_SANDBOX_TOKEN:-}" ]; then
+  echo "  SKIP: Zenodo sandbox deposit (set DSH_ZENODO_SANDBOX_TOKEN to run it)"
+elif ! command -v curl >/dev/null; then
+  echo "  SKIP: Zenodo sandbox deposit — curl not on PATH"
+else
+  ZAPI=https://sandbox.zenodo.org/api
+  ZAUTH="$WORKDIR/zenodo-auth.header"
+  ( umask 077; printf 'Authorization: Bearer %s\n' "$DSH_ZENODO_SANDBOX_TOKEN" > "$ZAUTH" )
+  step "sandbox: create deposition" \
+    curl -fsS -X POST -H @"$ZAUTH" -H 'Content-Type: application/json' -d '{}' \
+         -o "$WORKDIR/zdep.json" "$ZAPI/deposit/depositions"
+  ZID=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["id"])' "$WORKDIR/zdep.json")
+  ZBUCKET=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["links"]["bucket"])' "$WORKDIR/zdep.json")
+  printf 'data-science-harness e2e sandbox deposit\n' > "$WORKDIR/deposit.txt"
+  step "sandbox: upload file to bucket" \
+    curl -fsS -X PUT -H @"$ZAUTH" --upload-file "$WORKDIR/deposit.txt" -o /dev/null "$ZBUCKET/deposit.txt"
+  python3 - "$WORKDIR/zmeta.json" <<'PY'
+import json, sys
+json.dump({"metadata": {
+    "upload_type": "dataset",
+    "title": "data-science-harness e2e sandbox deposit",
+    "creators": [{"name": "Harness, Test"}],
+    "description": "Created by tests/e2e-smoke.sh against the Zenodo sandbox.",
+    "access_right": "open",
+    "license": "cc-by-4.0",
+}}, open(sys.argv[1], "w"))
+PY
+  step "sandbox: set metadata" \
+    curl -fsS -X PUT -H @"$ZAUTH" -H 'Content-Type: application/json' --data @"$WORKDIR/zmeta.json" \
+         -o /dev/null "$ZAPI/deposit/depositions/$ZID"
+  step "sandbox: publish" \
+    curl -fsS -X POST -H @"$ZAUTH" -o "$WORKDIR/zpub.json" "$ZAPI/deposit/depositions/$ZID/actions/publish"
+  ZDOI=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("doi", ""))' "$WORKDIR/zpub.json")
+  assert "sandbox publish returned a test-prefix DOI (10.5072)" '[[ "$ZDOI" == 10.5072/* ]]'
 fi
 
 # =========================================================== link-outputs (Phase 2 capstone)

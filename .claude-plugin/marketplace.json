@@ -70,6 +70,11 @@
       "name": "nipoppy-cli",
       "source": "./plugins/nipoppy-cli",
       "description": "Nipoppy skill toolbox: dataset curation, BIDS conversion, pipeline running/tracking, and IDP extraction for neuroimaging studies."
+    },
+    {
+      "name": "archive-cli",
+      "source": "./plugins/archive-cli",
+      "description": "Archive skill toolbox: per-backend skills for deposit, DOI minting and related identifiers (Zenodo today), plus the offline readiness check the archive doer runs before any deposit."
     }
   ]
 }
