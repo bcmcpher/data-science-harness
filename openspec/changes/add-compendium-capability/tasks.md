@@ -45,6 +45,7 @@ executable article this harness produces should be its own paper.
 
 The `manuscript` sub-agent decision (`docs/writing/SPEC.md`) was carried here as a section 4 and has
 been removed. It is a question about the writing reference bundle, not about compendium build
-mechanics, and `pin-doer-models` already owns the only part of it that blocks anything - the
-symbolic `model: strong-writing` value that no allowed set would accept. Two changes owning one
-decision is how a decision goes unmade.
+mechanics, and `pin-doer-models` owned the only part of it that blocked anything - the
+symbolic `model: strong-writing` value that no allowed set would accept. That change (archived
+2026-09-15) made it a commented placeholder, because a writing agent is not pinnable. Two changes
+owning one decision is how a decision goes unmade.

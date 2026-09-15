@@ -838,9 +838,9 @@ proposed change is a validated record rather than a checkbox in a 55 KB file:
   grounded in the checks that already enforce it (`tests/lint-plugins.py`, `tests/e2e-smoke.sh`,
   `schemas/project.schema.json`).
 - **[`openspec/changes/`](openspec/changes)** — what we have decided to do next. The former
-  "deepening the capability plane" roadmap is now seven open changes: `add-annotate-capability`,
+  "deepening the capability plane" roadmap is now six open changes: `add-annotate-capability`,
   `add-archive-toolbox`, `add-compendium-capability`, `add-deidentify-skill`, `add-liab-capability`,
-  `deepen-bids-nipoppy`, and `pin-doer-models`.
+  and `deepen-bids-nipoppy`.
 - **[`openspec/changes/archive/`](openspec/changes/archive)** — changes that shipped. A change leaves
   `changes/` only when its tasks are done and its spec delta has been merged into `specs/`, so the
   open list stays an accurate account of what is *not* built.
