@@ -34,5 +34,6 @@ directory.
 - Modified: `plugins/disseminate/skills/executable-article/SKILL.md`,
   `plugins/disseminate/skills/agent-bundle/SKILL.md`, `.claude-plugin/marketplace.json`,
   `tests/e2e-smoke.sh`
-- **Depends on `add-archive-toolbox`**: a compendium cross-links released, DOI'd products, so the
-  archive path must work first.
+- **Depended on `add-archive-toolbox`**, archived 2026-09-15: a compendium cross-links released,
+  DOI'd products, so the archive path had to exist first. Its deposit paths have not yet been run
+  against a live archive, so an end-to-end compendium test still needs a sandbox deposit.

@@ -48,5 +48,6 @@ authoring counterpart to the compendium's build machinery.
   choice open.
 - **MCP scaffolding targets a moving spec.** The emitted config should be minimal and regenerable
   rather than elaborate.
-- **Depends on the archive path.** If `add-archive-toolbox` slips, the cross-linking step of a
-  compendium cannot be exercised end to end.
+- **Depends on the archive path.** `add-archive-toolbox` landed on 2026-09-15, but its deposit and
+  relation paths have only been checked up to the credential gate. Until a sandbox deposit runs,
+  the cross-linking step of a compendium cannot be exercised end to end.
