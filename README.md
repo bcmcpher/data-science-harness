@@ -2,7 +2,7 @@
 
 A community-driven, harness-agnostic collection of AI assistant configurations for academic data science work — skills, agents, commands, hooks, MCP configs, and planning templates. The content is harness-neutral Markdown; `bin/install.sh` installs to **Claude Code and OpenCode today**, and Cursor, GitHub Copilot, Windsurf and Gemini CLI are the harnesses the format is designed to reach next (see [Install](#install)).
 
-> **Status:** the workflow plane is built, the capability plane is uneven — `datalad` has a 19-skill toolbox, `bids`, `containers` and `archive` have none — and the [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
+> **Status:** the workflow plane is built, the capability plane is uneven — `datalad` has a 19-skill toolbox and `archive` a 3-skill one, while `bids` and `containers` have none — and the [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
 
 ---
 
@@ -227,12 +227,13 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | `annotate` + `annotate-cli` | bagel-cli / pynidm / reproschema / SNOMED | [`add-annotate-capability`](openspec/changes/add-annotate-capability) |
 | `compendium` + `compendium-cli` | MyST / Jupyter Book / repo2data / MCP | [`add-compendium-capability`](openspec/changes/add-compendium-capability) |
 | `liab` + `liab-cli` | pyinfra / Forgejo | [`add-liab-capability`](openspec/changes/add-liab-capability) |
-| `archive-cli` | OSF / Zenodo / DataCite, split per backend | [`add-archive-toolbox`](openspec/changes/add-archive-toolbox) |
 | `bids-cli` | bids-validator as a first-class skill | [`deepen-bids-nipoppy`](openspec/changes/deepen-bids-nipoppy) |
 
-The capability plane is the uneven half of the harness. `datalad` has 19 toolbox skills; `bids`,
-`containers` and `archive` have none, so a planner above them can express what should happen and can
-only actually do the git-annex part. Closing that is what the changes above are for, and the
+The capability plane is the uneven half of the harness. `datalad` has 19 toolbox skills and
+`archive` has 3; `bids` and `containers` have none, so a planner above them can express what should
+happen and can only actually do the parts a toolbox covers. The archive skills were written against
+the live OSF, Zenodo, and DataCite APIs, but no deposit has yet been run through them against a live
+archive. Closing that is what the changes above are for, and the
 observable signal that one has shipped is a planner's `delegates_to:` growing beyond `[datalad]`.
 
 Capability plugins are deliberately thin: they hold tool mechanics and the STAMPED primitives,
@@ -858,9 +859,9 @@ calls a spec folder a "capability", which is *not* this repository's "capability
 
 **Where the harness stands.** The workflow plane is complete: 22 planner skills across six workflow
 plugins, each naming concrete ledger fields, log-entry shapes, and delegations. The capability plane
-beneath them is uneven — `datalad` has 19 toolbox skills while `bids`, `containers`, and `archive`
-have none, so most steps can express what should happen but can only actually *do* the git-annex
-part. Closing that gap is what the changes above are for. The observable signal that one has shipped
+beneath them is uneven — `datalad` has 19 toolbox skills and `archive` has 3, while `bids` and
+`containers` have none, so most steps can express what should happen but can only actually *do* the
+git-annex and archive parts. Closing that gap is what the changes above are for. The observable signal that one has shipped
 is a planner's `delegates_to:` growing beyond `[datalad]`.
 
 ## Evaluating the harness

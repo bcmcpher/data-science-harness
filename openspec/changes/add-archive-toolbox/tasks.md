@@ -52,7 +52,7 @@ because `tests/e2e-smoke.sh` runs commands and cannot observe an agent.
 
 ## 5. Documentation
 
-- [ ] 5.1 Retire the "archive has no toolbox" claims: `README.md` (status line, plugin table, plugin
+- [x] 5.1 Retire the "archive has no toolbox" claims: `README.md` (status line, plugin table, plugin
       count, capability-plane paragraph, "Where the harness stands"), `docs/motivation.md`, and
       `docs/funding/catalyst-fit.md`.
 - [ ] 5.2 On archive, update the `archive` spec's Purpose, which says the toolbox is not yet built.

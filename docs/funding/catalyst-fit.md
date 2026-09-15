@@ -138,8 +138,9 @@ these in order and instructs *"Do not soften this."*
    harness's effect on work quality is a design argument, not a measurement. This is the limitation a
    reader should take away, and it goes first.
 2. **The capability plane is uneven.** Several planners can express a step and cannot perform it —
-   they describe the output and commit it. `datalad` has a 19-skill toolbox; `bids`, `containers` and
-   `archive` have none.
+   they describe the output and commit it. `datalad` has a 19-skill toolbox and `archive` a 3-skill
+   one whose deposit paths have not been run against a live archive; `bids` and `containers` have
+   none.
 3. **Single-project experience.** The design comes from one context; generality is asserted, not
    demonstrated.
 4. **Governance scope is project-level.** Botes (2026) asks for agent-level access control and
