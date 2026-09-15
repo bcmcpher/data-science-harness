@@ -16,30 +16,30 @@ because `tests/e2e-smoke.sh` runs commands and cannot observe an agent.
 
 ## 1. The archive-cli toolbox
 
-- [ ] 1.1 `plugins/archive-cli/skills/osf/SKILL.md` — `datalad create-sibling-osf` + push, reading the
+- [x] 1.1 `plugins/archive-cli/skills/osf/SKILL.md` — `datalad create-sibling-osf` + push, reading the
       DOI from the OSF project; cross-reference `datalad-cli/skills/datalad-siblings`.
 - [x] 1.2 `plugins/archive-cli/skills/zenodo/SKILL.md` — create deposition, upload, publish, read `doi`.
-- [ ] 1.3 `plugins/archive-cli/skills/datacite/SKILL.md` — REST minting under a registered prefix,
+- [x] 1.3 `plugins/archive-cli/skills/datacite/SKILL.md` — REST minting under a registered prefix,
       `RelatedIdentifier` creation, and public lookup with `relationType` values.
 - [x] 1.4 `plugins/archive-cli/.claude-plugin/plugin.json` and a `.claude-plugin/marketplace.json` entry.
 - [x] 1.5 `plugins/archive-cli/scripts/check-readiness.sh <osf|zenodo|datacite>` — presence-only,
       offline, never prints a secret; exit 0 ready, 1 unminted, 2 usage.
-- [ ] 1.6 Relation write paths: `related_identifiers` in the `zenodo` skill; the `datacite` skill for
+- [x] 1.6 Relation write paths: `related_identifiers` in the `zenodo` skill; the `datacite` skill for
       own-prefix DOIs; any other owner answers `ledger-only`.
 
 ## 2. Slim the doer
 
-- [ ] 2.1 Replace the inline backend detail in `plugins/archive/agents/archive-doer.md` with a
+- [x] 2.1 Replace the inline backend detail in `plugins/archive/agents/archive-doer.md` with a
       toolbox table pointing at the three skills, matching how `datalad-doer` references `datalad-cli`.
 - [x] 2.2 Keep the five-step procedure, the `unminted` contract, and the pre-publish confirmation in
       the doer unchanged; take readiness from `check-readiness.sh`, which also covers DataCite.
 
 ## 3. Rewire link-outputs
 
-- [ ] 3.1 Move the `RelatedIdentifier` mechanics out of
+- [x] 3.1 Move the `RelatedIdentifier` mechanics out of
       `plugins/disseminate/skills/link-outputs/SKILL.md` and into a delegation to the archive doer;
       record an unresolvable external target and flag it in the log note and report.
-- [ ] 3.2 Confirm frontmatter and prose agree in both directions, as the lint requires.
+- [x] 3.2 Confirm frontmatter and prose agree in both directions, as the lint requires.
 
 ## 4. Verify
 

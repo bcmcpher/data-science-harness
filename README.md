@@ -218,7 +218,7 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | `bids` | doer | bids-validator | `bids-doer` — no toolbox yet | S, M |
 | `containers` | doer | Apptainer / Docker | `containers-doer` — no toolbox yet | P, E |
 | `archive` | doer | OSF / Zenodo / DataCite | `archive-doer` | D |
-| `archive-cli` | toolbox | Zenodo REST API | `zenodo` skill + offline readiness check | D |
+| `archive-cli` | toolbox | OSF / Zenodo / DataCite APIs | 3 skills, one per backend, + offline readiness check | D |
 
 **Planned** — each has an OpenSpec change:
 

@@ -74,7 +74,7 @@
     {
       "name": "archive-cli",
       "source": "./plugins/archive-cli",
-      "description": "Archive skill toolbox: per-backend skills for deposit, DOI minting and related identifiers (Zenodo today), plus the offline readiness check the archive doer runs before any deposit."
+      "description": "Archive skill toolbox: one skill per backend (OSF, Zenodo, DataCite) for deposit, DOI minting and related identifiers, plus the offline readiness check the archive doer runs before any deposit."
     }
   ]
 }

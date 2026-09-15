@@ -6,6 +6,8 @@
   "license": "MIT",
   "keywords": ["archive", "doi", "zenodo", "osf", "datacite", "related-identifier", "toolbox"],
   "skills": [
-    "./skills/zenodo"
+    "./skills/osf",
+    "./skills/zenodo",
+    "./skills/datacite"
   ]
 }
