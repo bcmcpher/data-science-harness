@@ -41,6 +41,48 @@ tasks:
       Discriminator for capability@k — the only built planner reaching the bids doer. A route that
       reaches datalad alone scores 0.5, not 0.
 
+  - id: govern-init-ledger
+    prompt: >
+      This study has been running for two years and there's no administrative record anywhere.
+      Start one.
+    expected_skill: govern/init-ledger
+    expected_delegates_to: [datalad]
+    notes: >
+      "Has been running for two years" is the discriminator: the dataset exists, so this is the
+      brownfield entry point. A route to the new-project scaffolder is the expected failure — it
+      would try to create a dataset that is already there.
+
+  - id: govern-dmp
+    prompt: >
+      The funder wants a data management plan, and I want whatever we promise in it to actually be
+      tracked rather than filed away.
+    expected_skill: govern/dmp
+    expected_delegates_to: [datalad]
+    notes: >
+      The second clause is what distinguishes this from a writing task: the promises become
+      obligations. A route to the obligations tracker alone scores 0 — that resolves commitments,
+      it does not extract them from a plan.
+
+  - id: govern-ethics
+    prompt: >
+      Our board approval has a number and an expiry and I keep losing track of it. Put it somewhere
+      that will warn me before it lapses.
+    expected_skill: govern/ethics-track
+    expected_delegates_to: [datalad]
+
+  - id: govern-stamped
+    prompt: >
+      Give me a full readout of where this research object stands on every reproducibility dimension,
+      with the evidence, before I answer the funder.
+    expected_skill: govern/stamped-assess
+    expected_delegates_to: [bids, datalad]
+    notes: >
+      Near-miss against govern/qc-review, which also assesses STAMPED but leads with BIDS
+      conformance as a gate before data moves. "Full readout on every dimension, with the evidence"
+      is the seven-dimension report. Both reach [bids, datalad], so capability@k cannot separate
+      them — this task discriminates on route@1 alone, which is why the prompt avoids "check" and
+      "before we release".
+
   # ------------------------------------------------------------ 1. initialize
   - id: project-new
     prompt: >

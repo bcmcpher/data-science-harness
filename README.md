@@ -261,10 +261,10 @@ nothing about *why* or *when* you run them.
 - `obligations` — surface and resolve deadlines, compliance requirements, and confirmatory-comparison commitments recorded in the ledger
 - `preregister` — register the study (OSF Registrations / ClinicalTrials.gov / PROSPERO); record the registration ID into the ledger; used to freeze a **confirmatory comparison**'s spec
 - `qc-review` — review a dataset's quality and completeness before it moves downstream
-- `init-ledger` *(planned)* — scaffold `project.yaml` (called by / extends `project/new-project`)
-- `dmp` *(planned)* — author/update a Data Management Plan against the RDA DMP Common Standard (maDMP) or a funder template; record obligations into the ledger
-- `ethics-track` *(planned)* — record IRB/IACUC protocol, approval, expiry, and amendments; flag upcoming renewals
-- `stamped-assess` *(planned)* — score a research object against the [STAMPED checklist](docs/stamped.md) (the paper's LinkML schema); **would subsume compliance-audit + reproducibility-audit** into one graded readout of Self-containment / Tracking / … coverage, including ledger obligations, de-identification, DUA data-scope, and pre-registration adherence
+- `init-ledger` — create `project.yaml` in a dataset that has none: the **brownfield** entry point for a study already under way. Refuses to overwrite an existing ledger and never backfills its log — the first entry records where the record begins
+- `dmp` — author/update a Data Management Plan against the RDA DMP Common Standard (maDMP) or a funder template, and turn each promise it makes into a `kind: dmp` obligation. Never asserts a funder requirement it did not read; reports the sections you still have to fill
+- `ethics-track` — record IRB/IACUC protocol, approval, expiry and amendments as a `kind: ethics` obligation (expiry in `due`, protocol in `ref`, amendments append to `log:`); flag upcoming renewals. Never computes an expiry from an approval date, and never rules on whether a use is in scope
+- `stamped-assess` — score a research object against the [STAMPED checklist](docs/stamped.md), per dimension against the requirement ids S.1 … D.3, with the evidence for each. **No composite score** (the framework sets no pass mark) and a dimension it could not check is `unassessed`, never zero. Subsumes the old compliance-audit + reproducibility-audit idea
 - References: `references/stamped.md`
 
 **`project`** — Scaffold a new research project **and** run the ongoing Manage & Comply lane.

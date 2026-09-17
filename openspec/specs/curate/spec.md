@@ -8,10 +8,12 @@ converter under `datalad run`, so the ingest itself is provenanced rather than a
 predates the record. `annotate` then advances STAMPED Metadata and Actionability — data dictionaries,
 sidecars, and optionally controlled-term annotation via Neurobagel/SNOMED, ReproSchema, or NIDM.
 That annotation is delegated to the `annotate` capability, which checks each backend independently,
-so the dataset-level metadata still completes when no vocabulary tool is installed.
+so the dataset-level metadata still completes when no vocabulary tool is installed. `deidentify`
+makes identifier removal a provenanced run with a recorded approach and a required residual-risk
+statement — it scaffolds the decision and the record, and refuses to select a tool, to claim
+compliance, or to answer whether the data may be shared.
 
 ## Requirements
-
 ### Requirement: Raw-to-BIDS conversion is provenanced
 
 `curate/raw-to-bids` MUST have the nipoppy doer construct the converter invocation, MUST ensure a
@@ -86,3 +88,39 @@ joins the same chain as the data it describes.
 
 - **WHEN** metadata files are added or changed
 - **THEN** they are committed through the datalad doer with a message naming the operation
+
+### Requirement: De-identification is a recorded, provenanced step
+
+Removing identifying information from a dataset MUST be carried out through the provenance chain and
+recorded in the ledger, naming the approach applied, the inputs it was applied to, and the residual
+risk the researcher accepted. The record MUST state what was deliberately retained as well as what
+was removed.
+
+#### Scenario: A dataset is de-identified
+
+- **WHEN** identifying information is removed from a dataset
+- **THEN** each removal is a provenanced run, and the ledger records the approach, its inputs, and
+  the residual risk
+
+#### Scenario: Identifying information is deliberately kept
+
+- **WHEN** a category of identifier is retained for a research reason, such as scan dates in a
+  longitudinal design
+- **THEN** the retention is recorded as a decision, so it is distinguishable from an oversight
+
+### Requirement: De-identification claims nothing it did not do
+
+A skill MUST NOT state that a dataset is de-identified unless a recorded action produced that state,
+and MUST NOT present its record as a compliance determination. The residual-risk statement MUST be
+present; an absent one is a claim that nothing remains.
+
+#### Scenario: No de-identification has been run
+
+- **WHEN** a report is produced for a dataset with no recorded de-identification action
+- **THEN** it reports the absence rather than describing the dataset as de-identified
+
+#### Scenario: The researcher asks whether the data can be shared
+
+- **WHEN** a sharing decision is requested
+- **THEN** the skill reports what was done and what risk remains, and does not answer the question
+

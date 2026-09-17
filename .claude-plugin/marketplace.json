@@ -14,7 +14,7 @@
     {
       "name": "govern",
       "source": "./plugins/govern",
-      "description": "Governance planner (Manage & Comply lane): preregister freezes a comparison's spec before execution and registers it as a confirmatory obligation; obligations tracks and resolves the project's outstanding commitments in the ledger."
+      "description": "Governance planner (Manage & Comply lane): init-ledger gives an existing dataset a project.yaml (the brownfield entry point, refusing to overwrite one); dmp turns a Data Management Plan's promises into tracked obligations; ethics-track records IRB/IACUC protocols, expiries and amendments and flags renewals; preregister freezes a comparison's spec before execution; obligations tracks and resolves outstanding commitments; qc-review and stamped-assess report conformance and STAMPED coverage per dimension, scoring what they could not check as unassessed rather than zero."
     },
     {
       "name": "analyze",

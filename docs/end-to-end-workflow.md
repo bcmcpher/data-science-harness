@@ -202,7 +202,7 @@ Ranked by likely impact, these are the refinements most worth a hackathon's atte
 4. **Analysis-code testing** — smoke/unit tests for the scripts the `datalad` capability wraps.
 5. **Guided pipeline parameters** — declaring expected pipelines and wiring them into Nipoppy covers selection/config; the residual gap is guided parameter choice.
 
-*Now addressed by the refactor:* container build (`containers` plugin), comparison tracking (the rigor spectrum above), STAMPED/reproducibility/compliance auditing (`govern/stamped-assess` *(planned)*), and self-hosted distribution (`disseminate/liab-deploy`).
+*Now addressed by the refactor:* container build (`containers` plugin), comparison tracking (the rigor spectrum above), STAMPED/reproducibility/compliance auditing (`govern/stamped-assess`, which reports per dimension with evidence and marks what it could not check `unassessed` rather than zero), and self-hosted distribution (`disseminate/liab-deploy`, now over the `liab` doer).
 
 ---
 
@@ -210,8 +210,8 @@ Ranked by likely impact, these are the refinements most worth a hackathon's atte
 
 Two things genuinely lock *early* because they shape everything downstream — **governance/compliance** (funding, ethics, data-management obligations) and the **data model** (variables, units, standards). Most *analytic* decisions do **not** need to be fixed up front: analyses are modular comparisons you add as the story develops. Plan in roughly this order:
 
-1. **Frame the question** (`analyze/literature-search` *(planned)*, meta-analysis tools) — what's known, what's the gap. *(lightweight)*
-2. **Stand up governance** (`govern/init-ledger`, `govern/dmp` *(planned)*, `govern/ethics-track`, `project/people`) — encode obligations and credit before data exists. These genuinely lock early.
+1. **Frame the question** (`analyze/literature-search` *(planned — the one skill still unbuilt)*, meta-analysis tools) — what's known, what's the gap. *(lightweight)*
+2. **Stand up governance** (`govern/init-ledger`, `govern/dmp`, `govern/ethics-track`, `project/people`) — encode obligations and credit before data exists. These genuinely lock early. `init-ledger` is for a dataset that already exists; `project/new-project` writes the ledger for a new one.
 3. **Sketch the first comparison(s)** (`analyze/propose-comparison`) — outcomes, design, effect size → power/sample size.
 4. **Choose your rigor mode per comparison:**
    - *Strict / confirmatory* — write the exact models and decision rules and **pre-register** (`govern/preregister`); the comparison becomes a ledger obligation, and later changes are reportable deviations.

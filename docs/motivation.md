@@ -1,7 +1,7 @@
 # Why this exists
 
 > **Status: the workflow plane is built, the capability plane is uneven, and nothing has been
-> measured.** Six workflow plugins and 53 skills are on disk and structurally checked. Beneath them,
+> measured.** Six workflow plugins and 57 skills are on disk and structurally checked. Beneath them,
 > `datalad` has a 19-skill toolbox, `annotate` a 4-skill one, `archive` a 3-skill one, and `bids`,
 > `compendium` and `liab` a 1-skill one each, while `containers` has none, so a planner can express
 > a step it cannot fully perform. The evaluation protocol in

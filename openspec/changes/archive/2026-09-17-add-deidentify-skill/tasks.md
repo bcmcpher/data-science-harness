@@ -1,8 +1,8 @@
 ## Status
 
-Complete as of 2026-09-17. All tasks checked except 3.3, which is deferred to
-`complete-govern-skills` with its intended shape recorded below. Ready to archive once that link
-lands, or archivable now with 3.3 carried forward — see 3.3.
+Complete as of 2026-09-17. All 16 tasks checked. Task 3.3 was blocked on `govern/ethics-track`,
+which landed the same day in `complete-govern-skills`; the link is real rather than recorded as an
+intention. Ready to archive.
 
 Task 2.1/2.2's open question was settled ahead of this change by
 `extend-ledger-for-planned-skills`, which added `resolved_by` to `$defs/obligation` and made it
@@ -52,13 +52,13 @@ date-shifting), which is a separate change and is not required for this one to l
       the skill, a 🔧 note naming the tools and why the skill will not pick one, and a narrowed ⚠️
       gap that now says the *tooling* is unscaffolded rather than the step.
 - [x] 3.2 Ranked gap 3 rewritten to name the remaining tooling gap rather than the whole step.
-- [ ] 3.3 Point `govern/ethics-track`'s obligation at the skill once it exists. **Still blocked, and
-      now scheduled:** `ethics-track` lands in `complete-govern-skills`. The intended link, recorded
-      here so that change can implement it rather than re-derive it: `ethics-track` writes an
-      `obligations[]` entry with `kind: ethics`, the protocol number or URL in `ref`, and the expiry
-      in `due`; `curate/deidentify` step 7 moves that entry to `status: met` with `resolved_by`
-      naming its recording run. Both halves of that contract now exist in the schema — only the
-      writing skill is missing.
+- [x] 3.3 Point `govern/ethics-track`'s obligation at the skill. **Closed by
+      `complete-govern-skills`, same day.** `ethics-track` writes the `obligations[]` entry with
+      `kind: ethics`, the protocol number or URL in `ref` and the expiry in `due`, and explicitly
+      refuses to mark it `met` itself — it names `curate/deidentify` resolving it with `resolved_by`,
+      or `govern/obligations` waiving it with a reason. `curate/deidentify` step 7 is the other half.
+      Both ends of the contract now exist and neither can close the obligation by assertion, because
+      the schema requires `resolved_by` when status is `met`.
 
 ## 4. Verify
 
