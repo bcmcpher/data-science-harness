@@ -278,7 +278,7 @@ nothing about *why* or *when* you run them.
 **`curate`** — Get raw data into a standardized, annotated form.
 - `raw-to-bids` — convert raw acquisitions into BIDS (via the `nipoppy` doer), then validate (via the `bids` doer)
 - `annotate` — enrich metadata so the dataset is self-describing: `dataset_description.json`, a `participants.json` data dictionary, BIDS sidecars, and optionally controlled terms via the `annotate` doer (Neurobagel today; NIDM, ReproSchema and SNOMED report unavailable)
-- `deidentify` *(planned)* — remove PHI as a recorded, provenanced step rather than an untracked fixup ([`add-deidentify-skill`](openspec/changes/add-deidentify-skill))
+- `deidentify` — remove PHI as a recorded, provenanced step rather than an untracked fixup: one `datalad run` per category, with what was deliberately kept and a required residual-risk statement in the ledger. Selecting and running the tools stays 🔧 do-it-yourself
 - `merge-data` *(planned)* — combine tabular phenotypic/clinical sources
 - `gen-data-dict` *(planned)* — generate a data dictionary
 

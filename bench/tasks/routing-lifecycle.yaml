@@ -65,6 +65,17 @@ tasks:
       Reaching datalad alone commits hand-written metadata; reaching annotate is what makes the
       terms checked rather than recalled. Partial credit is the point of capability@k here.
 
+  - id: curate-deidentify
+    prompt: >
+      Before this goes anywhere I need the participant identifiers out of it, and I need to be able
+      to show what I did.
+    expected_skill: curate/deidentify
+    expected_delegates_to: [datalad]
+    notes: >
+      "Before this goes anywhere" plus "show what I did" is the discriminator: the request is for a
+      recorded, provenanced removal, not an audit. A route to a governance assessment scores 0 —
+      that checks for exposure after the fact and owns no action.
+
   # --------------------------------------------------------------- 3. process
   - id: process-pipeline
     prompt: Run fMRIPrep over the participants we've curated so far.

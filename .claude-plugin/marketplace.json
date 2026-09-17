@@ -29,7 +29,7 @@
     {
       "name": "curate",
       "source": "./plugins/curate",
-      "description": "Curation planner: raw-to-bids converts raw acquisitions to a BIDS layout via nipoppy with DataLad provenance; annotate enriches a dataset's metadata (dataset_description.json, participants.json data dictionary, BIDS sidecars, controlled-term mappings). Advances STAMPED Self-containment + Actionability."
+      "description": "Curation planner: raw-to-bids converts raw acquisitions to a BIDS layout via nipoppy with DataLad provenance; annotate enriches a dataset's metadata (dataset_description.json, participants.json data dictionary, BIDS sidecars, controlled-term mappings); deidentify makes identifier removal a provenanced run with a recorded approach and a required residual-risk statement, and refuses to present that record as a compliance determination. Advances STAMPED Self-containment + Actionability."
     },
     {
       "name": "process",

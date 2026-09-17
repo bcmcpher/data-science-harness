@@ -81,7 +81,11 @@ Get raw data into a standardized, annotated form. The `curate` workflow orchestr
 
 > 🔧 **Do-it-yourself:** the real data wrangling — cleaning, format conversion for non-standard inputs, defining variables and units, deciding how to handle missingness and outliers. The skills *standardize and annotate* what you've defined; they don't define it.
 
-> ⚠️ **Scaffolding gap:** **de-identification has no skill.** `govern/stamped-assess` later *checks* for PHI exposure and `govern/dmp`/`govern/ethics-track` impose the obligation, but nothing helps you actually de-identify (defacing imaging, scrubbing PHI columns, date-shifting). For a clinical/neuro workflow this is a high-value, high-risk gap — a `curate/deidentify` *(planned)* skill would be worth adding.
+6. **`curate/deidentify`** *(→ the `datalad` doer)* — inventory what identifiers are actually present per category (tabular, filenames, DICOM/NIfTI headers, and facial anatomy in structural imaging), decide removal / pseudonym / coarsening / deliberate retention with the user, and run each removal as its own `datalad run` so it joins the provenance chain like any other transformation. The record is the point: the approach, what was verified and how, what was deliberately kept, and a **residual-risk statement that is required and never blank** — an empty one is itself the claim that nothing remains. An ethics obligation is resolved by `resolved_by` naming the run, which the ledger schema enforces, so it cannot be closed by assertion.
+
+> 🔧 **Do-it-yourself:** choosing and running the de-identification tools — defacing (`pydeface`, `mri_deface`, `mideface`), DICOM header scrubbing, PHI column detection, date-shifting — and **inspecting the output**. None of it ships with the harness, and the skill will not select a tool or invent a command line for you: a defacing tool with the wrong mask removes brain tissue, and an inconsistently applied date-shift destroys a longitudinal design while looking like it worked. The skill scaffolds the decision and the record; you run the tool and check it.
+
+> ⚠️ **Scaffolding gap:** de-identification *tooling* is still unscaffolded — there is no capability plane beneath `curate/deidentify`. The step is now recorded and provenanced, which is the half that was missing; automating the removal itself is capability-plane work and a later change.
 
 ---
 
@@ -194,7 +198,7 @@ Ranked by likely impact, these are the refinements most worth a hackathon's atte
 
 1. **`analyze/scaffold-analysis` *(planned)*** — emit a runnable, provenance-wrapped script stub for the test chosen by `plan-analysis`. (Bridges the biggest gap, between Stages 3 and 5.)
 2. **`analyze/plot` *(planned)*** — consistent exploratory and publication figures. (The only entirely-unserved core activity.)
-3. **`curate/deidentify` *(planned)*** — actually remove PHI, not just audit for it. (High risk in clinical/neuro work.)
+3. **De-identification tooling** — `curate/deidentify` now records and provenances the step, but no defacing, PHI-detection or date-shifting capability sits beneath it. (High risk in clinical/neuro work; the record exists, the automation does not.)
 4. **Analysis-code testing** — smoke/unit tests for the scripts the `datalad` capability wraps.
 5. **Guided pipeline parameters** — declaring expected pipelines and wiring them into Nipoppy covers selection/config; the residual gap is guided parameter choice.
 
