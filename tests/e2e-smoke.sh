@@ -496,6 +496,75 @@ step "datalad get the annexed result" \
 assert "annexed result retrievable from sibling (datalad get)" \
        'grep -q "\"diff\": 7.0" "$CLONE/derivatives/cmp-group-diff-y/result.json"'
 
+# =========================================================== annotate (data dictionary + backends)
+echo; echo "## annotate (data dictionary written uncommitted; backends degrade per tool)"
+# The annotate doer is an agent prompt, so this asserts the two deterministic things around it: the
+# toolbox's per-backend presence check it runs first, and its write-but-never-commit contract.
+# "unavailable" must stay distinguishable from "no term matched" — an uninstalled backend means the
+# question was never asked, and reporting that as zero matches is a false negative the user cannot
+# see.
+BACKENDS="$REPO/plugins/annotate-cli/scripts/check-backends.sh"
+ARC=$(rc_of env -u SNOMED_API_KEY -u SNOMED_OWL bash "$BACKENDS" snomed)
+assert "snomed backend exits 1 with no terminology source" "[ $ARC -eq 1 ]"
+env -u SNOMED_API_KEY -u SNOMED_OWL bash "$BACKENDS" snomed > "$WORKDIR/backend.txt" 2>&1 || true
+assert_grep "backend check reports result: unavailable" "^result: unavailable$"      "$WORKDIR/backend.txt"
+assert_grep "backend check names what is missing"       "^missing: SNOMED CT source$" "$WORKDIR/backend.txt"
+assert_grep "backend check says how to enable it"       "^enable: "                   "$WORKDIR/backend.txt"
+SRC=$(rc_of env SNOMED_API_KEY=dsh-sentinel-secret bash "$BACKENDS" snomed)
+assert "snomed backend exits 0 with a source configured" "[ $SRC -eq 0 ]"
+env SNOMED_API_KEY=dsh-sentinel-secret bash "$BACKENDS" snomed > "$WORKDIR/backend-ok.txt" 2>&1 || true
+assert "backend check never prints the credential value" '! grep -q dsh-sentinel-secret "$WORKDIR/backend-ok.txt"'
+ABRC=$(rc_of bash "$BACKENDS" figshare)
+assert "unknown annotate backend is a usage error (exit 2)" "[ $ABRC -eq 2 ]"
+
+# The data dictionary is the always-available half of annotation — no backend, no credential — so it
+# is asserted unconditionally. Free-text Description only: a controlled term here would have to come
+# from a backend, none is installed, and writing one anyway is exactly the fabrication the doer
+# refuses.
+python3 - <<'PY'
+import csv, json
+cols = next(csv.reader(open("participants.tsv"), delimiter="\t"))
+spec = {
+    "participant_id": {"Description": "Unique participant identifier."},
+    "group": {"Description": "Study group assignment.", "Levels": {"A": "Group A", "B": "Group B"}},
+    "age": {"Description": "Age at enrolment.", "Units": "years"},
+}
+json.dump({c: spec[c] for c in cols}, open("participants.json", "w"), indent=2)
+PY
+cat > "$WORKDIR/check-dict.py" <<'PY'
+import csv, json, sys
+cols = next(csv.reader(open("participants.tsv"), delimiter="\t"))
+d = json.load(open("participants.json"))
+if set(cols) != set(d):
+    sys.exit(f"dictionary keys {sorted(d)} do not match columns {cols}")
+if not all(d[c].get("Description") for c in cols):
+    sys.exit("a column has no Description")
+if any("Annotations" in d[c] for c in cols):
+    sys.exit("an Annotations block appeared with no annotation backend installed")
+PY
+DRC=$(rc_of python3 "$WORKDIR/check-dict.py")
+assert "participants.json describes every column, with no fabricated Annotations block" "[ $DRC -eq 0 ]"
+datalad status > "$WORKDIR/annstatus.txt" 2>&1 || true
+assert_grep "annotate writes but does not commit (dictionary left untracked)" \
+            "untracked.*participants\.json" "$WORKDIR/annstatus.txt"
+
+# A real Neurobagel conversion needs bagel-cli, which is deliberately not in environment.yml —
+# Neurobagel annotation is an optional add-on, not part of the harness's own toolchain. When it is
+# present, the assertion is that it REFUSES an unannotated dictionary: bagel validates controlled
+# terms, so a graph file built from a dictionary carrying none would mean the validation did nothing.
+if ! command -v bagel >/dev/null 2>&1; then
+  echo "  SKIP: bagel-cli not installed (pip install bagel-cli to exercise Neurobagel conversion)"
+else
+  bagel --version > "$WORKDIR/bagel-version.txt" 2>&1 || true
+  assert "bagel reports a version" '[ -s "$WORKDIR/bagel-version.txt" ]'
+  BPRC=$(rc_of bagel pheno --pheno participants.tsv --dictionary participants.json \
+                           --name "e2e demo study" --output "$WORKDIR/pheno.jsonld")
+  assert "bagel pheno rejects a dictionary with no Annotations" "[ $BPRC -ne 0 ]"
+  assert "no graph file produced from an unannotated dictionary" '[ ! -e "$WORKDIR/pheno.jsonld" ]'
+fi
+
+rm -f participants.json   # leave the tree as the earlier blocks left it
+
 # =========================================================== summary
 echo; echo "==================================================="
 echo "e2e-smoke: $PASS passed, $FAIL failed"

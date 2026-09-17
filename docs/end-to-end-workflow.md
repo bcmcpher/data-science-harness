@@ -77,7 +77,7 @@ Get raw data into a standardized, annotated form. The `curate` workflow orchestr
 2. …then validate *(→ the `bids` doer)* — confirm the dataset is BIDS-compliant.
 3. **`curate/merge-data` *(planned)*** *(Agent: `merge-agent`)* — combine tabular phenotypic/clinical sources.
 4. **`curate/gen-data-dict` *(planned)*** — generate a data dictionary for the tabular data.
-5. **`curate/annotate-variables` *(planned)*** *(→ `annotate/*`)* — decide which variables to standardize and drive the tools: `neurobagel-annotate` + `snomed-lookup` (phenotypic/clinical), `reproschema-annotate` (behavioral assessments), `nidm-annotate` (imaging experiment/results).
+5. **`curate/annotate`** *(→ the `annotate` doer)* — decide which variables to standardize and let the doer drive the tools. Built: Neurobagel via `annotate-cli/bagel-cli` (phenotypic/clinical). Reported unavailable until their backends land: SNOMED lookup, ReproSchema (behavioral assessments), NIDM (imaging experiment/results) — see [`add-annotate-capability`](../openspec/changes/add-annotate-capability). The doer never recalls a term identifier; an unresolved variable comes back `unannotated` with the reason.
 
 > 🔧 **Do-it-yourself:** the real data wrangling — cleaning, format conversion for non-standard inputs, defining variables and units, deciding how to handle missingness and outliers. The skills *standardize and annotate* what you've defined; they don't define it.
 
@@ -134,7 +134,7 @@ The `analyze` workflow runs each comparison through the `datalad` capability so 
 ## Stage 7 — Publish
 
 1. **`disseminate/dataset-release`** *(→ `publish/zenodo-deposit`, `datalad` tag)* — bump `dataset_description.json` version, write a BIDS `CHANGES` entry, create a git tag, and optionally mint a Zenodo DOI.
-2. Finalize **`curate/annotate-variables` *(planned)*** *(→ `annotate/nidm-annotate`)* and push the **Neurobagel** graph.
+2. Finalize **`curate/annotate`** *(→ the `annotate` doer)* and push the **Neurobagel** graph. The doer builds the graph file via `annotate-cli/bagel-cli`; pushing it to a Neurobagel node is still do-it-yourself.
 
 > 🔧 **Do-it-yourself:** choose the dataset license, citation, and authorship; decide semantic-versioning policy for the data product.
 

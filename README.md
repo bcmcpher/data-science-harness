@@ -193,7 +193,7 @@ agent's model rather than failing to load.
 
 ## Plugins
 
-**14 plugins**, split across the two planes: 8 **capability** plugins wrap the technical tools, and
+**16 plugins**, split across the two planes: 10 **capability** plugins wrap the technical tools, and
 6 **workflow** plugins encode the research process and call down into them.
 
 Tables below separate what is **built** from what is **planned**. Planned entries are kept because
@@ -219,12 +219,13 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | `containers` | doer | Apptainer / Docker | `containers-doer` — no toolbox yet | P, E |
 | `archive` | doer | OSF / Zenodo / DataCite | `archive-doer` | D |
 | `archive-cli` | toolbox | OSF / Zenodo / DataCite APIs | 3 skills, one per backend, + offline readiness check | D |
+| `annotate` | doer | Neurobagel / SNOMED / ReproSchema / NIDM | `annotate-doer` | M, A |
+| `annotate-cli` | toolbox | bagel-cli | 1 skill (Neurobagel), + offline per-backend check | M, A |
 
 **Planned** — each has an OpenSpec change:
 
 | Plugin | Wraps | Change |
 |--------|-------|--------|
-| `annotate` + `annotate-cli` | bagel-cli / pynidm / reproschema / SNOMED | [`add-annotate-capability`](openspec/changes/add-annotate-capability) |
 | `compendium` + `compendium-cli` | MyST / Jupyter Book / repo2data / MCP | [`add-compendium-capability`](openspec/changes/add-compendium-capability) |
 | `liab` + `liab-cli` | pyinfra / Forgejo | [`add-liab-capability`](openspec/changes/add-liab-capability) |
 | `bids-cli` | bids-validator as a first-class skill | [`deepen-bids-nipoppy`](openspec/changes/deepen-bids-nipoppy) |
@@ -276,7 +277,7 @@ nothing about *why* or *when* you run them.
 
 **`curate`** — Get raw data into a standardized, annotated form.
 - `raw-to-bids` — convert raw acquisitions into BIDS (via the `nipoppy` doer), then validate (via the `bids` doer)
-- `annotate` — enrich metadata so the dataset is self-describing: `dataset_description.json`, a `participants.json` data dictionary, BIDS sidecars, and optionally controlled terms once the `annotate` capability exists
+- `annotate` — enrich metadata so the dataset is self-describing: `dataset_description.json`, a `participants.json` data dictionary, BIDS sidecars, and optionally controlled terms via the `annotate` doer (Neurobagel today; NIDM, ReproSchema and SNOMED report unavailable)
 - `deidentify` *(planned)* — remove PHI as a recorded, provenanced step rather than an untracked fixup ([`add-deidentify-skill`](openspec/changes/add-deidentify-skill))
 - `merge-data` *(planned)* — combine tabular phenotypic/clinical sources
 - `gen-data-dict` *(planned)* — generate a data dictionary
@@ -787,7 +788,7 @@ This project generalizes and re-partitions the Claude Code-specific plugins in [
 | `nipoppy-cli` | `nipoppy` | capability | Full CLI wrapper; orchestration moves to `curate`/`analyze` |
 | — | `containers` | capability | New — portability/ephemerality |
 | — | `disseminate/publish` + `archive` | workflow + capability | New — the planner skill is `disseminate/publish`; OSF/Zenodo/DataCite mechanics live in the `archive` doer |
-| — | `curate/annotate` + `annotate` *(planned)* | workflow + capability | New — the planner skill is `curate/annotate`; the Neurobagel/SNOMED/NIDM/ReproSchema wrappers are a planned capability plugin ([`add-annotate-capability`](openspec/changes/add-annotate-capability)) |
+| — | `curate/annotate` + `annotate` | workflow + capability | New — the planner skill is `curate/annotate`; the Neurobagel/SNOMED/NIDM/ReproSchema wrappers live in the `annotate` doer, of which `bagel-cli` is built ([`add-annotate-capability`](openspec/changes/add-annotate-capability)) |
 | — | `govern` | workflow | DMP, ethics, pre-registration, STAMPED assessment |
 | — | `disseminate` | workflow | Manuscript, reporting guidelines, executable article, agent bundle, Lab-in-a-Box |
 

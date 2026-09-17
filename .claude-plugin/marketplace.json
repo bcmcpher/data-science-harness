@@ -2,7 +2,7 @@
   "name": "data-science-harness",
   "owner": { "name": "bcmcpher" },
   "metadata": {
-    "description": "Governance as a by-product of doing the work: a harness-agnostic set of assistant configurations for academic data science. 6 workflow-plane planner skills (project, govern, curate, analyze, process, disseminate) delegate to capability-plane doers (datalad, nipoppy, bids, containers, archive) and their CLI toolboxes, so every computation and every administrative change runs through one DataLad provenance chain and every research object is Self-contained, Tracked, Actionable, Modular, Portable, Ephemeral and Distributable (see docs/stamped.md). The default export is a living compendium — provenanced dataset, re-executable article, agent-callable method bundle, self-hostable deployment — cross-linked by DOI. Status: the workflow plane is built, the capability plane is uneven, and the evaluation protocol is unrun (see docs/motivation.md).",
+    "description": "Governance as a by-product of doing the work: a harness-agnostic set of assistant configurations for academic data science. 6 workflow-plane planner skills (project, govern, curate, analyze, process, disseminate) delegate to capability-plane doers (datalad, nipoppy, bids, containers, archive, annotate) and their CLI toolboxes, so every computation and every administrative change runs through one DataLad provenance chain and every research object is Self-contained, Tracked, Actionable, Modular, Portable, Ephemeral and Distributable (see docs/stamped.md). The default export is a living compendium — provenanced dataset, re-executable article, agent-callable method bundle, self-hostable deployment — cross-linked by DOI. Status: the workflow plane is built, the capability plane is uneven, and the evaluation protocol is unrun (see docs/motivation.md).",
     "version": "0.1.0"
   },
   "plugins": [
@@ -62,6 +62,11 @@
       "description": "Archive doer: deposits a released version to an external archive (OSF/Zenodo/DataCite) and mints a persistent DOI; reports 'unminted' rather than fabricating one when credentials are absent."
     },
     {
+      "name": "annotate",
+      "source": "./plugins/annotate",
+      "description": "Annotate doer: builds and validates a dataset's machine-readable metadata — participants.json data dictionaries and controlled-term coverage against Neurobagel/SNOMED, ReproSchema and NIDM; reports a term it could not look up as 'unannotated' rather than recalling one, and an uninstalled backend as unavailable rather than as zero matches."
+    },
+    {
       "name": "datalad-cli",
       "source": "./plugins/datalad-cli",
       "description": "DataLad skill toolbox: 19 focused skills wrapping individual datalad subcommands (create, run, save, container-run, siblings, push, ...)."
@@ -75,6 +80,11 @@
       "name": "archive-cli",
       "source": "./plugins/archive-cli",
       "description": "Archive skill toolbox: one skill per backend (OSF, Zenodo, DataCite) for deposit, DOI minting and related identifiers, plus the offline readiness check the archive doer runs before any deposit."
+    },
+    {
+      "name": "annotate-cli",
+      "source": "./plugins/annotate-cli",
+      "description": "Annotate skill toolbox: Neurobagel (bagel-cli) annotation-coverage and graph-building mechanics, plus the offline per-backend check the annotate doer runs first. pynidm, reproschema and a SNOMED source have no skill yet and are reported unavailable."
     }
   ]
 }
