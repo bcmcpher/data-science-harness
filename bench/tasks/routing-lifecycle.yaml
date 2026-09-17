@@ -60,10 +60,10 @@ tasks:
       Our participants table has columns nobody outside the lab would understand. Make the dataset
       self-describing, with standard terms where they exist.
     expected_skill: curate/annotate
-    expected_delegates_to: [datalad]
+    expected_delegates_to: [annotate, datalad]
     notes: >
-      Expected delegation is [datalad] TODAY. add-annotate-capability changes this to
-      [annotate, datalad] — update this task in that change, not before.
+      Reaching datalad alone commits hand-written metadata; reaching annotate is what makes the
+      terms checked rather than recalled. Partial credit is the point of capability@k here.
 
   # --------------------------------------------------------------- 3. process
   - id: process-pipeline
@@ -141,7 +141,10 @@ tasks:
       The dataset, the code, and the paper are all separate now. Connect them so someone landing on
       any one of them can find the others.
     expected_skill: disseminate/link-outputs
-    expected_delegates_to: [datalad]
+    expected_delegates_to: [archive, datalad]
+    notes: >
+      Relations are registered with the archive that owns the identifier, so datalad alone records
+      the links locally and publishes nothing resolvable.
 
   - id: disseminate-manuscript
     prompt: >
@@ -198,7 +201,7 @@ tasks:
   - id: nearmiss-annotate-vs-qc
     prompt: The sidecars are incomplete — sort out the metadata.
     expected_skill: curate/annotate
-    expected_delegates_to: [datalad]
+    expected_delegates_to: [annotate, datalad]
     notes: >
       qc-review would *report* incomplete sidecars; annotate fixes them. A read-only route here is
       the expected failure.

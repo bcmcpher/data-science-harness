@@ -95,7 +95,7 @@ the harness is how one person serves a cohort without becoming the bottleneck.
 |---|---|---|
 | [`docs/stamped.md`](../stamped.md) distils STAMPED into RFC 2119 requirements (S.1 … D.3) that are **mechanically enforced** — the lint validates every skill's `stamped:` letters against the closed set, and now validates the marketplace description's prose too | repo | **built** |
 | The **two-plane split** is a nameable, transferable adoption pattern: research vocabulary above, tool mechanics below, joined by a contract that fails a check rather than decaying into convention | repo | **built** |
-| [`openspec/specs/`](../../openspec/specs) is 19 validated specs — a shared, machine-checkable statement of what an assistant configuration must do, and a worked example of OpenSpec itself as an adoption framework | repo | **built** |
+| [`openspec/specs/`](../../openspec/specs) is 20 validated specs — a shared, machine-checkable statement of what an assistant configuration must do, and a worked example of OpenSpec itself as an adoption framework | repo | **built** |
 | [`docs/end-to-end-workflow.md`](../end-to-end-workflow.md) "When each decision must be finalized" — 16 rows of decision → stage → ledger location → why it locks there. An adoption-decision framework in its own right | repo | **built** |
 | Transfer of these frameworks to other groups is demonstrated through training, not measured | training | **gap** |
 
@@ -138,9 +138,10 @@ these in order and instructs *"Do not soften this."*
    harness's effect on work quality is a design argument, not a measurement. This is the limitation a
    reader should take away, and it goes first.
 2. **The capability plane is uneven.** Several planners can express a step and cannot perform it —
-   they describe the output and commit it. `datalad` has a 19-skill toolbox and `archive` a 3-skill
-   one whose deposit paths have not been run against a live archive; `bids` and `containers` have
-   none.
+   they describe the output and commit it. `datalad` has a 19-skill toolbox, `annotate` a 4-skill one
+   and `archive` a 3-skill one; `bids` and `containers` have none. Neither the archive deposit paths
+   nor any annotate backend has been run live — `annotate` additionally depends on tools that are
+   not installed here, and most of that toolbox validates terms rather than finding them.
 3. **Single-project experience.** The design comes from one context; generality is asserted, not
    demonstrated.
 4. **Governance scope is project-level.** Botes (2026) asks for agent-level access control and
