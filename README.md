@@ -2,7 +2,7 @@
 
 A community-driven, harness-agnostic collection of AI assistant configurations for academic data science work — skills, agents, commands, hooks, MCP configs, and planning templates. The content is harness-neutral Markdown; `bin/install.sh` installs to **Claude Code and OpenCode today**, and Cursor, GitHub Copilot, Windsurf and Gemini CLI are the harnesses the format is designed to reach next (see [Install](#install)).
 
-> **Status:** the workflow plane is built, the capability plane is uneven — `datalad` has a 19-skill toolbox and `archive` a 3-skill one, while `bids` and `containers` have none — and the [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
+> **Status:** the workflow plane is built, the capability plane is uneven — `datalad` has a 19-skill toolbox, `annotate` a 4-skill one, `archive` a 3-skill one and `bids` a 1-skill one, while `containers` has none — and the [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
 
 ---
 
@@ -193,7 +193,7 @@ agent's model rather than failing to load.
 
 ## Plugins
 
-**16 plugins**, split across the two planes: 10 **capability** plugins wrap the technical tools, and
+**17 plugins**, split across the two planes: 11 **capability** plugins wrap the technical tools, and
 6 **workflow** plugins encode the research process and call down into them.
 
 Tables below separate what is **built** from what is **planned**. Planned entries are kept because
@@ -215,7 +215,8 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | `datalad-cli` | toolbox | DataLad CLI | 19 skills, one per command | T, S, M |
 | `nipoppy` | doer | Nipoppy | `nipoppy-doer` | S, T, M, A |
 | `nipoppy-cli` | toolbox | Nipoppy CLI | 1 skill covering the whole CLI | S, T, M, A |
-| `bids` | doer | bids-validator | `bids-doer` — no toolbox yet | S, M |
+| `bids` | doer | bids-validator | `bids-doer` | S, M |
+| `bids-cli` | toolbox | `@bids/validator` / legacy `bids-validator` | 1 skill + offline validator-presence check | S, M |
 | `containers` | doer | Apptainer / Docker | `containers-doer` — no toolbox yet | P, E |
 | `archive` | doer | OSF / Zenodo / DataCite | `archive-doer` | D |
 | `archive-cli` | toolbox | OSF / Zenodo / DataCite APIs | 3 skills, one per backend, + offline readiness check | D |
@@ -228,10 +229,9 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 |--------|-------|--------|
 | `compendium` + `compendium-cli` | MyST / Jupyter Book / repo2data / MCP | [`add-compendium-capability`](openspec/changes/add-compendium-capability) |
 | `liab` + `liab-cli` | pyinfra / Forgejo | [`add-liab-capability`](openspec/changes/add-liab-capability) |
-| `bids-cli` | bids-validator as a first-class skill | [`deepen-bids-nipoppy`](openspec/changes/deepen-bids-nipoppy) |
 
 The capability plane is the uneven half of the harness. `datalad` has 19 toolbox skills, `annotate`
-has 4 and `archive` has 3; `bids` and `containers` have none, so a planner above them can express
+has 4, `archive` has 3 and `bids` has 1; `containers` has none, so a planner above them can express
 what should happen and can only actually do the parts a toolbox covers. The archive skills were written against
 the live OSF, Zenodo, and DataCite APIs, but no deposit has yet been run through them against a live
 archive. Closing that is what the changes above are for, and the
@@ -859,9 +859,9 @@ calls a spec folder a "capability", which is *not* this repository's "capability
 
 **Where the harness stands.** The workflow plane is complete: 22 planner skills across six workflow
 plugins, each naming concrete ledger fields, log-entry shapes, and delegations. The capability plane
-beneath them is uneven — `datalad` has 19 toolbox skills, `annotate` has 4 and `archive` has 3,
-while `bids` and `containers` have none, so most steps can express what should happen but can only
-actually *do* the git-annex, annotation and archive parts. Closing that gap is what the changes above are for. The observable signal that one has shipped
+beneath them is uneven — `datalad` has 19 toolbox skills, `annotate` has 4, `archive` has 3 and
+`bids` has 1, while `containers` has none, so most steps can express what should happen but can
+only actually *do* the git-annex, annotation, archive and validation parts. Closing that gap is what the changes above are for. The observable signal that one has shipped
 is a planner's `delegates_to:` growing beyond `[datalad]`.
 
 ## Evaluating the harness

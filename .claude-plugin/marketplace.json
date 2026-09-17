@@ -82,6 +82,11 @@
       "description": "Archive skill toolbox: one skill per backend (OSF, Zenodo, DataCite) for deposit, DOI minting and related identifiers, plus the offline readiness check the archive doer runs before any deposit."
     },
     {
+      "name": "bids-cli",
+      "source": "./plugins/bids-cli",
+      "description": "BIDS skill toolbox: bids-validator as a first-class, user-invocable skill, plus the offline check the bids doer runs first. Two different programs are called 'the BIDS validator' and they take different flags, so the skill confirms the installed surface instead of assuming it, and reports 'unverified' rather than a pass when none is installed."
+    },
+    {
       "name": "annotate-cli",
       "source": "./plugins/annotate-cli",
       "description": "Annotate skill toolbox: one skill per annotation tool (bagel-cli for Neurobagel, pynidm for NIDM, reproschema for instrument schemas, snomed-lookup for clinical codes), plus the offline per-backend check the annotate doer runs first. Most of them validate terms rather than find them, and each says so."

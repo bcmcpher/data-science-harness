@@ -518,6 +518,50 @@ step "datalad get the annexed result" \
 assert "annexed result retrievable from sibling (datalad get)" \
        'grep -q "\"diff\": 7.0" "$CLONE/derivatives/cmp-group-diff-y/result.json"'
 
+# =========================================================== bids validation (bids-cli toolbox)
+echo; echo "## bids (validator presence check; validation gated on an installed validator)"
+# The bids doer is an agent prompt, so this asserts the deterministic part: the toolbox's offline
+# presence check, and that the skill the check implies actually exists. "unverified" must stay
+# distinguishable from "valid" — with no validator installed the question was never asked, and
+# reporting that as a pass is the one thing the doer's read-only contract must never do.
+VALCHK="$REPO/plugins/bids-cli/scripts/check-validator.sh"
+assert "bids-cli provides a bids-validator skill to invoke" \
+       "[ -f '$REPO/plugins/bids-cli/skills/bids-validator/SKILL.md' ]"
+VRC=$(rc_of bash "$VALCHK")
+assert "validator check answers available (0) or unavailable (1)" "[ $VRC -eq 0 ] || [ $VRC -eq 1 ]"
+bash "$VALCHK" > "$WORKDIR/bids-validator-check.txt" 2>&1 || true
+assert_grep "validator check names the tool it checked" "^tool: bids-validator\$" \
+            "$WORKDIR/bids-validator-check.txt"
+BVBRC=$(rc_of bash "$VALCHK" --bogus)
+assert "an unknown flag is a usage error (exit 2)" "[ $BVBRC -eq 2 ]"
+if [ "$VRC" -eq 1 ]; then
+  assert_grep "unavailable validator says how to enable one" "^enable: " \
+              "$WORKDIR/bids-validator-check.txt"
+  # The Python bids_validator package is a filename matcher with no console script. If it is
+  # importable and the check still says unavailable, the check is refusing to count it — which is
+  # the point: reporting `available` for a capability that cannot validate a dataset would
+  # green-light a validation path that does not exist.
+  if python3 -c 'import bids_validator' 2>/dev/null; then
+    assert_grep "the Python package is not counted as a validator" \
+                "not a substitute" "$WORKDIR/bids-validator-check.txt"
+  else
+    skip "the Python bids_validator package is not installed, so its exclusion is untested here"
+  fi
+  skip "no BIDS validator installed (deno run -A jsr:@bids/validator, or npm install -g bids-validator, to validate the scaffolded dataset)"
+else
+  assert_grep "available validator names the distribution found" "^found: " \
+              "$WORKDIR/bids-validator-check.txt"
+  # The scaffolded dataset is a YODA/BIDS skeleton, so it is not expected to pass — what is asserted
+  # is that the validator ran and produced a verdict, not which verdict.
+  if command -v bids-validator >/dev/null 2>&1; then
+    bids-validator . > "$WORKDIR/bids-validate.txt" 2>&1 || true
+  else
+    deno run -A jsr:@bids/validator . > "$WORKDIR/bids-validate.txt" 2>&1 || true
+  fi
+  assert "the validator produced output for the scaffolded dataset" \
+         "[ -s '$WORKDIR/bids-validate.txt' ]"
+fi
+
 # =========================================================== annotate (data dictionary + backends)
 echo; echo "## annotate (data dictionary written uncommitted; backends degrade per tool)"
 # The annotate doer is an agent prompt, so this asserts the two deterministic things around it: the

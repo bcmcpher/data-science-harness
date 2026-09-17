@@ -1,0 +1,11 @@
+{
+  "name": "bids-cli",
+  "description": "BIDS skill toolbox: bids-validator as a first-class, user-invocable skill, plus the offline check the bids doer runs before it reads a dataset. Two different programs are called 'the BIDS validator' and they take different flags, so the skill confirms the installed surface rather than assuming it — and reports 'unverified' rather than a pass when none is installed.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["bids", "bids-validator", "neuroimaging", "validation", "self-containment", "toolbox", "capability"],
+  "skills": [
+    "./skills/bids-validator"
+  ]
+}

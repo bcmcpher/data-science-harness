@@ -8,13 +8,37 @@ into a toolbox change - if it grows, it belongs in its own change rather than he
 
 ## 1. bids first, verified before moving on
 
-- [ ] 1.1 `plugins/bids-cli/skills/bids-validator/SKILL.md` — `user-invocable: true`, `argument-hint`,
+Section 1 shipped 2026-09-17. Sections 2 and 3 remain, so this change stays open.
+
+- [x] 1.1 `plugins/bids-cli/skills/bids-validator/SKILL.md` — `user-invocable: true`, `argument-hint`,
       scoped `allowed-tools`.
-- [ ] 1.2 `plugins/bids-cli/.claude-plugin/plugin.json` and a marketplace entry.
-- [ ] 1.3 Point `plugins/bids/agents/bids-doer.md` at the toolbox skill instead of inlining the
-      invocation; leave the read-only contract untouched.
-- [ ] 1.4 Add a gated BIDS validation assertion to `tests/e2e-smoke.sh`.
-- [ ] 1.5 `python3 tests/lint-plugins.py` clean before starting section 2.
+- [x] 1.2 `plugins/bids-cli/.claude-plugin/plugin.json` and a marketplace entry.
+- [x] 1.3 Point `plugins/bids/agents/bids-doer.md` at the toolbox skill instead of inlining the
+      invocation; leave the read-only contract untouched. The doer gained a `## Toolbox` table and
+      two constraints (never invent an issue code, never report a clean pass without saying what was
+      ignored); the read-only contract is unchanged.
+- [x] 1.4 Add a gated BIDS validation assertion to `tests/e2e-smoke.sh`. Five assertions plus two
+      gated skips; e2e goes 77 → 82.
+- [x] 1.5 `python3 tests/lint-plugins.py` clean before starting section 2 — 0 errors, 0 warnings at
+      17 plugins / 50 skills.
+- [x] 1.6 **Added during implementation:** `plugins/bids-cli/scripts/check-validator.sh`, the offline
+      presence check, modelled on `annotate-cli/scripts/check-backends.sh` with the same
+      `0 = available / 1 = unavailable / 2 = usage error` contract. Not in the original task list;
+      without it the e2e has nothing deterministic to assert, because the doer is a prompt.
+
+### What section 1 discovered
+
+The original proposal treated the validator as one tool. There are **two** that validate a dataset —
+the current `@bids/validator` (Deno/JSR) and the legacy `bids-validator` Node CLI — and they do not
+share a command line, so the skill confirms `--help` before trusting a flag rather than translating
+between them.
+
+The Python `bids_validator` package is a trap and the gate script deliberately refuses to count it.
+It exposes a `BIDSValidator` class that matches a single *filename* against the naming patterns,
+installs no console script, and cannot validate a dataset. It is importable on this machine, so the
+first version of the check reported `available` and would have green-lit a validation path that does
+not exist — the same "green light into nothing" failure the annotate per-backend check was built to
+avoid. The e2e asserts the exclusion whenever that package is importable.
 
 ## 2. nipoppy
 

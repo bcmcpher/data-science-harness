@@ -1,9 +1,9 @@
 # Why this exists
 
 > **Status: the workflow plane is built, the capability plane is uneven, and nothing has been
-> measured.** Six workflow plugins and 49 skills are on disk and structurally checked. Beneath them,
-> `datalad` has a 19-skill toolbox, `annotate` a 4-skill one and `archive` a 3-skill one, while
-> `bids` and `containers` have none, so a planner can express a step it cannot fully perform. The evaluation protocol in
+> measured.** Six workflow plugins and 50 skills are on disk and structurally checked. Beneath them,
+> `datalad` has a 19-skill toolbox, `annotate` a 4-skill one, `archive` a 3-skill one and `bids` a
+> 1-skill one, while `containers` has none, so a planner can express a step it cannot fully perform. The evaluation protocol in
 > [`evaluation.md`](evaluation.md) is specified and **no probe has been run**; no number anywhere in
 > this repository comes from a measurement. When that changes, this banner is the first thing to
 > update.
@@ -214,7 +214,7 @@ science" with that in mind.
 | | State |
 |---|---|
 | Workflow plane | **Built.** Six plugins — `project`, `govern`, `curate`, `analyze`, `process`, `disseminate` — and the planner skills beneath them, structurally checked. |
-| Capability plane | **Uneven.** `datalad` has a 19-skill toolbox; `nipoppy` has one; `archive` has one skill per backend (OSF, Zenodo, DataCite), whose deposit paths have not been run against a live archive; `bids` and `containers` have doers and no toolbox. A planner above them can express a step and perform only the parts those toolboxes cover. |
+| Capability plane | **Uneven.** `datalad` has a 19-skill toolbox; `nipoppy` has one; `annotate` has one skill per backend (Neurobagel, NIDM, ReproSchema, SNOMED), most of which validate terms rather than find them; `archive` has one per backend (OSF, Zenodo, DataCite); `bids` has one wrapping whichever validator distribution is installed. None of the annotate, archive or BIDS paths has been run live, because none of those tools is installed here. `containers` still has a doer and no toolbox. A planner above them can express a step and perform only the parts those toolboxes cover. |
 | Ledger | **Built.** Schema-validated, with a worked example. |
 | Living compendium | **Designed, partly built.** The four artifacts are specified; the coupling is not complete. |
 | Portability | **Designed for six harnesses, exercised on two.** The installer supports Claude Code and OpenCode. |
