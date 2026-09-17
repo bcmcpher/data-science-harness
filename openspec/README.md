@@ -44,9 +44,13 @@ project-level vocabulary; it describes the `plugins/project/` plugin.
 - **Specs describe the present.** If something is not built, it is a change, not a spec.
 - **Additive, not breaking.** The `project:` header and the append-only `log:` stay as they are.
 - **Ledger-first.** Formalize the schema before the skills that write to it.
-- **One step deep before the next step wide.** Finish a capability end-to-end — doer, toolbox,
-  planner rewired, assertion — before starting another. A half-built capability is worse than an
-  absent one, because the planner will try to use it.
+- **One step deep before the next step wide — in the capability plane.** Finish a capability
+  end-to-end — doer, toolbox, planner rewired, assertion — before starting another. A doer whose
+  toolbox is empty is worse than an absent capability, because the planner will try to use it.
+  This rule is about the capability plane, where a half-built wrapper misleads the layer above it.
+  A workflow-plane skill that is complete over a doer that already exists is not half-built, and
+  such skills may land wide — several at once, grouped by owning plugin. The discriminator is
+  whether anything downstream would reach for something that is not there.
 - **A capability change is done when its planner's `delegates_to:` grows.** That field is the
   observable signal that a conceptual step gained a real tool. If it still reads `[datalad]`,
   nothing shipped.

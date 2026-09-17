@@ -311,14 +311,16 @@ PY
   ORC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
   assert_ledger "ledger valid after adding a pending obligation" "$ORC"
   assert_grep "confirmatory obligation recorded as pending" "status: pending" "project.yaml"
-  python3 - project.yaml <<'PY'
+  OBSHA=$(git rev-parse --short HEAD)
+  python3 - project.yaml "$OBSHA" <<'PY'
 import sys, yaml
-path = sys.argv[1]
+path, sha = sys.argv[1], sys.argv[2]
 with open(path) as fh:
     doc = yaml.safe_load(fh)
 for ob in doc.get("obligations", []):
     if ob.get("id") == "prereg-group-diff-y":
-        ob["status"] = "met"          # forward-only resolution; never deleted
+        ob["status"] = "met"        # forward-only resolution; never deleted
+        ob["resolved_by"] = sha     # the recorded action that met it, not an assertion
 with open(path, "w") as fh:
     yaml.safe_dump(doc, fh, sort_keys=False)
 PY
@@ -326,6 +328,26 @@ PY
   ORC2=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
   assert_ledger "ledger valid after resolving obligation to met" "$ORC2"
   assert_grep "obligation resolved forward to met"        "status: met" "project.yaml"
+  assert_grep "resolution names the recorded action"      "resolved_by: $OBSHA" "project.yaml"
+  # The schema forbids `met` without `resolved_by` — a status flip that records nothing is the
+  # failure the obligations registry exists to prevent. Prove the constraint bites instead of
+  # trusting it: strip the field in a throwaway copy and require a rejection.
+  python3 - project.yaml "$WORKDIR/ledger-met-no-evidence.yaml" <<'PY'
+import sys, yaml
+src, dst = sys.argv[1], sys.argv[2]
+with open(src) as fh:
+    doc = yaml.safe_load(fh)
+for ob in doc.get("obligations", []):
+    ob.pop("resolved_by", None)
+with open(dst, "w") as fh:
+    yaml.safe_dump(doc, fh, sort_keys=False)
+PY
+  NORC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" "$WORKDIR/ledger-met-no-evidence.yaml")
+  if [ "$NORC" -eq 2 ]; then
+    skip "a met obligation with no resolved_by is rejected — ledger validator dependency absent"
+  else
+    assert "a met obligation with no resolved_by is rejected" "[ $NORC -eq 1 ]"
+  fi
 fi
 
 # =========================================================== project/people (Phase 5: contributors[])
