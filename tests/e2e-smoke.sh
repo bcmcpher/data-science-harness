@@ -518,6 +518,59 @@ step "datalad get the annexed result" \
 assert "annexed result retrievable from sibling (datalad get)" \
        'grep -q "\"diff\": 7.0" "$CLONE/derivatives/cmp-group-diff-y/result.json"'
 
+# =========================================================== liab (deployment plan, never an apply)
+echo; echo "## liab (tool gate; a deploy plan touches no network) [gated on pyinfra]"
+# The liab doer is an agent prompt, so this asserts the deterministic parts: the tool gate, that the
+# skill behind it exists, that an unbuilt tool is a usage error, and — the important one — that the
+# plan path produces a plan and performs NO network operation. The apply path is deliberately not
+# tested: it needs a disposable host, and the doer states that verification gap rather than implying
+# coverage.
+LIABCHK="$REPO/plugins/liab-cli/scripts/check-tools.sh"
+assert "liab-cli provides a pyinfra skill to invoke" \
+       "[ -f '$REPO/plugins/liab-cli/skills/pyinfra/SKILL.md' ]"
+PRC=$(rc_of bash "$LIABCHK" pyinfra)
+assert "pyinfra gate answers available (0) or unavailable (1)" "[ $PRC -eq 0 ] || [ $PRC -eq 1 ]"
+FJRC=$(rc_of bash "$LIABCHK" forgejo)
+assert "unbuilt forgejo is a usage error (exit 2), not 'unavailable'" "[ $FJRC -eq 2 ]"
+LUNKRC=$(rc_of bash "$LIABCHK" bogus)
+assert "unknown liab tool is a usage error (exit 2)" "[ $LUNKRC -eq 2 ]"
+# The gate must say what it did not check, on BOTH paths. An `available` answer is exactly when a
+# green check is most likely to be mistaken for deployment readiness.
+bash "$LIABCHK" pyinfra > "$WORKDIR/pyinfra-gate.txt" 2>&1 || true
+assert_grep "the pyinfra gate states it cannot verify host reachability" \
+            "does not and cannot verify" "$WORKDIR/pyinfra-gate.txt"
+if [ "$PRC" -ne 0 ]; then
+  skip "pyinfra unusable — $(grep -h '^missing: ' "$WORKDIR/pyinfra-gate.txt" | sed 's/^missing: //')"
+  echo "    $(grep -h '^enable: ' "$WORKDIR/pyinfra-gate.txt" | sed 's/^enable: //')"
+else
+  LIABDIR="$WORKDIR/liab"
+  mkdir -p "$LIABDIR"
+  # An @local inventory is the only target a test may name. A plan against a real hostname would be
+  # a network operation, which is the thing this block exists to rule out.
+  cat > "$LIABDIR/inventory.py" <<'INVEOF'
+hosts = ["@local"]
+INVEOF
+  cat > "$LIABDIR/deploy.py" <<'DEPEOF'
+from pyinfra.operations import files
+
+files.directory(
+    name="Create the git-annex serving root",
+    path="/tmp/dsh-liab-e2e-annex",
+    present=True,
+)
+DEPEOF
+  PLANRC=$(rc_of bash -c "cd '$LIABDIR' && pyinfra inventory.py deploy.py --dry > '$WORKDIR/liab-plan.log' 2>&1")
+  if [ "$PLANRC" -ne 0 ]; then
+    echo "  note: pyinfra --dry exited $PLANRC; last lines of $WORKDIR/liab-plan.log:"
+    tail -5 "$WORKDIR/liab-plan.log" | sed 's/^/    /'
+  fi
+  assert "a --dry plan is produced against an @local inventory" "[ $PLANRC -eq 0 ]"
+  assert "the plan names the operation it would perform" \
+         "grep -qi 'git-annex serving root\|files.directory' '$WORKDIR/liab-plan.log'"
+  # The whole point of plan-only: the directory the deploy would create must not exist afterwards.
+  assert "a plan changed nothing on the host" "[ ! -d /tmp/dsh-liab-e2e-annex ]"
+fi
+
 # =========================================================== compendium (MyST article build)
 echo; echo "## compendium (tool gate; a scaffolded MyST project builds) [gated on mystmd]"
 # The compendium doer is an agent prompt, so this asserts the deterministic parts: the tool gate,

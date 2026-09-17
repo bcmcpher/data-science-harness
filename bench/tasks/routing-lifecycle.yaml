@@ -191,7 +191,11 @@ tasks:
     prompt: >
       We can't put this data on someone else's cloud. Set up serving it from hardware we control.
     expected_skill: disseminate/liab-deploy
-    expected_delegates_to: [datalad]
+    expected_delegates_to: [liab, datalad]
+    notes: >
+      Reaching datalad alone scaffolds a pyinfra config and commits it; reaching liab is what plans
+      it against a named inventory and later proves the dataset is retrievable from the host. The
+      liab doer plans by default, so a route that reaches it is not a route that deploys anything.
 
   # ------------------------------------------------- near-miss discriminators
   # Pairs that a keyword-matching model will confuse. These carry most of the

@@ -1,10 +1,10 @@
 # Why this exists
 
 > **Status: the workflow plane is built, the capability plane is uneven, and nothing has been
-> measured.** Six workflow plugins and 52 skills are on disk and structurally checked. Beneath them,
-> `datalad` has a 19-skill toolbox, `annotate` a 4-skill one, `archive` a 3-skill one, and `bids`
-> and `compendium` a 1-skill one each, while `containers` has none, so a planner can express a step
-> it cannot fully perform. The evaluation protocol in
+> measured.** Six workflow plugins and 53 skills are on disk and structurally checked. Beneath them,
+> `datalad` has a 19-skill toolbox, `annotate` a 4-skill one, `archive` a 3-skill one, and `bids`,
+> `compendium` and `liab` a 1-skill one each, while `containers` has none, so a planner can express
+> a step it cannot fully perform. The evaluation protocol in
 > [`evaluation.md`](evaluation.md) is specified and **no probe has been run**; no number anywhere in
 > this repository comes from a measurement. When that changes, this banner is the first thing to
 > update.
@@ -215,7 +215,7 @@ science" with that in mind.
 | | State |
 |---|---|
 | Workflow plane | **Built.** Six plugins — `project`, `govern`, `curate`, `analyze`, `process`, `disseminate` — and the planner skills beneath them, structurally checked. |
-| Capability plane | **Uneven.** `datalad` has a 19-skill toolbox; `nipoppy` has one; `annotate` has one skill per backend (Neurobagel, NIDM, ReproSchema, SNOMED), most of which validate terms rather than find them; `archive` has one per backend (OSF, Zenodo, DataCite); `bids` has one wrapping whichever validator distribution is installed; `compendium` has one wrapping MyST, and it is the only capability whose tool is actually installed here and exercised by the end-to-end test. None of the annotate, archive or BIDS paths has been run live, because none of those tools is installed. `containers` still has a doer and no toolbox. A planner above them can express a step and perform only the parts those toolboxes cover. |
+| Capability plane | **Uneven.** `datalad` has a 19-skill toolbox; `nipoppy` has one; `annotate` has one skill per backend (Neurobagel, NIDM, ReproSchema, SNOMED), most of which validate terms rather than find them; `archive` has one per backend (OSF, Zenodo, DataCite); `bids` has one wrapping whichever validator distribution is installed; `compendium` has one wrapping MyST, which the end-to-end test actually builds with; `liab` has one wrapping pyinfra, whose plan path the test exercises when pyinfra is installed and whose apply path is exercised only by hand, because testing it needs a disposable host. None of the annotate, archive or BIDS paths has been run live, because none of those tools is installed. `containers` still has a doer and no toolbox. A planner above them can express a step and perform only the parts those toolboxes cover. |
 | Ledger | **Built.** Schema-validated, with a worked example. |
 | Living compendium | **Designed, partly built.** The four artifacts are specified; the coupling is not complete. |
 | Portability | **Designed for six harnesses, exercised on two.** The installer supports Claude Code and OpenCode. |

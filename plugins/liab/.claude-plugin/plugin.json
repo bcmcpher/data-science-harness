@@ -1,0 +1,11 @@
+{
+  "name": "liab",
+  "description": "Lab-in-a-Box doer (capability plane): the tool subagent that plans self-hosted research infrastructure, applies it only on an explicit target-naming confirmation, and proves the dataset is retrievable from it with a datalad get. The only doer whose mistakes are not confined to a working tree, so it plans by default, reports a partial application as partial, never retries a failed apply, and never calls a deployment 'working' on the strength of a green pyinfra run.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["lab-in-a-box", "pyinfra", "self-hosting", "forgejo", "git-annex", "data-sovereignty", "distributability", "doer", "capability"],
+  "agents": [
+    "./agents/liab-doer.md"
+  ]
+}

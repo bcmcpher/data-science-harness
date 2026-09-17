@@ -2,7 +2,7 @@
 
 A community-driven, harness-agnostic collection of AI assistant configurations for academic data science work — skills, agents, commands, hooks, MCP configs, and planning templates. The content is harness-neutral Markdown; `bin/install.sh` installs to **Claude Code and OpenCode today**, and Cursor, GitHub Copilot, Windsurf and Gemini CLI are the harnesses the format is designed to reach next (see [Install](#install)).
 
-> **Status:** the workflow plane is built, the capability plane is uneven — `datalad` has a 19-skill toolbox, `annotate` a 4-skill one, `archive` a 3-skill one, and `bids` and `compendium` a 1-skill one each, while `containers` has none — and the [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
+> **Status:** the workflow plane is built, the capability plane is uneven — `datalad` has a 19-skill toolbox, `annotate` a 4-skill one, `archive` a 3-skill one, and `bids`, `compendium` and `liab` a 1-skill one each, while `containers` has none — and the [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
 
 ---
 
@@ -193,7 +193,7 @@ agent's model rather than failing to load.
 
 ## Plugins
 
-**19 plugins**, split across the two planes: 13 **capability** plugins wrap the technical tools, and
+**21 plugins**, split across the two planes: 15 **capability** plugins wrap the technical tools, and
 6 **workflow** plugins encode the research process and call down into them.
 
 Tables below separate what is **built** from what is **planned**. Planned entries are kept because
@@ -224,15 +224,16 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | `annotate-cli` | toolbox | bagel-cli / pynidm / reproschema / SNOMED source | 4 skills, one per backend, + offline per-backend check | M, A |
 | `compendium` | doer | MyST (Jupyter Book / repo2data / MCP planned) | `compendium-doer` | A, P, E |
 | `compendium-cli` | toolbox | mystmd | 1 skill + offline tool check | A, P, E |
+| `liab` | doer | pyinfra (Forgejo planned) | `liab-doer` — plans by default | D |
+| `liab-cli` | toolbox | pyinfra | 1 skill + offline tool check | D |
 
 **Planned** — each has an OpenSpec change:
 
 | Plugin | Wraps | Change |
 |--------|-------|--------|
-| `liab` + `liab-cli` | pyinfra / Forgejo | [`add-liab-capability`](openspec/changes/add-liab-capability) |
 
 The capability plane is the uneven half of the harness. `datalad` has 19 toolbox skills, `annotate`
-has 4, `archive` has 3, and `bids` and `compendium` have 1 each; `containers` has none, so a planner above them can express
+has 4, `archive` has 3, and `bids`, `compendium` and `liab` have 1 each; `containers` has none, so a planner above them can express
 what should happen and can only actually do the parts a toolbox covers. The archive skills were written against
 the live OSF, Zenodo, and DataCite APIs, but no deposit has yet been run through them against a live
 archive. Closing that is what the changes above are for, and the
@@ -309,7 +310,7 @@ nothing about *why* or *when* you run them.
 *Living research compendium:*
 - `executable-article` — scaffold a **NeuroLibre-style reproducible preprint**: MyST `myst.yml` + Jupyter Book content, a `binder/` environment from the DataLad container digest, and a `repo2data` file pointing at the OSF/DataLad-published dataset; wire figures to regenerate from the provenanced pipeline. *Delegates to the `compendium` doer, which invokes MyST, resolves each figure's output to the run that produced it, and builds in the project's container — reporting an untraceable figure as `unprovenanced` and a host build as unpinned. `jupyter-book`, `repo2data` and the MCP scaffold are still unbuilt; see [`add-compendium-capability`](openspec/changes/add-compendium-capability).*
 - `agent-bundle` — **Paper2Agent-style**: synthesize an MCP server + parameterized tools from the project's scripts + data dictionary, emitted as the harness's *own* universal `SKILL.md` + `plugin.json` + MCP config, with result-reproduction tests. This dogfoods the project's own content format. *Still delegates only to `datalad`: the `compendium` doer exists but its MCP-scaffold skill does not, so this can describe the bundle and commit it. See [`add-compendium-capability`](openspec/changes/add-compendium-capability) section 3.3.*
-- `liab-deploy` — **Lab-in-a-Box-style**: scaffold a `liab-deployments` (pyinfra) config that stands up self-hosted Forgejo + git-annex data serving and publishes the provenanced DataLad dataset via git-annex remotes — a **data-sovereign distribution channel** alongside the cloud-hosted article and agent bundle. *Currently delegates only to `datalad`; see [`add-liab-capability`](openspec/changes/add-liab-capability).*
+- `liab-deploy` — **Lab-in-a-Box-style**: scaffold a `liab-deployments` (pyinfra) config that stands up self-hosted Forgejo + git-annex data serving and publishes the provenanced DataLad dataset via git-annex remotes — a **data-sovereign distribution channel** alongside the cloud-hosted article and agent bundle. *Delegates to the `liab` doer, which plans by default and applies only on an explicit instruction naming the target host, and which reports `applied` rather than `working` until a `datalad get` retrieves annexed content from the self-hosted remote. Forgejo instance setup is still unbuilt; see [`add-liab-capability`](openspec/changes/add-liab-capability).*
 - `link-outputs` — cross-link dataset / code / paper / preprint / pre-registration / executable-article / agent-bundle / Lab-in-a-Box DOIs & URLs using DataCite `RelatedIdentifier` relation types; write back to the ledger `products:` and `dataset_description.json`
 - References: `references/equator-guidelines.md`, `references/datacite-relations.md`
 
@@ -861,9 +862,9 @@ calls a spec folder a "capability", which is *not* this repository's "capability
 **Where the harness stands.** The workflow plane is complete: 22 planner skills across six workflow
 plugins, each naming concrete ledger fields, log-entry shapes, and delegations. The capability plane
 beneath them is uneven — `datalad` has 19 toolbox skills, `annotate` has 4, `archive` has 3, and
-`bids` and `compendium` have 1 each, while `containers` has none, so most steps can express what
-should happen but can only actually *do* the git-annex, annotation, archive, validation and
-article-build parts. Closing that gap is what the changes above are for. The observable signal that one has shipped
+`bids`, `compendium` and `liab` have 1 each, while `containers` has none, so most steps can express
+what should happen but can only actually *do* the git-annex, annotation, archive, validation,
+article-build and deployment-planning parts. Closing that gap is what the changes above are for. The observable signal that one has shipped
 is a planner's `delegates_to:` growing beyond `[datalad]`.
 
 ## Evaluating the harness
