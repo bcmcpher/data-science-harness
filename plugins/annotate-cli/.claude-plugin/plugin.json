@@ -1,11 +1,14 @@
 {
   "name": "annotate-cli",
-  "description": "Annotate skill toolbox: one skill per annotation tool, read by the annotate doer as reference material, plus the offline backend check the doer runs before annotating. Neurobagel (bagel-cli) mechanics live here; pynidm, reproschema and a SNOMED source are not built yet and are reported unavailable. The never-recall-a-term rule stays with the doer.",
-  "version": "0.1.0",
+  "description": "Annotate skill toolbox: one skill per annotation tool, read by the annotate doer as reference material, plus the offline backend check the doer runs before annotating. Neurobagel (bagel-cli) validates and converts, reproschema validates instrument schemas, pynidm converts and can resolve terms interactively, and snomed-lookup queries whichever licensed SNOMED source the user configured. The never-recall-a-term rule stays with the doer.",
+  "version": "0.2.0",
   "author": { "name": "bcmcpher" },
   "license": "MIT",
-  "keywords": ["annotate", "neurobagel", "bagel-cli", "data-dictionary", "controlled-terms", "toolbox"],
+  "keywords": ["annotate", "neurobagel", "bagel-cli", "nidm", "reproschema", "snomed", "data-dictionary", "controlled-terms", "toolbox"],
   "skills": [
-    "./skills/bagel-cli"
+    "./skills/bagel-cli",
+    "./skills/pynidm",
+    "./skills/reproschema",
+    "./skills/snomed-lookup"
   ]
 }

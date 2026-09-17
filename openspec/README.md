@@ -31,7 +31,7 @@ project-level vocabulary; it describes the `plugins/project/` plugin.
 | Group | Specs |
 |---|---|
 | Workflow plane | `govern`, `project-mgmt`, `curate`, `analyze`, `process`, `disseminate` |
-| Capability plane | `datalad`, `nipoppy`, `bids`, `containers`, `archive` |
+| Capability plane | `datalad`, `nipoppy`, `bids`, `containers`, `archive`, `annotate` |
 | Cross-cutting | `project-ledger`, `skill-format`, `harness-distribution`, `structural-lint`, `dependency-environment` |
 | Research communication | `literature-record`, `evaluation-protocol`, `publication` |
 

@@ -84,7 +84,7 @@
     {
       "name": "annotate-cli",
       "source": "./plugins/annotate-cli",
-      "description": "Annotate skill toolbox: Neurobagel (bagel-cli) annotation-coverage and graph-building mechanics, plus the offline per-backend check the annotate doer runs first. pynidm, reproschema and a SNOMED source have no skill yet and are reported unavailable."
+      "description": "Annotate skill toolbox: one skill per annotation tool (bagel-cli for Neurobagel, pynidm for NIDM, reproschema for instrument schemas, snomed-lookup for clinical codes), plus the offline per-backend check the annotate doer runs first. Most of them validate terms rather than find them, and each says so."
     }
   ]
 }

@@ -7,7 +7,8 @@ self-describing. `raw-to-bids` converts DICOMs to a BIDS layout through nipoppy'
 converter under `datalad run`, so the ingest itself is provenanced rather than a manual step that
 predates the record. `annotate` then advances STAMPED Metadata and Actionability — data dictionaries,
 sidecars, and optionally controlled-term annotation via Neurobagel/SNOMED, ReproSchema, or NIDM.
-Today `annotate` has no capability beneath it and does the metadata work inline.
+That annotation is delegated to the `annotate` capability, which checks each backend independently,
+so the dataset-level metadata still completes when no vocabulary tool is installed.
 
 ## Requirements
 
@@ -53,21 +54,28 @@ dictionary covering each phenotypic column, and fill or extend BIDS sidecars.
 
 ### Requirement: Controlled-term annotation is optional and honest about coverage
 
-`curate/annotate` MUST report controlled-term coverage honestly whenever it annotates variables with
-terms from Neurobagel, SNOMED, ReproSchema, or NIDM — naming which variables received a term and
-which did not. This annotation step is optional and is offered when richer Metadata and
-Actionability are wanted.
+`curate/annotate` MUST delegate controlled-term annotation to the annotate doer and report the
+coverage that doer returns — naming which variables received a term, which did not, and why. This
+annotation step is optional and is offered when richer Metadata and Actionability are wanted. The
+skill MUST declare `delegates_to: [annotate, datalad]`.
 
 #### Scenario: Partial controlled-term coverage
 
 - **WHEN** only some variables map to controlled terms
-- **THEN** the report distinguishes annotated from unannotated variables
+- **THEN** the report distinguishes annotated from unannotated variables, attributing each term to
+  the source the doer queried
 
 #### Scenario: A term cannot be resolved
 
-- **WHEN** no controlled term is found for a variable
-- **THEN** the variable is described in free text and the gap is reported, and no term identifier is
+- **WHEN** the annotate doer reports a variable as unannotated
+- **THEN** the variable is described in free text, the gap is reported, and no term identifier is
   invented
+
+#### Scenario: The annotate capability is unavailable
+
+- **WHEN** no annotation backend is installed
+- **THEN** the skill still completes the dataset-level metadata and data-dictionary steps, and
+  reports controlled-term coverage as unavailable
 
 ### Requirement: Metadata edits are provenanced
 

@@ -517,6 +517,23 @@ assert "backend check never prints the credential value" '! grep -q dsh-sentinel
 ABRC=$(rc_of bash "$BACKENDS" figshare)
 assert "unknown annotate backend is a usage error (exit 2)" "[ $ABRC -eq 2 ]"
 
+# Every backend the check knows must have a skill behind it. A check reporting `available` for a
+# backend with no SKILL.md would hand the doer a green light and no invocation path — the exact
+# half-built state the repo treats as worse than an absent capability. Install state is not asserted
+# (none of these tools is in environment.yml), the per-backend contract is: it names itself, answers
+# 0 or 1 and never crashes, and when unavailable it says how to enable it.
+for pair in bagel:bagel-cli pynidm:pynidm reproschema:reproschema snomed:snomed-lookup; do
+  BK="${pair%%:*}"; SK="${pair##*:}"
+  assert "backend $BK has an annotate-cli skill to invoke" "[ -f '$REPO/plugins/annotate-cli/skills/$SK/SKILL.md' ]"
+  PRC=$(rc_of bash "$BACKENDS" "$BK")
+  assert "backend $BK answers available (0) or unavailable (1)" "[ $PRC -eq 0 ] || [ $PRC -eq 1 ]"
+  bash "$BACKENDS" "$BK" > "$WORKDIR/backend-$BK.txt" 2>&1 || true
+  assert_grep "backend $BK names itself in its report" "^backend: $BK\$" "$WORKDIR/backend-$BK.txt"
+  if [ "$PRC" -eq 1 ]; then
+    assert_grep "unavailable $BK says how to enable it" "^enable: " "$WORKDIR/backend-$BK.txt"
+  fi
+done
+
 # The data dictionary is the always-available half of annotation — no backend, no credential — so it
 # is asserted unconditionally. Free-text Description only: a controlled term here would have to come
 # from a backend, none is installed, and writing one anyway is exactly the fabrication the doer

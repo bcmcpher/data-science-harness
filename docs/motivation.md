@@ -1,9 +1,9 @@
 # Why this exists
 
 > **Status: the workflow plane is built, the capability plane is uneven, and nothing has been
-> measured.** Six workflow plugins and 45 skills are on disk and structurally checked. Beneath them,
-> `datalad` has a 19-skill toolbox and `archive` a 3-skill one, while `bids` and `containers` have
-> none, so a planner can express a step it cannot fully perform. The evaluation protocol in
+> measured.** Six workflow plugins and 49 skills are on disk and structurally checked. Beneath them,
+> `datalad` has a 19-skill toolbox, `annotate` a 4-skill one and `archive` a 3-skill one, while
+> `bids` and `containers` have none, so a planner can express a step it cannot fully perform. The evaluation protocol in
 > [`evaluation.md`](evaluation.md) is specified and **no probe has been run**; no number anywhere in
 > this repository comes from a measurement. When that changes, this banner is the first thing to
 > update.

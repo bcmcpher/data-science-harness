@@ -23,9 +23,10 @@ without opening the raw files. Every metadata edit is a file in the dataset, so 
 > a `participants.json` data dictionary, and BIDS sidecars — which need no extra tools and are fully
 > provenanced. Controlled-term annotation against external vocabularies is the richer add-on, and it
 > belongs to the **annotate** doer: delegate it rather than constructing terms here. That doer owns
-> Neurobagel (`bagel-cli`) today and reports NIDM (`pynidm`), ReproSchema and SNOMED as unavailable
-> until their backends land. An unavailable backend is not zero matches — report the gap and keep the
-> free-text description, never a fabricated code.
+> Neurobagel (`bagel-cli`), NIDM (`pynidm`), ReproSchema and SNOMED CT, and checks each backend
+> independently — an uninstalled tool or an unconfigured terminology source comes back unavailable.
+> An unavailable backend is not zero matches — report the gap and keep the free-text description,
+> never a fabricated code.
 
 ## When to use
 - Data is in (or near) BIDS form and needs describing: missing/thin `dataset_description.json`,
@@ -52,9 +53,12 @@ without opening the raw files. Every metadata edit is a file in the dataset, so 
    > "check Neurobagel annotation coverage for `participants.tsv` and report which columns carry a
    > term, which do not, and which backends are unavailable."
 
-   It covers phenotypic variables via Neurobagel (`bagel-cli`), and reports ReproSchema (behavioral
-   assessments), NIDM (`pynidm`, imaging provenance) and SNOMED as unavailable until those backends
-   land. It returns candidates with their source and never selects a term — **you** put each one to
+   It covers phenotypic variables via Neurobagel (`bagel-cli`), behavioral assessments via
+   ReproSchema, imaging provenance via NIDM (`pynidm`), and clinical codes via a SNOMED source the
+   user configures — reporting any backend it could not reach as unavailable rather than as an empty
+   result. Note that only SNOMED lookup and an interactive `pynidm` session actually *find* new
+   terms; the rest validate terms you already have, so expect to supply or confirm them.
+   It returns candidates with their source and never selects a term — **you** put each one to
    the user for confirmation, because which term is correct is a research judgment. Pass the
    confirmed term back for it to write. It writes the metadata files and leaves them uncommitted,
    which is what step 6 then saves.

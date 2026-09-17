@@ -220,7 +220,7 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | `archive` | doer | OSF / Zenodo / DataCite | `archive-doer` | D |
 | `archive-cli` | toolbox | OSF / Zenodo / DataCite APIs | 3 skills, one per backend, + offline readiness check | D |
 | `annotate` | doer | Neurobagel / SNOMED / ReproSchema / NIDM | `annotate-doer` | M, A |
-| `annotate-cli` | toolbox | bagel-cli | 1 skill (Neurobagel), + offline per-backend check | M, A |
+| `annotate-cli` | toolbox | bagel-cli / pynidm / reproschema / SNOMED source | 4 skills, one per backend, + offline per-backend check | M, A |
 
 **Planned** — each has an OpenSpec change:
 
@@ -230,9 +230,9 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | `liab` + `liab-cli` | pyinfra / Forgejo | [`add-liab-capability`](openspec/changes/add-liab-capability) |
 | `bids-cli` | bids-validator as a first-class skill | [`deepen-bids-nipoppy`](openspec/changes/deepen-bids-nipoppy) |
 
-The capability plane is the uneven half of the harness. `datalad` has 19 toolbox skills and
-`archive` has 3; `bids` and `containers` have none, so a planner above them can express what should
-happen and can only actually do the parts a toolbox covers. The archive skills were written against
+The capability plane is the uneven half of the harness. `datalad` has 19 toolbox skills, `annotate`
+has 4 and `archive` has 3; `bids` and `containers` have none, so a planner above them can express
+what should happen and can only actually do the parts a toolbox covers. The archive skills were written against
 the live OSF, Zenodo, and DataCite APIs, but no deposit has yet been run through them against a live
 archive. Closing that is what the changes above are for, and the
 observable signal that one has shipped is a planner's `delegates_to:` growing beyond `[datalad]`.
@@ -788,7 +788,7 @@ This project generalizes and re-partitions the Claude Code-specific plugins in [
 | `nipoppy-cli` | `nipoppy` | capability | Full CLI wrapper; orchestration moves to `curate`/`analyze` |
 | — | `containers` | capability | New — portability/ephemerality |
 | — | `disseminate/publish` + `archive` | workflow + capability | New — the planner skill is `disseminate/publish`; OSF/Zenodo/DataCite mechanics live in the `archive` doer |
-| — | `curate/annotate` + `annotate` | workflow + capability | New — the planner skill is `curate/annotate`; the Neurobagel/SNOMED/NIDM/ReproSchema wrappers live in the `annotate` doer, of which `bagel-cli` is built ([`add-annotate-capability`](openspec/changes/add-annotate-capability)) |
+| — | `curate/annotate` + `annotate` | workflow + capability | New — the planner skill is `curate/annotate`; the Neurobagel/SNOMED/NIDM/ReproSchema wrappers live in the `annotate` doer and its four `annotate-cli` skills ([`openspec/specs/annotate`](openspec/specs/annotate/spec.md)) |
 | — | `govern` | workflow | DMP, ethics, pre-registration, STAMPED assessment |
 | — | `disseminate` | workflow | Manuscript, reporting guidelines, executable article, agent bundle, Lab-in-a-Box |
 
@@ -837,13 +837,12 @@ CI checks **structure and specs, not agent behaviour** — see [Evaluating the h
 The forward plan no longer lives in this README. It lives in [`openspec/`](openspec), where each
 proposed change is a validated record rather than a checkbox in a 55 KB file:
 
-- **[`openspec/specs/`](openspec/specs)** — 19 specs describing what the harness *does today*,
+- **[`openspec/specs/`](openspec/specs)** — 20 specs describing what the harness *does today*,
   grounded in the checks that already enforce it (`tests/lint-plugins.py`, `tests/e2e-smoke.sh`,
   `schemas/project.schema.json`).
 - **[`openspec/changes/`](openspec/changes)** — what we have decided to do next. The former
-  "deepening the capability plane" roadmap is now five open changes: `add-annotate-capability`,
-  `add-compendium-capability`, `add-deidentify-skill`, `add-liab-capability`, and
-  `deepen-bids-nipoppy`.
+  "deepening the capability plane" roadmap is now four open changes: `add-compendium-capability`,
+  `add-deidentify-skill`, `add-liab-capability`, and `deepen-bids-nipoppy`.
 - **[`openspec/changes/archive/`](openspec/changes/archive)** — changes that shipped. A change leaves
   `changes/` only when its tasks are done and its spec delta has been merged into `specs/`, so the
   open list stays an accurate account of what is *not* built.
@@ -860,9 +859,9 @@ calls a spec folder a "capability", which is *not* this repository's "capability
 
 **Where the harness stands.** The workflow plane is complete: 22 planner skills across six workflow
 plugins, each naming concrete ledger fields, log-entry shapes, and delegations. The capability plane
-beneath them is uneven — `datalad` has 19 toolbox skills and `archive` has 3, while `bids` and
-`containers` have none, so most steps can express what should happen but can only actually *do* the
-git-annex and archive parts. Closing that gap is what the changes above are for. The observable signal that one has shipped
+beneath them is uneven — `datalad` has 19 toolbox skills, `annotate` has 4 and `archive` has 3,
+while `bids` and `containers` have none, so most steps can express what should happen but can only
+actually *do* the git-annex, annotation and archive parts. Closing that gap is what the changes above are for. The observable signal that one has shipped
 is a planner's `delegates_to:` growing beyond `[datalad]`.
 
 ## Evaluating the harness

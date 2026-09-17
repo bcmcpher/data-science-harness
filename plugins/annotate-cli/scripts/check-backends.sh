@@ -17,9 +17,11 @@
 # per-backend answer lets a dataset gain Neurobagel annotation while SNOMED coverage stays empty,
 # instead of failing the whole request.
 #
-# Only `bagel` has an annotate-cli skill today. The other three are checked here so the doer can
-# name what is missing precisely, but even when their tool is installed there is no invocation path
-# yet, which their `enable:` hint says.
+# Each of the four backends has an annotate-cli skill, so a passing check here means the doer has a
+# real invocation path. What a backend can *do* once available still differs: `bagel` and
+# `reproschema` validate and convert, `pynidm` converts and can resolve new terms only interactively
+# (which needs INTERLEX_API_KEY and a human at the prompt), and `snomed` queries whichever licensed
+# source the user configured. Those differences live in the skills, not here.
 
 set -uo pipefail
 
@@ -43,19 +45,19 @@ case "$backend" in
   pynidm)
     if ! python3 -c 'import nidm' 2>/dev/null; then
       missing+=("pynidm package")
-      enable+=("pip install pynidm — note that no annotate-cli/skills/pynidm skill exists yet, so the doer still has no invocation path")
+      enable+=("pip install pynidm (provides the 'pynidm', 'csv2nidm' and 'bidsmri2nidm' commands) — resolving new terms additionally needs INTERLEX_API_KEY and an interactive terminal")
     fi
     ;;
   reproschema)
     if ! python3 -c 'import reproschema' 2>/dev/null; then
       missing+=("reproschema package")
-      enable+=("pip install reproschema — note that no annotate-cli/skills/reproschema skill exists yet, so the doer still has no invocation path")
+      enable+=("pip install reproschema (provides the 'reproschema' command)")
     fi
     ;;
   snomed)
     if [ -z "${SNOMED_API_KEY:-}" ] && { [ -z "${SNOMED_OWL:-}" ] || [ ! -f "${SNOMED_OWL:-}" ]; }; then
       missing+=("SNOMED CT source")
-      enable+=("export SNOMED_API_KEY for a licensed terminology server, or SNOMED_OWL=/path/to/snomed.owl for a local release — SNOMED CT requires a licence in most countries, and no annotate-cli/skills/snomed-lookup skill exists yet")
+      enable+=("export SNOMED_API_KEY for a licensed terminology server (SNOMED_API_URL overrides the endpoint), or SNOMED_OWL=/path/to/snomed.owl for a local release — SNOMED CT requires a licence in most countries, which is why no source ships with the harness")
     fi
     ;;
   *)

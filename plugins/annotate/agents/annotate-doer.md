@@ -33,23 +33,35 @@ The `annotate-cli` plugin holds the per-tool mechanics: which command, which inp
 vocabulary it can and cannot resolve. **Before operating on a backend, read its skill**
 (repo-relative paths).
 
-| Backend | Skill to consult | Requirement | Status |
+| Backend | Skill to consult | Requirement | What it can do |
 |---|---|---|---|
-| **Neurobagel** | `plugins/annotate-cli/skills/bagel-cli/SKILL.md` | `bagel` on `PATH` (`pip install bagel-cli`) | built |
-| **NIDM** | — | `pynidm` | not built — report unavailable |
-| **ReproSchema** | — | `reproschema` | not built — report unavailable |
-| **SNOMED CT** | — | a licensed terminology source | not built — report unavailable |
+| **Neurobagel** | `plugins/annotate-cli/skills/bagel-cli/SKILL.md` | `bagel` on `PATH` (`pip install bagel-cli`) | validate a dictionary's annotations, convert to a graph file — no lookup |
+| **NIDM** | `plugins/annotate-cli/skills/pynidm/SKILL.md` | `pynidm` installed; new terms also need `INTERLEX_API_KEY` **and a human at the prompt** | convert BIDS/tabular to NIDM, query NIDM — term resolution is interactive only |
+| **ReproSchema** | `plugins/annotate-cli/skills/reproschema/SKILL.md` | `reproschema` installed | validate and convert instrument schemas — no lookup, no vocabulary |
+| **SNOMED CT** | `plugins/annotate-cli/skills/snomed-lookup/SKILL.md` | `SNOMED_API_KEY` or `SNOMED_OWL` (licensed content, so the user supplies it) | the only backend that returns candidate codes, and the only one that leaves the machine |
 
-A backend with no skill has **no invocation path at all**. Do not improvise one: report it
+A backend whose check fails has **no invocation path at all**. Do not improvise one: report it
 unavailable and say what would enable it. That is the honest answer, and it is the whole reason this
 doer exists.
 
 ## What each backend can and cannot resolve
-This distinction is load-bearing and easy to get wrong. `bagel-cli` is a **validator and converter**,
-not a lookup service: it checks that a data dictionary's `Annotations` block uses terms from the
-Neurobagel vocabularies and converts an annotated dataset into a graph file. It will not tell you
-which term a column should carry. Term *selection* happens in Neurobagel's annotation tool or by the
-user, and you surface candidates for confirmation rather than choosing.
+This distinction is load-bearing and easy to get wrong. Most of this toolbox **validates terms you
+already have**; almost none of it finds new ones. `bagel-cli` checks that a data dictionary's
+`Annotations` block uses terms from the Neurobagel vocabularies and converts an annotated dataset
+into a graph file, and `reproschema` checks that an instrument schema conforms — neither will tell
+you which term a column should carry.
+
+There are exactly two ways a term identifier you did not already have can legitimately enter your
+report:
+
+- a **`snomed-lookup` query** against the source the user configured, which returns candidates with
+  their source; or
+- an **interactive `pynidm` annotation session that the user ran themselves**, whose result they hand
+  back to you as a mapping file.
+
+Anything outside those two paths and the user's own message is recall, and recall is forbidden here.
+Term *selection* among candidates is a research judgement: you surface them for confirmation rather
+than choosing.
 
 So a column can be in exactly one of three states, and your report must say which:
 
@@ -84,7 +96,7 @@ So a column can be in exactly one of three states, and your report must say whic
 5. **Report** a structured result:
    ```
    op:          dictionary | annotate | validate | graph | coverage
-   tool:        bagel-cli | none
+   tool:        bagel-cli | pynidm | reproschema | snomed-lookup | none
    version:     <the tool version you actually ran, or n/a>
    result:      ok | partial | unannotated | unavailable | failed
    files:       <metadata files written, uncommitted>
