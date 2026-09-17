@@ -272,17 +272,17 @@ nothing about *why* or *when* you run them.
 - `log-decision` — append to a decision / lab-notebook log, then `datalad save`
 - `status-report` — generate a progress / funder-RPPR-style summary from the ledger + `datalad log` + git history
 - `people` — manage collaborators / ORCID / CRediT contributor roles in the ledger
-- `env-check` *(planned)* — verify the executable dependencies declared in each plugin's `requires:` are present
-- `claude-config` *(planned)* — generate CLAUDE.md, settings, MCP stubs
-- `track-milestone` *(planned)* — add/update milestones & deadlines in the ledger
+- `env-check` — report the project's tool dependencies as two separate findings: **declared but absent** (a setup step) and **present but undeclared** (a Portability defect, `P.1`). Runs each capability's own gate script rather than re-implementing it; never installs anything
+- `claude-config` — generate CLAUDE.md, settings and MCP stubs from facts verified in the project. Writes no instruction it could not source, and never puts a credential in a committed stub
+- `track-milestone` — add/update deadlines in the ledger as `kind: milestone` obligations, so "what's due" has one answer. Never invents a date and never moves one silently — a slip is logged
 - `coordinator` — a read-only orientation **agent**, not a skill: it reports where a project stands so a fresh session can get oriented without reconstructing state by hand
 
 **`curate`** — Get raw data into a standardized, annotated form.
 - `raw-to-bids` — convert raw acquisitions into BIDS (via the `nipoppy` doer), then validate (via the `bids` doer)
 - `annotate` — enrich metadata so the dataset is self-describing: `dataset_description.json`, a `participants.json` data dictionary, BIDS sidecars, and optionally controlled terms via the `annotate` doer (Neurobagel today; NIDM, ReproSchema and SNOMED report unavailable)
 - `deidentify` — remove PHI as a recorded, provenanced step rather than an untracked fixup: one `datalad run` per category, with what was deliberately kept and a required residual-risk statement in the ledger. Selecting and running the tools stays 🔧 do-it-yourself
-- `merge-data` *(planned)* — combine tabular phenotypic/clinical sources
-- `gen-data-dict` *(planned)* — generate a data dictionary
+- `merge-data` — combine tabular phenotypic/clinical sources as a provenanced run, with the join key supplied rather than inferred and the row/column arithmetic reported. A wrong join does not fail, it produces a table
+- `gen-data-dict` — generate a `participants.json` data dictionary: the skeleton from the data, the meanings from the user or a codebook. An undescribed column gets no entry and appears in the report rather than a guessed `Description`
 
 **`process`** — Run established preprocessing pipelines under provenance.
 - `run-pipeline` — execute a preprocessing pipeline (fMRIPrep, QSIPrep, …) through the `nipoppy` and `datalad` doers, so the run is containerized and recorded
@@ -305,7 +305,7 @@ nothing about *why* or *when* you run them.
 - `reporting-checklist` — apply the right EQUATOR guideline (CONSORT / STROBE / PRISMA / ARRIVE) or, with the neuro pack, COBIDAS
 - `dataset-release` — bump `dataset_description.json`, write a BIDS `CHANGES` entry, `datalad` git tag, optional Zenodo DOI (via the `archive` doer)
 - `publish` — push a released product to an archive and record the identifier it returns
-- `submission-track` *(planned)* — track target journal, submission, revisions, reviewer responses in the ledger
+- `submission-track` — record venue, date, status and decision as an append-only `submissions[]` history on the product, so a resubmission does not erase the first venue's outcome. Never records an outcome that has not happened
 
 *Living research compendium:*
 - `executable-article` — scaffold a **NeuroLibre-style reproducible preprint**: MyST `myst.yml` + Jupyter Book content, a `binder/` environment from the DataLad container digest, and a `repo2data` file pointing at the OSF/DataLad-published dataset; wire figures to regenerate from the provenanced pipeline. *Delegates to the `compendium` doer, which invokes MyST, resolves each figure's output to the run that produced it, and builds in the project's container — reporting an untraceable figure as `unprovenanced` and a host build as unpinned. `jupyter-book`, `repo2data` and the MCP scaffold are still unbuilt; see [`add-compendium-capability`](openspec/changes/add-compendium-capability).*

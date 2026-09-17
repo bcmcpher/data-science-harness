@@ -1,15 +1,32 @@
 {
   "name": "project",
-  "description": "Project lifecycle + Manage & Comply planner (workflow plane): new-project scaffolds a YODA/BIDS DataLad study; status-report renders PROJECT.md/funder reports from the ledger; people records CRediT/ORCID credit; log-decision captures decisions + rationale. The coordinator agent orients a researcher on load. Delegates DataLad mechanics to the datalad doer.",
-  "version": "0.1.0",
-  "author": { "name": "bcmcpher" },
+  "description": "Project lifecycle + Manage & Comply planner (workflow plane): new-project scaffolds a YODA/BIDS DataLad study; status-report renders PROJECT.md/funder reports from the ledger; people records CRediT/ORCID credit; log-decision captures decisions + rationale; track-milestone keeps deadlines in the same obligations[] registry as every other commitment; env-check reports declared-but-absent and present-but-undeclared tools as the two different defects they are; claude-config writes the project's assistant configuration from verified facts only. The coordinator agent orients a researcher on load. Delegates DataLad mechanics to the datalad doer.",
+  "version": "0.2.0",
+  "author": {
+    "name": "bcmcpher"
+  },
   "license": "MIT",
-  "keywords": ["data-science", "research", "project", "ledger", "credit", "manage-comply", "datalad", "stamped", "workflow"],
+  "keywords": [
+    "data-science",
+    "research",
+    "project",
+    "ledger",
+    "credit",
+    "milestones",
+    "environment",
+    "manage-comply",
+    "datalad",
+    "stamped",
+    "workflow"
+  ],
   "skills": [
     "./skills/new-project",
     "./skills/status-report",
     "./skills/people",
-    "./skills/log-decision"
+    "./skills/log-decision",
+    "./skills/track-milestone",
+    "./skills/env-check",
+    "./skills/claude-config"
   ],
   "agents": [
     "./agents/coordinator.md"
