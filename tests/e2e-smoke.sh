@@ -518,6 +518,73 @@ step "datalad get the annexed result" \
 assert "annexed result retrievable from sibling (datalad get)" \
        'grep -q "\"diff\": 7.0" "$CLONE/derivatives/cmp-group-diff-y/result.json"'
 
+# =========================================================== compendium (MyST article build)
+echo; echo "## compendium (tool gate; a scaffolded MyST project builds) [gated on mystmd]"
+# The compendium doer is an agent prompt, so this asserts the deterministic parts: the tool gate,
+# that the skill behind it exists, that a request for an unbuilt tool is a usage error rather than
+# an `unavailable` answer, and that a minimal MyST project actually builds. What it deliberately
+# does NOT assert is reproducibility — a MyST project whose figures are committed images builds
+# perfectly and reproduces nothing, which is why figure provenance is the doer's check and not a
+# property of a green build.
+COMPCHK="$REPO/plugins/compendium-cli/scripts/check-tools.sh"
+assert "compendium-cli provides a myst skill to invoke" \
+       "[ -f '$REPO/plugins/compendium-cli/skills/myst/SKILL.md' ]"
+# --project names where a package.json-declared mystmd lives; without it the gate would answer from
+# the e2e's scaffolded dataset, which has no node_modules, and report a tool the repo does have as
+# unavailable.
+MRC=$(rc_of bash "$COMPCHK" myst --project "$REPO")
+assert "myst gate answers available (0) or unavailable (1)" "[ $MRC -eq 0 ] || [ $MRC -eq 1 ]"
+# jupyter-book, repo2data and mcp-scaffold are named in the change and not built. `unavailable`
+# would mean "install it and retry", which would promise an invocation path that does not exist.
+for NOTBUILT in jupyter-book repo2data mcp-scaffold; do
+  NBRC=$(rc_of bash "$COMPCHK" "$NOTBUILT")
+  assert "unbuilt tool $NOTBUILT is a usage error (exit 2), not 'unavailable'" "[ $NBRC -eq 2 ]"
+done
+UNKRC=$(rc_of bash "$COMPCHK" bogus)
+assert "unknown compendium tool is a usage error (exit 2)" "[ $UNKRC -eq 2 ]"
+if [ "$MRC" -ne 0 ]; then
+  # Quote the gate's own reason rather than assuming "not installed": present-but-unrunnable and
+  # absent are different problems with different fixes, and the gate already distinguishes them.
+  bash "$COMPCHK" myst --project "$REPO" > "$WORKDIR/myst-gate.txt" 2>&1 || true
+  skip "myst unusable — $(grep -h '^missing: ' "$WORKDIR/myst-gate.txt" | sed 's/^missing: //')"
+  echo "    $(grep -h '^enable: ' "$WORKDIR/myst-gate.txt" | sed 's/^enable: //')"
+else
+  MYSTPROJ="$WORKDIR/article"
+  mkdir -p "$MYSTPROJ"
+  cat > "$MYSTPROJ/myst.yml" <<'MYSTEOF'
+version: 1
+project:
+  id: e2e-smoke-article
+  title: An article scaffolded by the e2e smoke test
+  toc:
+    - file: paper.md
+site:
+  template: book-theme
+MYSTEOF
+  cat > "$MYSTPROJ/paper.md" <<'MDEOF'
+# Results
+
+The comparison produced a difference of 7.0.
+MDEOF
+  # Resolve myst the way the gate script does: a global install, else the project-local one a
+  # package.json declaration provides after `npm ci`. CI has only the second, and it needs an
+  # absolute path because the build runs from the scaffolded project directory.
+  if command -v myst >/dev/null 2>&1; then
+    MYSTBIN=$(command -v myst)
+  else
+    MYSTBIN="$REPO/node_modules/.bin/myst"
+  fi
+  # Not `step`: a build failure is the thing under test, and aborting the whole suite on it would
+  # hide every later assertion. Capture the result and assert on it.
+  BUILDRC=$(rc_of bash -c "cd '$MYSTPROJ' && '$MYSTBIN' build --html > '$WORKDIR/myst-build.log' 2>&1")
+  if [ "$BUILDRC" -ne 0 ]; then
+    echo "  note: myst build exited $BUILDRC; last lines of $WORKDIR/myst-build.log:"
+    tail -5 "$WORKDIR/myst-build.log" | sed 's/^/    /'
+  fi
+  assert "a scaffolded MyST project builds successfully" "[ $BUILDRC -eq 0 ]"
+  assert "the build produced output" "[ -d '$MYSTPROJ/_build' ]"
+fi
+
 # =========================================================== bids validation (bids-cli toolbox)
 echo; echo "## bids (validator presence check; validation gated on an installed validator)"
 # The bids doer is an agent prompt, so this asserts the deterministic part: the toolbox's offline

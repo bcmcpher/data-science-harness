@@ -139,9 +139,11 @@ these in order and instructs *"Do not soften this."*
    reader should take away, and it goes first.
 2. **The capability plane is uneven.** Several planners can express a step and cannot perform it —
    they describe the output and commit it. `datalad` has a 19-skill toolbox, `annotate` a 4-skill
-   one, `archive` a 3-skill one and `bids` a 1-skill one; `containers` has none. None of the archive
-   deposit paths, annotate backends or BIDS validators has been run live here, because none of those
-   tools is installed — and most of the annotate toolbox validates terms rather than finding them.
+   one, `archive` a 3-skill one, and `bids` and `compendium` a 1-skill one each; `containers` has
+   none. Only the compendium path has been exercised against its real tool — `tests/e2e-smoke.sh`
+   builds a scaffolded MyST project. The archive deposit paths, the annotate backends and the BIDS
+   validators have not been run live, because none of those tools is installed here, and most of
+   the annotate toolbox validates terms rather than finding them.
 3. **Single-project experience.** The design comes from one context; generality is asserted, not
    demonstrated.
 4. **Governance scope is project-level.** Botes (2026) asks for agent-level access control and

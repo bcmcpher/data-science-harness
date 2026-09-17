@@ -174,7 +174,11 @@ tasks:
       I want a version of the paper where the figures rebuild themselves from the data rather than
       being pasted in.
     expected_skill: disseminate/executable-article
-    expected_delegates_to: [datalad]
+    expected_delegates_to: [compendium, datalad]
+    notes: >
+      Reaching datalad alone scaffolds and commits a document; reaching compendium is what wires each
+      figure to the run that produced it and builds in the pinned container. The prompt's "rather
+      than being pasted in" is exactly the half datalad cannot deliver.
 
   - id: disseminate-bundle
     prompt: >

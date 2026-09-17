@@ -1,0 +1,11 @@
+{
+  "name": "compendium-cli",
+  "description": "Compendium skill toolbox: MyST project scaffolding, building and preview, plus the offline check the compendium doer runs first. The skill is explicit that building a document is not the same as making it reproducible — figure provenance and environment pinning belong to the doer — and that a MyST build exits 0 with unresolved references, so a clean build is never reported without its warnings.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["myst", "mystmd", "executable-article", "neurolibre", "reproducible-preprint", "compendium", "toolbox", "capability"],
+  "skills": [
+    "./skills/myst"
+  ]
+}
