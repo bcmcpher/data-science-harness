@@ -34,8 +34,10 @@ before generating.
 > annexed content from the self-hosted remote earns the word `working`, which is the same standard
 > `disseminate/publish` already applies to a cloud sibling.
 >
-> `forgejo` has no skill yet, so instance setup comes back not built. Scaffold the config and say so;
-> do not improvise it.
+> Instance setup and repository creation are different requests and reach different skills. Standing
+> Forgejo up belongs in the pyinfra deployment, where it can be planned and rebuilt; creating the
+> repository on a running instance is the `forgejo` skill, and it will refuse to guess the
+> repository's visibility. Neither is improvised from here.
 
 ## When to use
 - The project wants to self-host its dataset (data sovereignty, institutional policy), alongside or
@@ -56,7 +58,10 @@ before generating.
    Report the plan to the user. An apply is a separate, later instruction that names the target host;
    do not request one on the user's behalf, and do not treat their approval of the plan as approval
    to apply.
-4. **Register the sibling (datalad doer)** — once the store is up, delegate:
+4. **Create the repository, then register the sibling (datalad doer)** — once the instance is up,
+   the liab doer creates the repository through its `forgejo` skill. It will ask whether the
+   repository is private, and so should you: a dataset repository created public when it should have
+   been private is a disclosure, and there is no safe default to assume. Then delegate:
    > "siblings: register the self-hosted Forgejo/git-annex store as a sibling (`create-sibling` /
    > the annex special remote), with a storage `--publish-depends` so annexed content is served."
    Then the user pushes with `disseminate/publish`.

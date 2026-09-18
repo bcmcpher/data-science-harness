@@ -144,8 +144,8 @@ these in order and instructs *"Do not soften this."*
 2. **The capability plane is uneven.** The workflow plane is now complete — 37 planner skills, one
    deliberately unbuilt — which sharpens rather than softens this: several planners can express a
    step and cannot perform it, and they describe the output and commit it. `datalad` has a 19-skill
-   toolbox, `annotate` a 4-skill one, `archive` a 3-skill one, and `bids`, `compendium` and `liab` a
-   1-skill one each; `containers` has none. Two paths have been exercised against their real tools:
+   toolbox, `annotate` a 4-skill one, `archive` a 3-skill one, `liab` a 2-skill one, and `bids` and
+   `compendium` a 1-skill one each; `containers` has none. Two paths have been exercised against their real tools:
    `tests/e2e-smoke.sh` builds a scaffolded MyST project, and it produces a `pyinfra --dry` plan
    and asserts the host was unchanged. The archive deposit paths, the annotate backends and the
    BIDS validators have not been run live, because none of those tools is installed here; most of

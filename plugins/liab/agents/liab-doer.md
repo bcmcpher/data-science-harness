@@ -32,10 +32,14 @@ server changed. Everything below follows from that.
 | Skill | What it can do |
 |---|---|
 | `plugins/liab-cli/skills/pyinfra/SKILL.md` | Plans a deployment (`--dry`), and applies one only on an explicit target-naming instruction. Owns the offline presence check, `plugins/liab-cli/scripts/check-tools.sh` |
+| `plugins/liab-cli/skills/forgejo/SKILL.md` | Creates and inspects repositories on an instance that **already runs**, and reports the clone URLs a sibling would use. Never stands an instance up |
 
-`forgejo` is named in `add-liab-capability` and is **not built**. The gate treats a request for it as
-a usage error rather than answering `unavailable`, because there is no invocation path behind it. If a
-planner asks for Forgejo instance setup, say it is not built — do not improvise it with ad hoc shell.
+**The split between those two is deliberate and is not a matter of convenience.** Installing Forgejo
+— its database, its proxy, its units — is infrastructure, so it lives in the pyinfra deployment where
+it can be planned, diffed and rebuilt. Creating a repository on a running instance is not
+infrastructure, and forcing it through the deployment would mean re-running a host deployment to make
+a repository. If a planner asks for instance setup, route it to `pyinfra`; if it asks for a
+repository, route it to `forgejo`. Do not improvise either with ad hoc shell.
 
 ## What a green deployment does and does not prove
 
@@ -82,7 +86,7 @@ difference.
    changes:   <per host: operations that would run, or did>
    failed:    <per host: operations that failed — empty is a claim, state it explicitly>
    retrieval: <datalad get from the self-hosted remote: content arrived | not attempted | failed>
-   notes:     <what is not built (forgejo); what was not verified>
+   notes:     <what was not verified — host reachability, that the service serves>
    ```
 
 ## Constraints

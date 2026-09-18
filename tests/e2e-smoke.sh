@@ -530,8 +530,25 @@ assert "liab-cli provides a pyinfra skill to invoke" \
        "[ -f '$REPO/plugins/liab-cli/skills/pyinfra/SKILL.md' ]"
 PRC=$(rc_of bash "$LIABCHK" pyinfra)
 assert "pyinfra gate answers available (0) or unavailable (1)" "[ $PRC -eq 0 ] || [ $PRC -eq 1 ]"
-FJRC=$(rc_of bash "$LIABCHK" forgejo)
-assert "unbuilt forgejo is a usage error (exit 2), not 'unavailable'" "[ $FJRC -eq 2 ]"
+assert "liab-cli provides a forgejo skill to invoke" \
+       "[ -f '$REPO/plugins/liab-cli/skills/forgejo/SKILL.md' ]"
+# forgejo is credential-gated rather than binary-gated. With nothing exported it must refuse and name
+# both what is missing and how to supply it; a self-hosted instance has no default hostname, so
+# FORGEJO_URL is a hard requirement rather than something to infer.
+FJRC=$(rc_of env -u FORGEJO_URL -u FORGEJO_TOKEN bash "$LIABCHK" forgejo)
+assert "forgejo gate refuses (exit 1) with no instance or token exported" "[ $FJRC -eq 1 ]"
+env -u FORGEJO_URL -u FORGEJO_TOKEN bash "$LIABCHK" forgejo > "$WORKDIR/forgejo-gate.txt" 2>&1 || true
+assert_grep "the forgejo gate names the missing instance URL" \
+            "FORGEJO_URL" "$WORKDIR/forgejo-gate.txt"
+FJRC2=$(rc_of env FORGEJO_URL=https://git.invalid FORGEJO_TOKEN=not-a-real-token bash "$LIABCHK" forgejo)
+assert "forgejo gate is satisfied by presence alone (0), or reports a missing client (1)" \
+       "[ $FJRC2 -eq 0 ] || [ $FJRC2 -eq 1 ]"
+env FORGEJO_URL=https://git.invalid FORGEJO_TOKEN=not-a-real-token bash "$LIABCHK" forgejo \
+    > "$WORKDIR/forgejo-gate-ok.txt" 2>&1 || true
+# The point of the note: a token that is present and revoked passes this check and fails at the
+# instance, and the gate has to say so on the path where it is most likely to be misread.
+assert_grep "the forgejo gate states a present token is not a valid one" \
+            "not a valid one" "$WORKDIR/forgejo-gate-ok.txt"
 LUNKRC=$(rc_of bash "$LIABCHK" bogus)
 assert "unknown liab tool is a usage error (exit 2)" "[ $LUNKRC -eq 2 ]"
 # The gate must say what it did not check, on BOTH paths. An `available` answer is exactly when a

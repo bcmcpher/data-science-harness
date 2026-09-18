@@ -99,7 +99,7 @@
     {
       "name": "liab-cli",
       "source": "./plugins/liab-cli",
-      "description": "Lab-in-a-Box skill toolbox: pyinfra deployment planning and, on an explicit target-naming instruction, application — plus the offline check the liab doer runs first. Plan-by-default is a constraint rather than a preference, because the blast radius is a machine rather than a working tree."
+      "description": "Lab-in-a-Box skill toolbox: pyinfra deployment planning and, on an explicit target-naming instruction, application; forgejo repository creation on an instance that already runs — plus the offline check the liab doer runs first. Plan-by-default is a constraint rather than a preference, because the blast radius is a machine rather than a working tree, and forgejo refuses to guess a repository's visibility because neither answer is undoable. Advances STAMPED Distributability."
     },
     {
       "name": "compendium-cli",
