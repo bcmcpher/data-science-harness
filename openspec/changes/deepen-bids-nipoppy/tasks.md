@@ -42,10 +42,34 @@ avoid. The e2e asserts the exclusion whenever that package is importable.
 
 ## 2. nipoppy
 
-- [ ] 2.1 Split `plugins/nipoppy-cli/skills/` into read-only, mutating, and setup command-class skills.
-- [ ] 2.2 Update `plugins/nipoppy-cli/.claude-plugin/plugin.json` to list them all — the lint requires
-      bidirectional registration.
-- [ ] 2.3 Replace the doer's inline command knowledge with a toolbox table naming the skill per class.
+- [x] 2.1 Split `plugins/nipoppy-cli/skills/` into command-class skills. **Four, not three.** The
+      task said read-only, mutating and setup; the doer actually distinguished a fourth —
+      *bookkeeping writes* (`track-curation`, `track-processing`), which write derived state files
+      and so are neither a query nor a computation. Folding them into the read-only skill would have
+      made "read-only" false; folding them into the mutating one would have sent a status refresh
+      through `datalad run`, recording a run whose inputs are the whole dataset and burying the runs
+      that matter. The spec delta was corrected to name the four classes the doer distinguishes
+      rather than the three this task assumed.
+      `nipoppy-query` (`status`, `pipeline search`, `pipeline list`) runs directly and saves nothing.
+      `nipoppy-track` runs directly, reports the files written and hands the save back as a
+      checkpoint. `nipoppy-compute` (`reorg`, `bidsify`, `process`, `extract`) constructs, simulates,
+      declares inputs and outputs and **refuses to execute** — `result: constructed` is its success.
+      `nipoppy-setup` (`init`, the `pipeline` subgroup) writes declarations rather than data.
+      The split is by class because the handling rule is a property of the class, not of the verb.
+- [x] 2.2 `plugins/nipoppy-cli/.claude-plugin/plugin.json` lists all four, 0.1.0 → 0.2.0, with the
+      description naming the classes. The eight reference files moved from
+      `skills/nipoppy-cli/references/` to the plugin-level `references/`, matching `datalad-cli`'s
+      layout, so all four skills read the same material; `plugins/nipoppy-cli/README.md` and the
+      marketplace entry were rewritten. 68 → 71 skills.
+- [x] 2.3 The doer's inline classification is now a four-row table naming the skill per class, and it
+      gained the rule the spec delta asks for: **a command that fits none of the four classes is not
+      the doer's to run** — it reports which class it believes the command falls into, and why, and
+      asks the planner before executing anything that could write. Its `class:` report field gained
+      `setup`, and its dataset-state check now says `config.json`, matching the bundled references
+      rather than a filename recalled from a different nipoppy version.
+      **No e2e coverage was added, and nipoppy still has none.** The doer and all four skills are
+      prompts, and nipoppy is not installed here. The split is enforced by the lint's bidirectional
+      registration and by nothing else.
 
 ## 3. Guideline references
 

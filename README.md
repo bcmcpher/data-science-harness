@@ -214,7 +214,7 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | `datalad` | doer | DataLad / git-annex | `datalad-doer` | T, S, M |
 | `datalad-cli` | toolbox | DataLad CLI | 19 skills, one per command | T, S, M |
 | `nipoppy` | doer | Nipoppy | `nipoppy-doer` | S, T, M, A |
-| `nipoppy-cli` | toolbox | Nipoppy CLI | 1 skill covering the whole CLI | S, T, M, A |
+| `nipoppy-cli` | toolbox | Nipoppy CLI | 4 skills, one per command class | S, T, M, A |
 | `bids` | doer | bids-validator | `bids-doer` | S, M |
 | `bids-cli` | toolbox | `@bids/validator` / legacy `bids-validator` | 1 skill + offline validator-presence check | S, M |
 | `containers` | doer | Apptainer / Docker | `containers-doer` — no toolbox yet | P, E |
@@ -786,7 +786,7 @@ This project generalizes and re-partitions the Claude Code-specific plugins in [
 | `project-init` | `project` | workflow | Data-analysis project type; adds tracking skills + optional LiaB infra |
 | `bids` | `bids` | capability | Validation subset only — the doer is read-only and never modifies the dataset; scaffolding and workflow orchestration move to `curate` |
 | `datalad-cli` | `datalad` | capability | Core subset (run, container-run, save, clone, get, push, log, checkpoint) |
-| `nipoppy-cli` | `nipoppy` | capability | Full CLI wrapper; orchestration moves to `curate`/`analyze` |
+| `nipoppy-cli` | `nipoppy` | capability | Full CLI wrapper, split by command class; orchestration moves to `curate`/`analyze` |
 | — | `containers` | capability | New — portability/ephemerality |
 | — | `disseminate/publish` + `archive` | workflow + capability | New — the planner skill is `disseminate/publish`; OSF/Zenodo/DataCite mechanics live in the `archive` doer |
 | — | `curate/annotate` + `annotate` | workflow + capability | New — the planner skill is `curate/annotate`; the Neurobagel/SNOMED/NIDM/ReproSchema wrappers live in the `annotate` doer and its four `annotate-cli` skills ([`openspec/specs/annotate`](openspec/specs/annotate/spec.md)) |

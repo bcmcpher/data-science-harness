@@ -84,7 +84,7 @@
     {
       "name": "nipoppy-cli",
       "source": "./plugins/nipoppy-cli",
-      "description": "Nipoppy skill toolbox: dataset curation, BIDS conversion, pipeline running/tracking, and IDP extraction for neuroimaging studies."
+      "description": "Nipoppy skill toolbox, split by command class rather than by verb: nipoppy-query reads state, nipoppy-track refreshes the derived status files, nipoppy-compute constructs the commands that produce data and refuses to execute them, and nipoppy-setup scaffolds a dataset and its pipeline configurations. The split is the safety property — nipoppy records nothing about how derivatives came to be, so a computation executed bare produces a tree nothing can re-derive. Advances STAMPED Tracking and Actionability."
     },
     {
       "name": "archive-cli",
