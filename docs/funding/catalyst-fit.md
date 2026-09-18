@@ -71,7 +71,7 @@ are different kinds of evidence.
 |---|---|---|
 | **The help desk builds the judgment directly.** Guiding a cohort of postdocs at the AI/neuroscience intersection is the check the fund says gets bypassed, performed by a person — see [motivation.md](../motivation.md#practice) | training | **built** (qualitative; no figures collected) |
 | A planner skill MUST carry `## When to use`, `## Steps`, `## Constraints` — human-authored research-process judgment, enforced by [`tests/lint-plugins.py`](../../tests/lint-plugins.py). Tool mechanics are quarantined below: *doers are the only things that run tools* | repo | **built** |
-| [`docs/end-to-end-workflow.md`](../end-to-end-workflow.md) marks 🔧 **Do-it-yourself** sections — the scientific and engineering work the harness does not do for you (model selection, scripting, plotting, interpretation). *The skills scaffold around this work; they don't replace it.* An explicit, documented refusal to let the tool substitute for judgment | repo | **built** |
+| [`docs/end-to-end-workflow.md`](../end-to-end-workflow.md) marks 🔧 **Do-it-yourself** sections — the scientific and engineering work the harness does not do for you (model specification, the analysis code itself, checking statistical assumptions, deciding what a figure should show, interpretation). *The skills scaffold around this work; they don't replace it.* An explicit, documented refusal to let the tool substitute for judgment | repo | **built** |
 | ⚠️ **Scaffolding gap** callouts name where the harness leaves the researcher unaided, with a ranked list. The highest-ranked one now has an owning change | repo | **built** (the callouts); the fixes are **specified** |
 | Manuscript-craft reference material — [`docs/writing/`](../writing/index.md), six files distilled from ten sources | reference | **built** |
 
@@ -137,10 +137,11 @@ these in order and instructs *"Do not soften this."*
 1. **Nothing has been evaluated.** The protocol is specified and unrun. Every claim about the
    harness's effect on work quality is a design argument, not a measurement. This is the limitation a
    reader should take away, and it goes first.
-2. **The capability plane is uneven.** Several planners can express a step and cannot perform it —
-   they describe the output and commit it. `datalad` has a 19-skill toolbox, `annotate` a 4-skill
-   one, `archive` a 3-skill one, and `bids`, `compendium` and `liab` a 1-skill one each;
-   `containers` has none. Two paths have been exercised against their real tools:
+2. **The capability plane is uneven.** The workflow plane is now complete — 37 planner skills, one
+   deliberately unbuilt — which sharpens rather than softens this: several planners can express a
+   step and cannot perform it, and they describe the output and commit it. `datalad` has a 19-skill
+   toolbox, `annotate` a 4-skill one, `archive` a 3-skill one, and `bids`, `compendium` and `liab` a
+   1-skill one each; `containers` has none. Two paths have been exercised against their real tools:
    `tests/e2e-smoke.sh` builds a scaffolded MyST project, and it produces a `pyinfra --dry` plan
    and asserts the host was unchanged. The archive deposit paths, the annotate backends and the
    BIDS validators have not been run live, because none of those tools is installed here; most of

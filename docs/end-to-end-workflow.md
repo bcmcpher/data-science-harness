@@ -47,14 +47,14 @@ Set up the administrative and scientific *plan* before touching data.
 
 1. **`analyze/literature-search` *(planned)*** — *(scope deliberately thin, pending participant feedback)* a lightweight BibTeX-collection helper (PubMed / Semantic Scholar), **not** an AI summary engine. The clearer connection is to meta-analysis tooling like **NeuroSynth Compose / NiMARE**.
 2. **`analyze/propose-comparison`** — sketch the first comparison(s): outcomes, design, and power/effect-size estimation. Choose the rigor mode (quick query vs pre-registered — see [Comparisons](#the-comparison-spectrum-in-practice)).
-3. **`govern/init-ledger` *(planned)*** — create `project.yaml`, the administrative source of truth.
+3. **`govern/init-ledger`** — create `project.yaml`, the administrative source of truth, in a dataset that does not have one. It refuses to overwrite an existing ledger and never backfills the log.
 4. **`project/people`** — add collaborators with ORCID and CRediT roles to the ledger.
-5. **`govern/dmp` *(planned)*** — author a Data Management Plan (RDA maDMP / funder template); its obligations are written into the ledger.
-6. **`govern/ethics-track` *(planned)*** — record the IRB/IACUC protocol, approval, and expiry (drives a renewal obligation).
+5. **`govern/dmp`** — author a Data Management Plan (RDA maDMP / funder template); its obligations are written into the ledger. It asserts no funder requirement it did not read from a supplied template or hear from you.
+6. **`govern/ethics-track`** — record the IRB/IACUC protocol, approval, and expiry (drives a renewal obligation). It never computes an expiry from an approval date: a wrong expiry fires the renewal reminder after the approval lapsed.
 7. **`govern/preregister`** — register on OSF / ClinicalTrials.gov / PROSPERO; record the ID in the ledger. This is also how a **confirmatory comparison** freezes its spec.
 8. **`project/track-milestone`** — set the study's key dates and deliverables, as `kind: milestone` obligations in the same registry as every other commitment.
 
-> 🔧 **Do-it-yourself:** this is where the *science* is designed. You decide the hypotheses, the primary and secondary outcomes, the inclusion/exclusion criteria, the model family, and the sample-size justification. `analyze/propose-comparison` computes power once you supply an expected effect size and design — it does not choose them for you.
+> 🔧 **Do-it-yourself:** this is where the *science* is designed. You decide the hypotheses, the primary and secondary outcomes, the inclusion/exclusion criteria, the model family, and the sample-size justification. `analyze/plan-analysis` recommends an approach and lists what it assumes once you supply the design — it does not choose the design, check the assumptions, or compute a power figure; a power calculation is its own analysis with its own inputs.
 
 > ✅ **Now planned:** the earlier "how minimal should comparison-tracking be?" question is resolved — see [The comparison spectrum in practice](#the-comparison-spectrum-in-practice). Quick queries are zero-ledger DataLad branches; pre-registered comparisons are ledger obligations. Strict pre-registration is one (optional) end of the spectrum.
 
@@ -62,7 +62,7 @@ Set up the administrative and scientific *plan* before touching data.
 
 ## Stage 1 — Initialize
 
-1. **`project/new-project`** — scaffold a YODA-structured DataLad dataset *(→ `datalad`)*, a BIDS skeleton *(→ the `bids` doer)*, the environment/container *(→ the `containers` doer)*, `CLAUDE.md`, and the project ledger. (This is also where `govern/init-ledger` *(planned)* lands if you deferred it.)
+1. **`project/new-project`** — scaffold a YODA-structured DataLad dataset *(→ `datalad`)*, a BIDS skeleton *(→ the `bids` doer)*, the environment/container *(→ the `containers` doer)*, `CLAUDE.md`, and the project ledger. (`govern/init-ledger` is the brownfield entry point — use it when the dataset already exists.)
 2. **`project/new-project --with-liab`** *(optional)* — provision **Lab-in-a-Box working infrastructure**: stand up a self-hosted Forgejo git host, HedgeDoc for lab notes, and dumpthings for metadata capture via `liab-deployments`, so the project lives on data-sovereign infra from day one.
 
 > 🔧 **Do-it-yourself:** lay out your `code/` directory, decide naming conventions for derivatives, and pin your environment (`environment.yml` / `renv.lock` / `requirements.txt`). Build/select the analysis container now if you're using one.
@@ -118,7 +118,7 @@ The `analyze` workflow runs each comparison through the `datalad` capability so 
 
 ## Stage 5 — QC / Review
 
-1. **`govern/stamped-assess` *(planned)*** — score the research object against the [STAMPED checklist](stamped.md): does the analysis reproduce from the DataLad log (Tracking/Actionability)? Are inputs available via `datalad get` (Self-containment)? Are ledger obligations, de-identification, DUA data-scope, and pre-registration adherence satisfied? **This one skill subsumes the earlier separate reproducibility-audit and compliance-audit.**
+1. **`govern/stamped-assess`** — score the research object against the [STAMPED checklist](stamped.md): does the analysis reproduce from the DataLad log (Tracking/Actionability)? Are inputs available via `datalad get` (Self-containment)? Are ledger obligations, de-identification, DUA data-scope, and pre-registration adherence satisfied? **This one skill subsumes the earlier separate reproducibility-audit and compliance-audit.**
 2. **`curate`** *(→ the `bids` doer)* — re-validate after derivatives are added.
 3. **`analyze/gen-report`** — assemble results tables, QC metrics, figures and the commit behind each into an internal report, with a required **gaps section**: assumptions never checked, runs that failed, outputs produced by hand. A value in no output file reads `not reported`.
 
@@ -171,7 +171,7 @@ Running in parallel from Stage 0 onward:
 
 - **`govern/obligations`** (shared core with `govern`) — on demand, list what's due, including **pre-registered comparisons still to complete**; a Claude Code `SessionStart` hook surfaces items due soon.
 - **`project/track-milestone`**, **`project/log-decision`**, **`project/people`**, **`project/status-report`** — keep the ledger current. A moved deadline updates `due` *and* logs the old date with the reason, because a slip is information.
-- **`govern/stamped-assess` *(planned)*** — re-run periodically, not just at QC.
+- **`govern/stamped-assess`** — re-run periodically, not just at QC.
 
 > ⚠️ **Scaffolding gap:** reminders are pull-based (a skill you invoke) plus an opt-in Claude hook. There's no cross-harness push for a deadline you'd miss while *not* in a session — acceptable for v1, but worth noting for users who live in their calendar, not their terminal.
 
