@@ -9,7 +9,7 @@ description: >
   "make this dataset self-describing". This advances the Metadata (M) and Actionable (A) of STAMPED.
 plane: workflow
 stamped: [M, A]
-delegates_to: [datalad]
+delegates_to: [annotate, datalad]
 ---
 
 # Skill: annotate
@@ -19,12 +19,14 @@ controlled-vocabulary metadata that lets a human — or an agent — understand 
 without opening the raw files. Every metadata edit is a file in the dataset, so you keep it
 **provenanced** by delegating the save to the **datalad doer**; you never annotate off to the side.
 
-> Scope note: the v1-workable core is BIDS/dataset-level metadata — `dataset_description.json`, a
-> `participants.json` data dictionary, and BIDS sidecars — which need no extra tools and are fully
-> provenanced. Controlled-term annotation against external vocabularies (Neurobagel/`bagel-cli`,
-> SNOMED, ReproSchema, NIDM/`pynidm`) is the richer add-on: those are capability-plane tools
-> (a future `annotate` doer). Until those doers exist, construct the annotation, cite the source
-> term explicitly, and still datalad-save the result — never fabricate a code.
+> Scope note: the always-available core is BIDS/dataset-level metadata — `dataset_description.json`,
+> a `participants.json` data dictionary, and BIDS sidecars — which need no extra tools and are fully
+> provenanced. Controlled-term annotation against external vocabularies is the richer add-on, and it
+> belongs to the **annotate** doer: delegate it rather than constructing terms here. That doer owns
+> Neurobagel (`bagel-cli`), NIDM (`pynidm`), ReproSchema and SNOMED CT, and checks each backend
+> independently — an uninstalled tool or an unconfigured terminology source comes back unavailable.
+> An unavailable backend is not zero matches — report the gap and keep the free-text description,
+> never a fabricated code.
 
 ## When to use
 - Data is in (or near) BIDS form and needs describing: missing/thin `dataset_description.json`,
@@ -47,26 +49,35 @@ without opening the raw files. Every metadata edit is a file in the dataset, so 
 4. **BIDS sidecars** — fill/extend JSON sidecars for imaging data as needed (task, acquisition,
    units). Keep edits BIDS-valid; suggest running `bids-validator` after.
 5. **Controlled-term annotation (optional, richer M/A)** — when the user wants standardized
-   vocabularies, map variables/assessments to controlled terms:
-   - phenotypic variables → Neurobagel (`bagel-cli`) / SNOMED codes
-   - behavioral assessments/questionnaires → ReproSchema
-   - neuroimaging annotation & provenance → NIDM (`pynidm`)
-   Look up or confirm each term with the user; **never guess a code**. (These tool invocations
-   will delegate to the `annotate` capability doer once it exists; for now, record the mapping and
-   its source in the metadata.)
+   vocabularies, delegate to the **annotate** doer rather than running the tools yourself:
+   > "check Neurobagel annotation coverage for `participants.tsv` and report which columns carry a
+   > term, which do not, and which backends are unavailable."
+
+   It covers phenotypic variables via Neurobagel (`bagel-cli`), behavioral assessments via
+   ReproSchema, imaging provenance via NIDM (`pynidm`), and clinical codes via a SNOMED source the
+   user configures — reporting any backend it could not reach as unavailable rather than as an empty
+   result. Note that only SNOMED lookup and an interactive `pynidm` session actually *find* new
+   terms; the rest validate terms you already have, so expect to supply or confirm them.
+   It returns candidates with their source and never selects a term — **you** put each one to
+   the user for confirmation, because which term is correct is a research judgment. Pass the
+   confirmed term back for it to write. It writes the metadata files and leaves them uncommitted,
+   which is what step 6 then saves.
 6. **Provenance the edits (datalad doer)** — delegate the save so the annotation is tracked:
    > "save: `datalad save -m 'annotate: <what was added, e.g. participants.json data dictionary +
    > dataset_description authors>'`."
 7. **Log it** — append to `project.yaml`:
    `{ ts, op: annotate, stage: curate, note: "<metadata added>", branch: <branch> }`.
-8. **Report** — what was annotated, what controlled-term coverage exists vs. remains, and suggest
-   `bids-validator` and (when ready) pushing a Neurobagel graph.
+8. **Report** — what was annotated and what controlled-term coverage the annotate doer returned,
+   keeping its three states distinct: annotated (with the source of each term), unannotated (with
+   the reason), and backends that were unavailable. Suggest `bids-validator` and (when ready)
+   pushing a Neurobagel graph.
 
 ## Constraints
 - Delegate the save to the datalad doer so metadata is provenanced — never leave annotation edits
   uncommitted, and never call `datalad` directly.
 - Never fabricate controlled-vocabulary codes (SNOMED/Neurobagel/NIDM/ReproSchema) or authorship —
-  look them up or ask; cite the source of every term.
+  delegate the lookup to the annotate doer or ask; cite the source of every term. Never call
+  `bagel-cli`, `pynidm` or `reproschema` directly.
 - Keep edits BIDS-valid; a data dictionary or sidecar that breaks the schema is worse than none.
   Recommend `bids-validator` rather than asserting validity.
 - Do not restructure or rename data files here — annotation describes existing data; renaming is a

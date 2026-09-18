@@ -2,7 +2,7 @@
   "name": "data-science-harness",
   "owner": { "name": "bcmcpher" },
   "metadata": {
-    "description": "A harness for reproducible, STAMPED-aligned data-science research. Workflow-plane planner skills (project, analyze) delegate to capability-plane doers (datalad, datalad-cli, nipoppy-cli) so every research object is Shareable, Tracked, Actionable, Metadata-rich, Provenanced, Executable, and Distributable.",
+    "description": "Governance as a by-product of doing the work: a harness-agnostic set of assistant configurations for academic data science. 6 workflow-plane planner skills (project, govern, curate, analyze, process, disseminate) delegate to capability-plane doers (datalad, nipoppy, bids, containers, archive, annotate) and their CLI toolboxes, so every computation and every administrative change runs through one DataLad provenance chain and every research object is Self-contained, Tracked, Actionable, Modular, Portable, Ephemeral and Distributable (see docs/stamped.md). The default export is a living compendium — provenanced dataset, re-executable article, agent-callable method bundle, self-hostable deployment — cross-linked by DOI. Status: the workflow plane is built, the capability plane is uneven, and the evaluation protocol is unrun (see docs/motivation.md).",
     "version": "0.1.0"
   },
   "plugins": [
@@ -14,12 +14,12 @@
     {
       "name": "govern",
       "source": "./plugins/govern",
-      "description": "Governance planner (Manage & Comply lane): preregister freezes a comparison's spec before execution and registers it as a confirmatory obligation; obligations tracks and resolves the project's outstanding commitments in the ledger."
+      "description": "Governance planner (Manage & Comply lane): init-ledger gives an existing dataset a project.yaml (the brownfield entry point, refusing to overwrite one); dmp turns a Data Management Plan's promises into tracked obligations; ethics-track records IRB/IACUC protocols, expiries and amendments and flags renewals; preregister freezes a comparison's spec before execution; obligations tracks and resolves outstanding commitments; qc-review and stamped-assess report conformance and STAMPED coverage per dimension, scoring what they could not check as unassessed rather than zero."
     },
     {
       "name": "analyze",
       "source": "./plugins/analyze",
-      "description": "Analysis planner: propose comparisons on their own branch, run them with full (optionally containerized) provenance, and checkpoint clean snapshots."
+      "description": "Analysis planner: plan-analysis recommends a statistical approach and lists the assumptions it rests on as unchecked, reporting no statistic of its own; propose-comparison opens each comparison on its own branch; scaffold-analysis emits a provenance-wrapped script stub whose placeholder raises rather than returning a plausible number; run-comparison executes it with full (optionally containerized) provenance; plot draws figures only from produced outputs; gen-report assembles results, QC and provenance with a required gaps section; checkpoint takes clean snapshots and manage-product groups kept comparisons into deliverables."
     },
     {
       "name": "datalad",
@@ -29,7 +29,7 @@
     {
       "name": "curate",
       "source": "./plugins/curate",
-      "description": "Curation planner: the annotate skill enriches a dataset's metadata (dataset_description.json, participants.json data dictionary, BIDS sidecars, controlled-term mappings) with provenance, advancing STAMPED Metadata + Actionable."
+      "description": "Curation planner: raw-to-bids converts raw acquisitions to a BIDS layout via nipoppy with DataLad provenance; annotate enriches a dataset's metadata (dataset_description.json, participants.json data dictionary, BIDS sidecars, controlled-term mappings); deidentify makes identifier removal a provenanced run with a recorded approach and a required residual-risk statement, and refuses to present that record as a compliance determination. Advances STAMPED Self-containment + Actionability."
     },
     {
       "name": "process",
@@ -39,7 +39,7 @@
     {
       "name": "disseminate",
       "source": "./plugins/disseminate",
-      "description": "Dissemination planner: publish committed dataset state to a sibling (git + annexed content) and verify an independent clone can retrieve the outputs (STAMPED-D)."
+      "description": "Dissemination planner: turn provenanced work into published, linked products. publish pushes committed state to a sibling and verifies an independent clone can retrieve the outputs; dataset-release cuts a citable versioned release with a DOI via the archive doer; link-outputs cross-links products; draft-manuscript and reporting-checklist produce the paper; executable-article (NeuroLibre), agent-bundle (Paper2Agent) and liab-deploy (Lab-in-a-Box) produce the living compendium. submission-track records where a product was submitted and what came back as an append-only submissions[] history, so a resubmission does not erase the first venue's outcome and no decision is recorded before it arrives. Advances STAMPED Distributability."
     },
     {
       "name": "nipoppy",
@@ -62,6 +62,21 @@
       "description": "Archive doer: deposits a released version to an external archive (OSF/Zenodo/DataCite) and mints a persistent DOI; reports 'unminted' rather than fabricating one when credentials are absent."
     },
     {
+      "name": "annotate",
+      "source": "./plugins/annotate",
+      "description": "Annotate doer: builds and validates a dataset's machine-readable metadata — participants.json data dictionaries and controlled-term coverage against Neurobagel/SNOMED, ReproSchema and NIDM; reports a term it could not look up as 'unannotated' rather than recalling one, and an uninstalled backend as unavailable rather than as zero matches."
+    },
+    {
+      "name": "compendium",
+      "source": "./plugins/compendium",
+      "description": "Compendium doer: scaffolds and builds living research products (MyST executable articles today), wiring each figure to the provenanced run that produced it and building inside the project's pinned container. Reports an untraceable figure as 'unprovenanced' rather than embedding it, a partial build as partial, and refuses to build on the host and call it pinned."
+    },
+    {
+      "name": "liab",
+      "source": "./plugins/liab",
+      "description": "Lab-in-a-Box doer: plans self-hosted research infrastructure, applies it only on an explicit confirmation that names the target host, and proves the dataset is retrievable with a datalad get. The only doer whose mistakes are not confined to a working tree, so it plans by default, reports a partial application as partial, never retries a failed apply, and never calls a deployment 'working' on the strength of a green pyinfra run."
+    },
+    {
       "name": "datalad-cli",
       "source": "./plugins/datalad-cli",
       "description": "DataLad skill toolbox: 19 focused skills wrapping individual datalad subcommands (create, run, save, container-run, siblings, push, ...)."
@@ -69,7 +84,32 @@
     {
       "name": "nipoppy-cli",
       "source": "./plugins/nipoppy-cli",
-      "description": "Nipoppy skill toolbox: dataset curation, BIDS conversion, pipeline running/tracking, and IDP extraction for neuroimaging studies."
+      "description": "Nipoppy skill toolbox, split by command class rather than by verb: nipoppy-query reads state, nipoppy-track refreshes the derived status files, nipoppy-compute constructs the commands that produce data and refuses to execute them, and nipoppy-setup scaffolds a dataset and its pipeline configurations. The split is the safety property — nipoppy records nothing about how derivatives came to be, so a computation executed bare produces a tree nothing can re-derive. Advances STAMPED Tracking and Actionability."
+    },
+    {
+      "name": "archive-cli",
+      "source": "./plugins/archive-cli",
+      "description": "Archive skill toolbox: one skill per backend (OSF, Zenodo, DataCite) for deposit, DOI minting and related identifiers, plus the offline readiness check the archive doer runs before any deposit."
+    },
+    {
+      "name": "bids-cli",
+      "source": "./plugins/bids-cli",
+      "description": "BIDS skill toolbox: bids-validator as a first-class, user-invocable skill, plus the offline check the bids doer runs first. Two different programs are called 'the BIDS validator' and they take different flags, so the skill confirms the installed surface instead of assuming it, and reports 'unverified' rather than a pass when none is installed."
+    },
+    {
+      "name": "liab-cli",
+      "source": "./plugins/liab-cli",
+      "description": "Lab-in-a-Box skill toolbox: pyinfra deployment planning and, on an explicit target-naming instruction, application; forgejo repository creation on an instance that already runs — plus the offline check the liab doer runs first. Plan-by-default is a constraint rather than a preference, because the blast radius is a machine rather than a working tree, and forgejo refuses to guess a repository's visibility because neither answer is undoable. Advances STAMPED Distributability."
+    },
+    {
+      "name": "compendium-cli",
+      "source": "./plugins/compendium-cli",
+      "description": "Compendium skill toolbox: MyST project scaffolding, building and preview, plus the offline check the compendium doer runs first. Explicit that building a document is not the same as making it reproducible, and that a MyST build exits 0 with unresolved references — so a clean build is never reported without its warnings."
+    },
+    {
+      "name": "annotate-cli",
+      "source": "./plugins/annotate-cli",
+      "description": "Annotate skill toolbox: one skill per annotation tool (bagel-cli for Neurobagel, pynidm for NIDM, reproschema for instrument schemas, snomed-lookup for clinical codes), plus the offline per-backend check the annotate doer runs first. Most of them validate terms rather than find them, and each says so."
     }
   ]
 }

@@ -1,0 +1,21 @@
+{
+  "name": "data-science-harness-tooling",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Node CLIs used to validate the OpenSpec records and build the paper. Not published; not a dependency of the harness content.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "devDependencies": {
+    "@fission-ai/openspec": "1.3.1",
+    "mystmd": "1.10.1"
+  },
+  "scripts": {
+    "spec:validate": "openspec validate --all --strict --no-interactive",
+    "spec:list": "openspec list",
+    "paper:check": "tests/check-paper.sh",
+    "paper:html": "cd paper && myst build --html",
+    "paper:start": "cd paper && myst start"
+  }
+}

@@ -70,7 +70,24 @@
           "type": "array",
           "description": "DataCite RelatedIdentifier links to other products or external identifiers.",
           "items": { "$ref": "#/$defs/relation" }
+        },
+        "submissions": {
+          "type": "array",
+          "description": "Submission history (disseminate/submission-track). A history, not a state: a resubmission appends rather than replacing, and `status` above stays `in-progress` throughout.",
+          "items": { "$ref": "#/$defs/submission" }
         }
+      }
+    },
+    "submission": {
+      "type": "object",
+      "required": ["venue"],
+      "additionalProperties": false,
+      "properties": {
+        "venue": { "type": "string", "description": "Journal, conference or preprint server. A submission with no destination is not a submission." },
+        "submitted": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["preparing", "submitted", "under-review", "revision-requested", "accepted", "rejected", "withdrawn"] },
+        "decision": { "type": "string", "description": "The outcome as reported by the venue. Free text, because editors do not use a closed vocabulary." },
+        "ref": { "type": "string", "description": "Manuscript id or submission-system URL." }
       }
     },
     "relation": {
@@ -88,12 +105,15 @@
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string" },
-        "kind": { "type": "string", "enum": ["preregistration", "confirmatory-comparison", "dmp", "ethics", "funder-report", "other"] },
+        "kind": { "type": "string", "enum": ["preregistration", "confirmatory-comparison", "dmp", "ethics", "milestone", "funder-report", "other"] },
         "description": { "type": "string" },
         "due": { "type": "string", "format": "date" },
         "status": { "type": "string", "enum": ["pending", "met", "waived"] },
-        "ref": { "type": "string", "description": "Pre-registration id / URL or other external reference." }
-      }
+        "ref": { "type": "string", "description": "The EXTERNAL reference: a pre-registration id, an IRB protocol number, a funder award URL. Internal evidence belongs in resolved_by, so a reader can tell which kind they are checking." },
+        "resolved_by": { "type": "string", "description": "The recorded action that met this obligation: a commit SHA, a log entry timestamp, or a product id. REQUIRED when status is `met` — a status flip that records nothing is the failure this registry exists to prevent." }
+      },
+      "if": { "properties": { "status": { "const": "met" } }, "required": ["status"] },
+      "then": { "required": ["resolved_by"] }
     },
     "contributor": {
       "type": "object",

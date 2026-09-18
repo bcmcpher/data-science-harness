@@ -1,0 +1,12 @@
+{
+  "name": "liab-cli",
+  "description": "Lab-in-a-Box skill toolbox: pyinfra deployment planning and (on an explicit target-naming instruction) application, forgejo repository creation on an instance that already runs, plus the offline check the liab doer runs first. Plan-by-default is a constraint rather than a preference here, because the blast radius is a machine rather than a working tree — and a green pyinfra run means the operations applied, not that the service serves. Standing an instance up stays in the declarative deployment; a host configured by ad hoc commands cannot be rebuilt.",
+  "version": "0.2.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["pyinfra", "lab-in-a-box", "self-hosting", "forgejo", "git-annex", "data-sovereignty", "distributability", "toolbox", "capability"],
+  "skills": [
+    "./skills/pyinfra",
+    "./skills/forgejo"
+  ]
+}

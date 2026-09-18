@@ -1,9 +1,14 @@
 {
   "name": "nipoppy-cli",
-  "description": "Assist with nipoppy neuroimaging dataset management: initializing datasets, organizing DICOM files, BIDS conversion, running processing pipelines, tracking status, and extracting IDPs.",
-  "version": "0.1.0",
+  "description": "Nipoppy skill toolbox, split by command class rather than by verb: nipoppy-query reads state and changes nothing, nipoppy-track refreshes the derived status files and hands the save back, nipoppy-compute constructs the commands that produce data and refuses to execute them, and nipoppy-setup scaffolds a dataset and its pipeline configurations. The split is the safety property: nipoppy records nothing about how derivatives came to be, so a computation executed bare produces a tree nothing can re-derive.",
+  "version": "0.2.0",
   "author": { "name": "bcmcpher" },
   "license": "MIT",
   "keywords": ["nipoppy", "neuroimaging", "bids", "dicom", "fmriprep", "mriqc", "hpc", "pipeline"],
-  "skills": ["./skills/nipoppy-cli"]
+  "skills": [
+    "./skills/nipoppy-query",
+    "./skills/nipoppy-track",
+    "./skills/nipoppy-compute",
+    "./skills/nipoppy-setup"
+  ]
 }

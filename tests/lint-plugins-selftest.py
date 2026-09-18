@@ -47,11 +47,41 @@ def drop_manifest_agent(root, plugin, entry):
     json.dump(m, open(p, "w"), indent=2)
 
 
+def set_agent_model(root, plugin, agent, value):
+    """Declare `model: <value>` on an agent, replacing any model it already pins."""
+    p = os.path.join(root, "plugins", plugin, "agents", f"{agent}.md")
+    _, fm, body = open(p).read().split("---", 2)
+    fm = "".join(ln for ln in fm.splitlines(keepends=True) if not ln.startswith("model:"))
+    with open(p, "w") as fh:
+        fh.write(f"---{fm}model: {value}\n---{body}")
+
+
 def add_orphan_skill(root):
     d = os.path.join(root, "plugins", "analyze", "skills", "orphan")
     os.makedirs(d)
     with open(os.path.join(d, "SKILL.md"), "w") as fh:
         fh.write('---\nname: orphan\ndescription: "x"\n---\n')
+
+
+def add_undeclared_import(root):
+    """A manifest plus a check script importing something it does not declare.
+
+    Builds its own minimal pyproject.toml rather than copying the real one, so the case states
+    exactly what it assumes: `yaml` is declared (as pyyaml, via the alias table) and must pass;
+    `requests` is not and must error.
+    """
+    with open(os.path.join(root, "pyproject.toml"), "w") as fh:
+        fh.write('[dependency-groups]\ndev = ["pyyaml>=6.0"]\n')
+    os.makedirs(os.path.join(root, "tests"))
+    with open(os.path.join(root, "tests", "check-thing.py"), "w") as fh:
+        fh.write("import os\nimport yaml\nimport requests\n")
+
+
+def readme_with(root, text):
+    """Write a sandbox README. The lint's doc-claims check is skipped when none exists, so a case
+    that exercises it has to supply one."""
+    with open(os.path.join(root, "README.md"), "w") as fh:
+        fh.write(text)
 
 
 WARN_CASES = [
@@ -114,12 +144,39 @@ CASES = [
         "plugin.json name != its directory",
         lambda r: sub(f"{r}/plugins/bids/.claude-plugin/plugin.json", '"name": "bids"', '"name": "bidz"'),
     ),
+    ("check script imports a module pyproject.toml does not declare", add_undeclared_import),
+    (
+        "README sends contributors to a plugin.yaml that does not exist",
+        lambda r: readme_with(r, "**13 plugins**\n\n4. Add the path to `plugin.yaml`\n"),
+    ),
+    (
+        "README's plugin count disagrees with disk",
+        lambda r: readme_with(r, "**11 plugins**, split across the two planes.\n"),
+    ),
+    (
+        "marketplace claims a STAMPED principle outside the closed set",
+        lambda r: sub(
+            f"{r}/.claude-plugin/marketplace.json",
+            "Advances STAMPED Distributability.",
+            "Advances STAMPED Metadata.",
+        ),
+    ),
+    (
+        "marketplace's workflow-planner count disagrees with disk",
+        lambda r: sub(
+            f"{r}/.claude-plugin/marketplace.json",
+            "6 workflow-plane planner skills",
+            "2 workflow-plane planner skills",
+        ),
+    ),
     (
         "plugin.json lists a skill that does not exist",
         lambda r: sub(
             f"{r}/plugins/govern/.claude-plugin/plugin.json", '"./skills/qc-review"', '"./skills/qc-reviewww"'
         ),
     ),
+    ("agent declares a model outside the allowed set", lambda r: set_agent_model(r, "bids", "bids-doer", "haikoo")),
+    ("mutating doer declares a model", lambda r: set_agent_model(r, "datalad", "datalad-doer", "haiku")),
 ]
 
 

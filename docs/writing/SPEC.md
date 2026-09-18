@@ -69,7 +69,7 @@ description: >
 plane: workflow
 plugin: disseminate
 tools: [Read, Edit, Write, Grep]        # text-focused; no analysis/provenance tools
-model: strong-writing                    # e.g. a top-tier Claude model
+# model: <placeholder>                  # not pinnable: writes files (Edit/Write); only read-only agents pin
 loads:                                   # standing knowledge (the references bundle)
   - references/writing/index.md
   - references/writing/article-anatomy.md

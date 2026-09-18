@@ -1,0 +1,9 @@
+{
+  "name": "example-study-tools",
+  "description": "Agent-callable tools for the example study. One skill per provenanced comparison; each calls the project's own script and is checked against the result that script's recorded run produced.",
+  "version": "0.1.0",
+  "author": { "name": "the study's authors" },
+  "license": "MIT",
+  "keywords": ["agent-bundle", "mcp", "paper2agent", "reproduction"],
+  "skills": ["./skills/age-vs-volume"]
+}

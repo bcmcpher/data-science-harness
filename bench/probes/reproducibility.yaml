@@ -1,0 +1,50 @@
+id: reproducibility
+question: >
+  Can a third party, given only the published identifier, rebuild the artifact and obtain the same
+  results?
+
+status: specified
+
+instrument:
+  base: >
+    The distributability path already in tests/e2e-smoke.sh — push to a sibling, clone independently,
+    datalad get — extended through container rebuild and figure regeneration.
+
+procedure:
+  - Start from a machine with no project state and no cache.
+  - Resolve the published identifier and clone.
+  - datalad get the declared inputs.
+  - Rebuild the container from its recipe.
+  - Re-execute the recorded runs.
+  - Diff regenerated outputs against published ones.
+
+metrics:
+  - id: figures_regenerated
+    type: graded
+    definition: Fraction of published figures and tables successfully regenerated.
+  - id: output_agreement
+    type: graded
+    definition: >
+      Byte-level agreement, or agreement within a tolerance declared BEFORE the diff was inspected.
+  - id: time_to_first_figure
+    type: measured
+    definition: Wall-clock from clone to first regenerated figure.
+  - id: manual_interventions
+    type: measured
+    definition: >
+      Number of times a human had to intervene for the rebuild to proceed. Reported alongside
+      figures_regenerated always, never separately.
+
+control:
+  kind: absolute
+  description: It rebuilds or it does not.
+
+requires:
+  - a clean machine with no project state
+  - datalad and a container runtime
+  - a published, identifier-resolvable artifact
+
+invalidators:
+  - Rebuilding on the machine that produced the artifact, or with any cached state.
+  - Choosing the agreement tolerance after seeing the difference.
+  - Reporting figures_regenerated without manual_interventions.

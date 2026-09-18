@@ -1,13 +1,32 @@
 {
   "name": "govern",
-  "description": "Governance planner (workflow plane): the Manage & Comply lane + QC/review. preregister freezes a comparison's spec before execution and registers it as a confirmatory obligation; obligations tracks/resolves the project's commitments; qc-review runs BIDS validation (via the bids doer) and a STAMPED self-assessment. Commitments live in the ledger obligations[] and are provenanced via the datalad doer.",
-  "version": "0.1.0",
-  "author": { "name": "bcmcpher" },
+  "description": "Governance planner (workflow plane): the Manage & Comply lane + QC/review. init-ledger gives an existing dataset a project.yaml (the brownfield entry point); dmp turns a Data Management Plan's promises into tracked obligations; ethics-track records IRB/IACUC protocols, expiries and amendments and surfaces renewals; preregister freezes a comparison's spec before execution; obligations tracks and resolves commitments; qc-review and stamped-assess report conformance and STAMPED coverage per dimension, scoring what they could not check as unassessed rather than zero. Commitments live in the ledger obligations[] and are provenanced via the datalad doer.",
+  "version": "0.2.0",
+  "author": {
+    "name": "bcmcpher"
+  },
   "license": "MIT",
-  "keywords": ["data-science", "govern", "preregistration", "obligations", "compliance", "qc", "bids", "stamped", "workflow"],
+  "keywords": [
+    "data-science",
+    "govern",
+    "preregistration",
+    "obligations",
+    "dmp",
+    "ethics",
+    "irb",
+    "compliance",
+    "qc",
+    "bids",
+    "stamped",
+    "workflow"
+  ],
   "skills": [
     "./skills/preregister",
     "./skills/obligations",
-    "./skills/qc-review"
+    "./skills/qc-review",
+    "./skills/init-ledger",
+    "./skills/dmp",
+    "./skills/ethics-track",
+    "./skills/stamped-assess"
   ]
 }
