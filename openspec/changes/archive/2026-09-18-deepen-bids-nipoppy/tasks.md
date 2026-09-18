@@ -71,18 +71,19 @@ avoid. The e2e asserts the exclusion whenever that package is importable.
       prompts, and nipoppy is not installed here. The split is enforced by the lint's bidirectional
       registration and by nothing else.
 
-## 3. Guideline references
-
-- [ ] 3.1 Expand `plugins/disseminate/references/` with per-guideline EQUATOR files (CONSORT, STROBE,
-      PRISMA, ARRIVE), each stating what it contains and linking the authoritative version.
-- [ ] 3.2 Add a COBIDAS reference set for the neuroimaging path.
-- [ ] 3.3 Rewrite `plugins/disseminate/skills/reporting-checklist/SKILL.md` to read items from the
-      reference files and to refuse when the applicable guideline is not bundled.
-- [ ] 3.4 Point `plugins/govern/skills/qc-review/SKILL.md` at the COBIDAS reference for its
-      neuroimaging checks.
-
 ## 4. Verify
 
-- [ ] 4.1 `python3 tests/lint-plugins.py` and `python3 tests/lint-plugins-selftest.py` both clean.
-- [ ] 4.2 `tests/e2e-smoke.sh` passes with the new gated assertions.
-- [ ] 4.3 Every new reference file names its authoritative source and its redistribution basis.
+- [x] 4.1 `python3 tests/lint-plugins.py --strict` and `python3 tests/lint-plugins-selftest.py` both
+      clean — 0 errors, 0 warnings at 21 plugins / 71 skills; 24/24.
+- [x] 4.2 `tests/e2e-smoke.sh` — 99 passed. Section 1 added the gated BIDS block; section 2 added
+      nothing, because nipoppy is not installed here and every skill in the toolbox is a prompt.
+      **nipoppy still has zero behavioural coverage**, which the doer's own table does not disguise.
+- [x] 4.3 `npm run spec:validate`, `python3 tests/check-bench-fixtures.py` (clean at 42; no planner
+      was rewired, so no fixture moved) and the OpenCode install of `nipoppy`/`nipoppy-cli`, which
+      lists all four skills.
+- [x] 4.4 **Section 3 left this change.** The guideline references became
+      `add-guideline-references`, and the `disseminate` spec delta went with them. The reason is the
+      one this change's own section 0 predicted: it is a references change bundled into a toolbox
+      change, and it grew. Verifying the four guidelines' redistribution basis produced a result that
+      needs its own argument — two of them cannot be bundled at all — and CONSORT 2010 turned out to
+      be superseded. Sections 1 and 2 are complete and unaffected.

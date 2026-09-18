@@ -6,30 +6,28 @@ doer's procedure rather than something a user can invoke or a test can target. `
 one toolbox skill covering the entire CLI, so the doer carries per-command knowledge that
 `datalad-cli` would have distributed across verbs.
 
-Separately, `disseminate/reporting-checklist` and `govern/qc-review` cite EQUATOR and COBIDAS by
-name with nothing to cite from — `cobidas` appears 3 times and `equator` twice in planner bodies,
-and the only EQUATOR material on disk is a single reference file. A reporting checklist assembled
-from recall is exactly the failure mode these guidelines exist to prevent.
+This change originally carried a third strand — bundling EQUATOR and COBIDAS reference text so
+`disseminate/reporting-checklist` and `govern/qc-review` could cite fixed items rather than recall
+them. That strand is now `add-guideline-references`, for the reason this change's own task list
+predicted: it is a references change bundled into a toolbox change, and it grew once the guidelines'
+redistribution terms were actually checked.
 
 ## What Changes
 
 - A `bids-cli` toolbox making `bids-validator` a first-class skill.
 - `nipoppy-cli` extended toward the `datalad-cli` shape — one skill per command class rather than one
   skill for the CLI.
-- `references/` sets for EQUATOR and COBIDAS so the two planners cite fixed text.
 
 ## Capabilities
 
 ### Modified Capabilities
 - `bids`: gains a toolbox; validation becomes independently invocable and testable.
 - `nipoppy`: gains per-command skills so the doer stops carrying invocation detail.
-- `disseminate`: `reporting-checklist` cites bundled guideline text rather than recalling it.
+
 
 ## Impact
 
-- New: `plugins/bids-cli/`, additional `plugins/nipoppy-cli/skills/`,
-  `plugins/disseminate/references/cobidas/`, expanded EQUATOR references
+- New: `plugins/bids-cli/`, four `plugins/nipoppy-cli/skills/` in place of one
 - Modified: `plugins/bids/agents/bids-doer.md`, `plugins/nipoppy/agents/nipoppy-doer.md`,
-  `plugins/disseminate/skills/reporting-checklist/SKILL.md`,
-  `plugins/govern/skills/qc-review/SKILL.md`, `.claude-plugin/marketplace.json`
+  `plugins/nipoppy-cli/README.md`, `.claude-plugin/marketplace.json`, `tests/e2e-smoke.sh`
 - Independent of the other capability changes; can be picked up at any time.
