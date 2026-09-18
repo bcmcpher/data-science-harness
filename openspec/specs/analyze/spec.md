@@ -7,8 +7,14 @@ real papers are a series of small analyses introduced in unpredictable order, no
 A comparison is one lightweight, addable unit realized as a DataLad branch plus a provenanced run.
 It sits on a rigor spectrum: an exploratory query has zero ledger footprint and can be discarded
 freely, while a confirmatory one is frozen by `govern/preregister` first. Kept comparisons are
-grouped into products. Provides `propose-comparison`, `run-comparison`, `manage-product`, and
-`checkpoint`.
+grouped into products. Provides `plan-analysis`, `propose-comparison`, `scaffold-analysis`,
+`run-comparison`, `plot`, `checkpoint`, `manage-product` and `gen-report`.
+
+Its recurring problem is that the wrong answer here is a number, and a number is not obviously
+wrong. So `plan-analysis` states assumptions without asserting them and reports no statistic,
+`scaffold-analysis` raises where the model goes rather than returning a plausible value, `plot`
+draws only what an output file contains, and `gen-report` reports a missing result as missing.
+
 ## Requirements
 ### Requirement: A comparison is a branch plus a record, not a pipeline stage
 
