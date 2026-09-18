@@ -6,8 +6,12 @@ The workflow-plane plugin for Stages 6-8, and the largest one: nine planner skil
 grouped product into a citable release and then into a living research compendium. The compendium is
 the project's thesis made concrete — a provenanced dataset, a re-executable article, an
 agent-callable method bundle, and a self-hostable deployment, all built from one DataLad chain and
-cross-linked by DOI. Most of these planners currently describe outputs whose capability plane is not
-yet built, which is the known shape of the work ahead.
+cross-linked by DOI. `reporting-checklist` is the one planner here whose correctness is a property of
+its inputs rather than its procedure: its items are copied from checklist text bundled under
+`plugins/disseminate/references/`, each file naming the openly licensed publication it derives from,
+because a checklist assembled from recall looks complete and omits exactly the items the guideline
+was written for.
+
 ## Requirements
 ### Requirement: Publishing verifies distributability rather than assuming it
 
@@ -101,14 +105,32 @@ invent results, statistics, or citations; missing evidence MUST be flagged inste
 ### Requirement: Reporting compliance is recorded item by item
 
 `disseminate/reporting-checklist` MUST select the applicable guideline — an EQUATOR checklist such as
-CONSORT, STROBE, PRISMA, or ARRIVE, or COBIDAS for neuroimaging — instantiate it against the product,
-and record compliance per item.
+CONSORT 2025, STROBE, PRISMA 2020 or ARRIVE 2.0, and COBIDAS alongside it for neuroimaging —
+instantiate it against the product, and record compliance per item. Checklist items MUST be copied
+from bundled reference text under `plugins/disseminate/references/`, in the guideline's own wording
+and order, never from model recall. Each reference file MUST name the authoritative source it derives
+from **and the basis on which that source may be redistributed**, with the date that basis was
+checked. The skill MUST NOT state that a product is compliant with a guideline.
 
 #### Scenario: Preparing for submission
 
 - **WHEN** a checklist is applied to a manuscript product
 - **THEN** a completed checklist artifact is registered as part of that product, with unmet items
-  visible
+  visible, and every item traceable to the bundled guideline text
+
+#### Scenario: A guideline is not bundled
+
+- **WHEN** the applicable guideline has no reference file
+- **THEN** the skill reports that it cannot produce a checked list and names the canonical source,
+  rather than reconstructing the items — including partially, because a partial checklist is
+  submitted as though it were whole
+
+#### Scenario: A guideline's checklist is published under more than one licence
+
+- **WHEN** the same checklist is distributed both from the guideline's own site without a licence and
+  in an openly licensed journal article
+- **THEN** the bundled text derives from the licensed publication, and the reference file says which
+  one and why
 
 ### Requirement: The executable article rebuilds its own figures
 
