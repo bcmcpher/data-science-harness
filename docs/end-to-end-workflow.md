@@ -156,7 +156,7 @@ Produce the living research compendium and the classic outputs.
 4. **`disseminate/agent-bundle`** — emit a Paper2Agent-style MCP server exposing the methods as callable, tested tools.
 5. **`disseminate/liab-deploy`** — stand up a **Lab-in-a-Box** deployment: a self-hosted Forgejo + git-annex data-serving home for the provenanced dataset, published via git-annex remotes. A data-sovereign distribution channel alongside the article and agent bundle.
 6. **`disseminate/link-outputs`** — cross-link dataset / code / paper / preprint / prereg / executable-article / agent-bundle / Lab-in-a-Box DOIs & URLs (DataCite relations) back into the ledger.
-7. **`disseminate/submission-track` *(planned)*** — track target journal, submission, and revisions.
+7. **`disseminate/submission-track`** — track target journal, submission and revisions as an append-only `submissions[]` history. A resubmission appends, so the first venue's decision stays readable; nothing is recorded before it happens.
 8. **`project/status-report`** — generate the funder/progress report from the ledger + history.
 
 > 🔧 **Do-it-yourself:** write the science — intro, discussion, related work, the narrative. `analyze/plot` builds the publication figures from produced outputs under provenance, but what is worth showing, and what it means, is yours. The manuscript scaffold fills in the mechanical/provenance sections; the intellectual content, journal selection, cover letter, and reviewer responses are yours.
@@ -238,7 +238,7 @@ Two things genuinely lock *early* because they shape everything downstream — *
 | Which quick queries become products | **Stage 3–5** | `analyze/manage-product` | Promote only what tells the story |
 | Final result set & sensitivity analyses | **Stage 5** | `analyze/gen-report` + decision log | After interpretation, before publication |
 | Dataset version, license, DOI, access level | **Stage 6–7** | `disseminate/dataset-release` / `dataset_description.json` | At the point of sharing |
-| Target journal, reporting guideline, author order | **Stage 8** | ledger `products` + `disseminate/submission-track` *(planned)* | At write-up; affects format & credit |
+| Target journal, reporting guideline, author order | **Stage 8** | ledger `products` + `disseminate/submission-track` | At write-up; affects format & credit |
 | Which living artifacts to produce (article, agent bundle, Lab-in-a-Box) | **Stage 8** | ledger `products` | Depends on a stable, reproducible pipeline existing first |
 
 **Rule of thumb:** if a decision changes a *compliance obligation* or the *data model* (variables, units, standards), finalize it early — before data lands. Pre-registration additionally locks the confirmatory analysis plan, but that's an *optional* mode. Analytic and interpretive decisions can be made — and added as new comparisons — as the work develops; just `project/log-decision` when you make them.

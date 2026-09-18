@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The workflow-plane plugin for Stages 6-8, and the largest one: eight planner skills that turn a
+The workflow-plane plugin for Stages 6-8, and the largest one: nine planner skills that turn a
 grouped product into a citable release and then into a living research compendium. The compendium is
 the project's thesis made concrete — a provenanced dataset, a re-executable article, an
 agent-callable method bundle, and a self-hostable deployment, all built from one DataLad chain and

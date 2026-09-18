@@ -312,6 +312,16 @@ tasks:
     expected_skill: disseminate/agent-bundle
     expected_delegates_to: [datalad]
 
+  - id: disseminate-submission
+    prompt: >
+      The first journal turned it down and we're sending it to another one this week. Keep the
+      record straight.
+    expected_skill: disseminate/submission-track
+    expected_delegates_to: [datalad]
+    notes: >
+      "Keep the record straight" across two venues is the append cue. A route that updates one venue
+      field in place loses the rejection, which is the entry the history exists for.
+
   - id: disseminate-liab
     prompt: >
       We can't put this data on someone else's cloud. Set up serving it from hardware we control.
