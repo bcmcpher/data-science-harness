@@ -93,13 +93,15 @@ Get raw data into a standardized, annotated form. The `curate` workflow orchestr
 
 The `analyze` workflow runs each comparison through the `datalad` capability so provenance is never broken.
 
-1. **`analyze/plan-analysis` *(planned)*** — guided statistical-test selection with QC checks.
+1. **`analyze/plan-analysis`** — recommend a statistical approach from the design and the data's shape, and list the assumptions it rests on as **unchecked**. It reports no statistic of its own.
 2. **`analyze/propose-comparison`** — record the comparison (quick query or pre-registered) as its own unit.
-3. **`analyze/run-comparison`** *(→ `datalad-cli/datalad-run` or `datalad-cli/datalad-container-run`)* — execute the comparison on its own DataLad branch so inputs, command, and outputs are recorded. These auto-trigger on `python …`, `Rscript …`, `apptainer exec …`, etc. Preprocessing pipelines declared via **Nipoppy** also run through this path *(→ the `nipoppy` doer)*, keeping provenance intact. For a confirmatory comparison, the result is checked against the registered spec.
+3. **`analyze/scaffold-analysis`** — emit the script stub for it: declared inputs, one output directory, the run command, and a placeholder that raises where the model goes.
+4. **`analyze/run-comparison`** *(→ `datalad-cli/datalad-run` or `datalad-cli/datalad-container-run`)* — execute the comparison on its own DataLad branch so inputs, command, and outputs are recorded. These auto-trigger on `python …`, `Rscript …`, `apptainer exec …`, etc. Preprocessing pipelines declared via **Nipoppy** also run through this path *(→ the `nipoppy` doer)*, keeping provenance intact. For a confirmatory comparison, the result is checked against the registered spec.
+5. **`analyze/plot`** — figures from the produced outputs, written as a script and run through `run-comparison` so each panel carries the same provenance as the analysis.
 
-> 🔧 **Do-it-yourself — this is the core gap between scaffolds.** You write the actual analysis: model specification, feature engineering, estimator/hyperparameter choices, the fitting code, and **all plotting/figure code**. `plan-analysis` recommends *which* test; the `datalad` capability *wraps* whatever script you run — but the script itself, and the model inside it, are entirely yours.
+> 🔧 **Do-it-yourself:** you write the model. `plan-analysis` recommends *which* approach and `analyze/scaffold-analysis` writes everything around it — argument parsing, declared inputs, the output directory, the run command — leaving a placeholder that **raises** where model specification, feature engineering, estimator and hyperparameter choices go. The `datalad` capability wraps whatever you then run. The stub is deliberately unable to produce a result until you have written one.
 
-> ⚠️ **Scaffolding gap:** there is **no analysis-script scaffold** and **no plotting/visualization skill**. The jump from `plan-analysis` (choose a test) to `gen-report` (report results) skips the largest part of the work — fitting the model and making the figures. An `analyze/scaffold-analysis` skill (emit a runnable, provenance-wrapped script stub for the chosen test) and a `analyze/plot` *(planned)* skill (consistent, themed exploratory + publication figures) would be the single highest-impact additions.
+> 🔧 **Do-it-yourself:** checking the assumptions `plan-analysis` listed is yours. Testing normality, inspecting residuals or judging whether the design is adequate are analyses in their own right and run through `propose-comparison` / `run-comparison` like any other — nothing here checks them for you, and nothing reports them as checked.
 
 > ⚠️ **Scaffolding gap:** analysis code itself is untested. No skill scaffolds unit tests or smoke tests for analysis scripts, which undercuts the reproducibility promise.
 
@@ -118,7 +120,7 @@ The `analyze` workflow runs each comparison through the `datalad` capability so 
 
 1. **`govern/stamped-assess` *(planned)*** — score the research object against the [STAMPED checklist](stamped.md): does the analysis reproduce from the DataLad log (Tracking/Actionability)? Are inputs available via `datalad get` (Self-containment)? Are ledger obligations, de-identification, DUA data-scope, and pre-registration adherence satisfied? **This one skill subsumes the earlier separate reproducibility-audit and compliance-audit.**
 2. **`curate`** *(→ the `bids` doer)* — re-validate after derivatives are added.
-3. **`analyze/gen-report` *(planned)*** — scaffold an analysis report (results tables, QC metrics).
+3. **`analyze/gen-report`** — assemble results tables, QC metrics, figures and the commit behind each into an internal report, with a required **gaps section**: assumptions never checked, runs that failed, outputs produced by hand. A value in no output file reads `not reported`.
 
 > 🔧 **Do-it-yourself:** interpret the results, run sensitivity/robustness analyses, check statistical assumptions, and decide whether the findings are publication-ready. `stamped-assess` confirms the work is *reproducible and compliant*; it does not tell you whether it is *correct or meaningful*.
 
@@ -157,9 +159,9 @@ Produce the living research compendium and the classic outputs.
 7. **`disseminate/submission-track` *(planned)*** — track target journal, submission, and revisions.
 8. **`project/status-report`** — generate the funder/progress report from the ledger + history.
 
-> 🔧 **Do-it-yourself:** write the science — intro, discussion, related work, the narrative — and prepare **publication-quality figures**. The manuscript scaffold fills in the mechanical/provenance sections; the intellectual content, journal selection, cover letter, and reviewer responses are yours.
+> 🔧 **Do-it-yourself:** write the science — intro, discussion, related work, the narrative. `analyze/plot` builds the publication figures from produced outputs under provenance, but what is worth showing, and what it means, is yours. The manuscript scaffold fills in the mechanical/provenance sections; the intellectual content, journal selection, cover letter, and reviewer responses are yours.
 
-> ⚠️ **Scaffolding gap:** publication-figure preparation is again unscaffolded (ties back to the missing `analyze/plot` *(planned)* skill). The `agent-bundle` also assumes your analysis code is already structured as importable, parameterized functions — if your Stage-3 scripts were one-off, bundling them as tools is real work that nothing helps with.
+> ⚠️ **Scaffolding gap:** `agent-bundle` assumes your analysis code is already structured as importable, parameterized functions — if your Stage-3 scripts were one-off, bundling them as tools is real work that nothing helps with. (Publication figures are now scaffolded by `analyze/plot`, which runs the figure script under provenance so each panel traces to the output it was drawn from.)
 
 ---
 
@@ -196,13 +198,12 @@ So a paper is a **product** that collects the comparisons worth publishing — s
 
 Ranked by likely impact, these are the refinements most worth a hackathon's attention:
 
-1. **`analyze/scaffold-analysis` *(planned)*** — emit a runnable, provenance-wrapped script stub for the test chosen by `plan-analysis`. (Bridges the biggest gap, between Stages 3 and 5.)
-2. **`analyze/plot` *(planned)*** — consistent exploratory and publication figures. (The only entirely-unserved core activity.)
-3. **De-identification tooling** — `curate/deidentify` now records and provenances the step, but no defacing, PHI-detection or date-shifting capability sits beneath it. (High risk in clinical/neuro work; the record exists, the automation does not.)
-4. **Analysis-code testing** — smoke/unit tests for the scripts the `datalad` capability wraps.
-5. **Guided pipeline parameters** — declaring expected pipelines and wiring them into Nipoppy covers selection/config; the residual gap is guided parameter choice.
+1. **De-identification tooling** — `curate/deidentify` now records and provenances the step, but no defacing, PHI-detection or date-shifting capability sits beneath it. (High risk in clinical/neuro work; the record exists, the automation does not.)
+2. **Analysis-code testing** — smoke/unit tests for the scripts the `datalad` capability wraps. `scaffold-analysis` writes the script's edges and `run-comparison` records the run, but nothing checks that the analysis inside is correct.
+3. **Assumption checking and sensitivity analyses** — `plan-analysis` lists what its recommendation requires and marks the list as the researcher's; no skill tests those assumptions, runs a robustness check, or applies a multiple-comparison correction.
+4. **Guided pipeline parameters** — declaring expected pipelines and wiring them into Nipoppy covers selection/config; the residual gap is guided parameter choice.
 
-*Now addressed by the refactor:* container build (`containers` plugin), comparison tracking (the rigor spectrum above), STAMPED/reproducibility/compliance auditing (`govern/stamped-assess`, which reports per dimension with evidence and marks what it could not check `unassessed` rather than zero), and self-hosted distribution (`disseminate/liab-deploy`, now over the `liab` doer).
+*Now addressed by the refactor:* container build (`containers` plugin), comparison tracking (the rigor spectrum above), analysis scaffolding and figures (`analyze/scaffold-analysis`, whose placeholder raises rather than returning a plausible number, and `analyze/plot`, which draws only from produced outputs), STAMPED/reproducibility/compliance auditing (`govern/stamped-assess`, which reports per dimension with evidence and marks what it could not check `unassessed` rather than zero), and self-hosted distribution (`disseminate/liab-deploy`, now over the `liab` doer).
 
 ---
 
@@ -235,7 +236,7 @@ Two things genuinely lock *early* because they shape everything downstream — *
 | Missingness/outlier handling rules | **Stage 2–3** | decision log | Ideally pre-specified; otherwise log as analytic choice |
 | Software/package versions | **Stage 3** | container digest / lockfile | Pinned so results reproduce |
 | Which quick queries become products | **Stage 3–5** | `analyze/manage-product` | Promote only what tells the story |
-| Final result set & sensitivity analyses | **Stage 5** | `analyze/gen-report` *(planned)* + decision log | After interpretation, before publication |
+| Final result set & sensitivity analyses | **Stage 5** | `analyze/gen-report` + decision log | After interpretation, before publication |
 | Dataset version, license, DOI, access level | **Stage 6–7** | `disseminate/dataset-release` / `dataset_description.json` | At the point of sharing |
 | Target journal, reporting guideline, author order | **Stage 8** | ledger `products` + `disseminate/submission-track` *(planned)* | At write-up; affects format & credit |
 | Which living artifacts to produce (article, agent bundle, Lab-in-a-Box) | **Stage 8** | ledger `products` | Depends on a stable, reproducible pipeline existing first |

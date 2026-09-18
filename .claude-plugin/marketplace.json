@@ -19,7 +19,7 @@
     {
       "name": "analyze",
       "source": "./plugins/analyze",
-      "description": "Analysis planner: propose comparisons on their own branch, run them with full (optionally containerized) provenance, and checkpoint clean snapshots."
+      "description": "Analysis planner: plan-analysis recommends a statistical approach and lists the assumptions it rests on as unchecked, reporting no statistic of its own; propose-comparison opens each comparison on its own branch; scaffold-analysis emits a provenance-wrapped script stub whose placeholder raises rather than returning a plausible number; run-comparison executes it with full (optionally containerized) provenance; plot draws figures only from produced outputs; gen-report assembles results, QC and provenance with a required gaps section; checkpoint takes clean snapshots and manage-product groups kept comparisons into deliverables."
     },
     {
       "name": "datalad",

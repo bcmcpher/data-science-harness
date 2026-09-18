@@ -125,6 +125,16 @@ tasks:
     expected_delegates_to: [nipoppy, datalad]
 
   # --------------------------------------------------------------- 3. analyze
+  - id: analyze-plan
+    prompt: >
+      I have one outcome measure, two groups, and age and sex to adjust for. What test should I be
+      running here?
+    expected_skill: analyze/plan-analysis
+    expected_delegates_to: [datalad]
+    notes: >
+      The design is stated and no branch is asked for. A route to propose-comparison opens a branch
+      before the approach is settled, which is the expected failure.
+
   - id: analyze-propose
     prompt: >
       I want to look at whether hippocampal volume differs between the two groups. Nothing formal
@@ -132,6 +142,16 @@ tasks:
     expected_skill: analyze/propose-comparison
     expected_delegates_to: [datalad]
     rigor: exploratory
+
+  - id: analyze-scaffold
+    prompt: >
+      Give me the skeleton of the script for that comparison — where it reads the tsv from, where
+      the results go — I'll write the model myself.
+    expected_skill: analyze/scaffold-analysis
+    expected_delegates_to: [datalad]
+    notes: >
+      "I'll write the model myself" is the whole contract. A route that produces a working analysis
+      is the expected failure, not a partial credit.
 
   - id: analyze-run
     prompt: >
@@ -147,6 +167,22 @@ tasks:
     prompt: These three analyses belong together as one paper. Track them as a unit.
     expected_skill: analyze/manage-product
     expected_delegates_to: [datalad]
+
+  - id: analyze-plot
+    prompt: >
+      Make me a figure of the group difference from those results, good enough to go in the paper.
+    expected_skill: analyze/plot
+    expected_delegates_to: [datalad]
+
+  - id: analyze-report
+    prompt: >
+      Pull together what came out of that analysis — the tables, the QC numbers, and what's still
+      missing — into something I can circulate before lab meeting.
+    expected_skill: analyze/gen-report
+    expected_delegates_to: [datalad]
+    notes: >
+      "Circulate" is internal; draft-manuscript is the near miss. "What's still missing" is the cue
+      that the gaps section is the point.
 
   - id: analyze-checkpoint
     prompt: I'm done for the day — make sure nothing is left uncommitted.

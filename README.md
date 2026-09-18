@@ -248,14 +248,14 @@ nothing about *why* or *when* you run them.
 
 | Plugin | Lifecycle stages | Built skills |
 |--------|------------------|--------------|
-| `govern` | 0 + Manage & Comply lane | `obligations`, `preregister`, `qc-review` |
-| `project` | 1, 8 + Manage & Comply lane | `new-project`, `log-decision`, `people`, `status-report` |
-| `curate` | 2, 5, 7 | `raw-to-bids`, `annotate` |
-| `analyze` | 3–5 | `propose-comparison`, `run-comparison`, `checkpoint`, `manage-product` |
+| `govern` | 0 + Manage & Comply lane | `init-ledger`, `obligations`, `preregister`, `dmp`, `ethics-track`, `qc-review`, `stamped-assess` |
+| `project` | 1, 8 + Manage & Comply lane | `new-project`, `log-decision`, `people`, `status-report`, `track-milestone`, `env-check`, `claude-config` |
+| `curate` | 2, 5, 7 | `raw-to-bids`, `annotate`, `deidentify`, `merge-data`, `gen-data-dict` |
+| `analyze` | 3–5 | `plan-analysis`, `propose-comparison`, `scaffold-analysis`, `run-comparison`, `plot`, `checkpoint`, `manage-product`, `gen-report` |
 | `process` | 2–3 | `run-pipeline` |
-| `disseminate` | 6, 7, 8 | `draft-manuscript`, `reporting-checklist`, `dataset-release`, `publish`, `link-outputs`, `executable-article`, `agent-bundle`, `liab-deploy` |
+| `disseminate` | 6, 7, 8 | `draft-manuscript`, `reporting-checklist`, `dataset-release`, `publish`, `link-outputs`, `executable-article`, `agent-bundle`, `liab-deploy`, `submission-track` |
 
-22 planner skills across the six. The lists below describe each, including the ones not yet built.
+37 planner skills across the six. The lists below describe each; one, `analyze/literature-search`, is not yet built.
 
 **`govern`** — Stand up and maintain the administrative + compliance backbone (stage 0 and the Manage & Comply lane).
 - `obligations` — surface and resolve deadlines, compliance requirements, and confirmatory-comparison commitments recorded in the ledger
@@ -292,10 +292,10 @@ nothing about *why* or *when* you run them.
 - `run-comparison` — execute a comparison via the `datalad` doer on its own branch; check confirmatory results against the registered spec
 - `checkpoint` — take a described, clean snapshot of the dataset state
 - `manage-product` — group kept comparisons into a product
-- `plan-analysis` *(planned)* — guided statistical-test selection with QC checks
-- `scaffold-analysis` *(planned)* — emit a runnable, provenance-wrapped script stub for the chosen test
-- `plot` *(planned)* — consistent exploratory and publication figures
-- `gen-report` *(planned)* — scaffold an analysis report (results tables, QC metrics)
+- `plan-analysis` — recommend a statistical approach from the design and the data's shape, and list the assumptions it rests on as **unchecked**; reports no p-value, effect size or power figure, because a number that arrives before the analysis will be quoted as if it came from one
+- `scaffold-analysis` — emit a runnable, provenance-wrapped script stub for the chosen approach: inputs, outputs and run command, with a `NotImplementedError` where the model goes. It writes no analysis logic, and the placeholder **fails loudly** rather than returning a plausible number
+- `plot` — consistent exploratory and publication figures, written as a script and run through `run-comparison` so each figure carries the analysis's provenance; every value shown comes from a produced output file, and nothing is mocked up
+- `gen-report` — assemble results tables, QC metrics, figures and their commits into an internal report, with a required **gaps section**: assumptions never checked, runs that failed, outputs produced by hand. A missing value reads `not reported`, never a plausible one
 - `literature-search` *(planned)* — *(scope deliberately thin; pending participant feedback)* a lightweight BibTeX-collection helper (PubMed / Semantic Scholar), **not** a synthesis engine; the clearer value is connecting to meta-analytic tooling (NeuroSynth Compose / NiMARE)
 
 **`disseminate`** — Turn the finished, provenanced work into publications and living products.
@@ -859,7 +859,7 @@ openspec validate --all --strict
 [`openspec/README.md`](openspec/README.md) covers the conventions — including the fact that OpenSpec
 calls a spec folder a "capability", which is *not* this repository's "capability plane".
 
-**Where the harness stands.** The workflow plane is complete: 22 planner skills across six workflow
+**Where the harness stands.** The workflow plane is complete: 37 planner skills across six workflow
 plugins, each naming concrete ledger fields, log-entry shapes, and delegations. The capability plane
 beneath them is uneven — `datalad` has 19 toolbox skills, `annotate` has 4, `archive` has 3, and
 `bids`, `compendium` and `liab` have 1 each, while `containers` has none, so most steps can express
