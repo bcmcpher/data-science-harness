@@ -11,7 +11,10 @@ That annotation is delegated to the `annotate` capability, which checks each bac
 so the dataset-level metadata still completes when no vocabulary tool is installed. `deidentify`
 makes identifier removal a provenanced run with a recorded approach and a required residual-risk
 statement — it scaffolds the decision and the record, and refuses to select a tool, to claim
-compliance, or to answer whether the data may be shared.
+compliance, or to answer whether the data may be shared. `merge-data` combines tabular sources on a
+supplied join key and reports the row and column arithmetic, because a wrong join does not fail — it
+produces a table. `gen-data-dict` derives a dictionary's skeleton from the data and takes every
+meaning from the user or the `annotate` doer, leaving undescribed columns out and naming them.
 
 ## Requirements
 ### Requirement: Raw-to-BIDS conversion is provenanced

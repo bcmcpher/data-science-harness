@@ -114,6 +114,26 @@ tasks:
     expected_skill: curate/raw-to-bids
     expected_delegates_to: [nipoppy, datalad]
 
+  - id: curate-merge
+    prompt: >
+      The clinical scores and the demographics came from two different exports. Get them into one
+      table, and I want to know if anyone falls out along the way.
+    expected_skill: curate/merge-data
+    expected_delegates_to: [datalad]
+    notes: >
+      "If anyone falls out" is the row arithmetic. A route that produces a merged file without
+      reporting rows in / rows out has produced something that looks correct either way.
+
+  - id: curate-datadict
+    prompt: >
+      Write me the participants.json for this table — I'll tell you what the coded columns mean.
+    expected_skill: curate/gen-data-dict
+    expected_delegates_to: [annotate, datalad]
+    notes: >
+      Near miss with curate/annotate, which is the whole metadata pass including sidecars. "I'll
+      tell you what they mean" is the cue that meanings are supplied rather than looked up, though
+      the annotate doer is still reached for controlled terms.
+
   - id: curate-annotate
     prompt: >
       Our participants table has columns nobody outside the lab would understand. Make the dataset

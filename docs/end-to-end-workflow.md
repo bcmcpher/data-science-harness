@@ -75,8 +75,8 @@ Get raw data into a standardized, annotated form. The `curate` workflow orchestr
 
 1. **`curate/raw-to-bids`** *(→ the `nipoppy` or `bids` doer)* — convert raw acquisitions into BIDS layout. If you've adopted **Nipoppy** as your primary tool, this is one command in a framework whose config files also drive Stages 3 and 5.
 2. …then validate *(→ the `bids` doer)* — confirm the dataset is BIDS-compliant.
-3. **`curate/merge-data` *(planned)*** *(Agent: `merge-agent`)* — combine tabular phenotypic/clinical sources.
-4. **`curate/gen-data-dict` *(planned)*** — generate a data dictionary for the tabular data.
+3. **`curate/merge-data`** — combine tabular phenotypic/clinical sources as a provenanced run, on a join key you supply, with rows in / rows out / keys dropped per side in the report. A wrong join does not fail, it produces a table, so the arithmetic is the output that matters.
+4. **`curate/gen-data-dict`** — generate a data dictionary for the tabular data. The skeleton comes from the data; the meanings come from you or the `annotate` doer. An undescribed column gets no entry and is named in the report, because a description that restates the column name hides the gap.
 5. **`curate/annotate`** *(→ the `annotate` doer)* — decide which variables to standardize and let the doer drive the tools. All four backends have a skill: Neurobagel via `annotate-cli/bagel-cli` (phenotypic/clinical), SNOMED CT via `snomed-lookup`, behavioral assessments via `reproschema`, and imaging experiment/results via `pynidm` — see [`openspec/specs/annotate`](../openspec/specs/annotate/spec.md). Each is checked independently, so an uninstalled tool or an unconfigured SNOMED source comes back unavailable while the others still run. 🔧 Note what *finds* a term as opposed to validating one: only the SNOMED lookup and an interactive `pynidm` session resolve a new identifier, and the latter needs you at the prompt. The doer never recalls a term identifier; an unresolved variable comes back `unannotated` with the reason.
 
 > 🔧 **Do-it-yourself:** the real data wrangling — cleaning, format conversion for non-standard inputs, defining variables and units, deciding how to handle missingness and outliers. The skills *standardize and annotate* what you've defined; they don't define it.
@@ -232,7 +232,7 @@ Two things genuinely lock *early* because they shape everything downstream — *
 | Ethics scope & de-identification approach | **Stage 0–2** | ledger `ethics` | Gates what data may exist/leave |
 | Tech stack, env, container, naming conventions | **Stage 1** | `project/new-project` / `containers` | Cheap now, expensive to change after data lands |
 | Self-hosted infra (Lab-in-a-Box) | **Stage 1** *(optional)* or **Stage 8** | ledger `infrastructure` | Set up early for data sovereignty, or stand up at distribution |
-| Variable definitions, units, data dictionary | **Stage 2** | `curate/gen-data-dict` *(planned)* + annotations | Must be stable before analysis runs |
+| Variable definitions, units, data dictionary | **Stage 2** | `curate/gen-data-dict` + annotations | Must be stable before analysis runs |
 | Missingness/outlier handling rules | **Stage 2–3** | decision log | Ideally pre-specified; otherwise log as analytic choice |
 | Software/package versions | **Stage 3** | container digest / lockfile | Pinned so results reproduce |
 | Which quick queries become products | **Stage 3–5** | `analyze/manage-product` | Promote only what tells the story |
