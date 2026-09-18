@@ -219,7 +219,7 @@ science" with that in mind.
 | Ledger | **Built.** Schema-validated, with a worked example. |
 | Living compendium | **Designed, partly built.** The four artifacts are specified; the coupling is not complete. |
 | Portability | **Designed for six harnesses, exercised on two.** The installer supports Claude Code and OpenCode. |
-| Evaluation | **Specified, unrun.** Four probes, fixtures in `bench/`, CI-validated, no results. |
+| Evaluation | **Specified, unrun.** Four probes, fixtures in `bench/`, CI-validated, no results. The runner is not built here: [`wikiskill`](https://github.com/bcmcpher/wikiskill) reads these fixtures in place, and nothing has been executed through it either. |
 
 Unbuilt work is tracked in [`openspec/changes/`](../openspec/changes), where each item has a proposal
 and a task list; what is built is specified in [`openspec/specs/`](../openspec/specs). Nothing in this

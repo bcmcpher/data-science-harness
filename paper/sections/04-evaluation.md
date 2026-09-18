@@ -52,9 +52,14 @@ TWO THINGS TO STATE EXPLICITLY, BOTH SLIGHTLY UNCOMFORTABLE:
      kind. They are NOT comparable in value: different task suites, and a tool registry there that
      is far richer than `delegates_to`. Any reader who sees route@1 next to their 93.6% will make
      the comparison whether we invite it or not; better to bound it ourselves.
-  2. The current suite (bench/tasks/routing-lifecycle.yaml, 27 tasks) is a worked example, not a
-     validated instrument. Whether 27 tasks discriminate between conditions is unknown and cannot be
-     known without a pilot. @chen2026brainresearcher used 60.
+  2. The current suite (bench/tasks/routing-lifecycle.yaml, 42 tasks — one per built planner plus
+     near-miss discriminators) is a worked example, not a validated instrument. Whether 42 tasks
+     discriminate between conditions is unknown and cannot be known without a pilot.
+     @chen2026brainresearcher used 60.
+
+  RUNNER: the runner is external (wikiskill), so this section is not blocked on building one. State
+  that the instrument exists and that no probe has been executed through it — those are two separate
+  facts and the second is the one that matters here.
 
 Table: metric definitions. Lift from bench/probes/routing.yaml.
 -->

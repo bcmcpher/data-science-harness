@@ -227,16 +227,15 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | `liab` | doer | pyinfra (Forgejo planned) | `liab-doer` — plans by default | D |
 | `liab-cli` | toolbox | pyinfra | 1 skill + offline tool check | D |
 
-**Planned** — each has an OpenSpec change:
-
-| Plugin | Wraps | Change |
-|--------|-------|--------|
+Every capability plugin that had an OpenSpec change has now shipped at least its minimal core, so
+there is no planned-plugin table here any more. What is still open is *depth* inside the plugins
+above, tracked in [`openspec/changes/`](openspec/changes).
 
 The capability plane is the uneven half of the harness. `datalad` has 19 toolbox skills, `annotate`
 has 4, `archive` has 3, and `bids`, `compendium` and `liab` have 1 each; `containers` has none, so a planner above them can express
 what should happen and can only actually do the parts a toolbox covers. The archive skills were written against
 the live OSF, Zenodo, and DataCite APIs, but no deposit has yet been run through them against a live
-archive. Closing that is what the changes above are for, and the
+archive. Closing that is what the open changes are for, and the
 observable signal that one has shipped is a planner's `delegates_to:` growing beyond `[datalad]`.
 
 Capability plugins are deliberately thin: they hold tool mechanics and the STAMPED primitives,
@@ -843,8 +842,8 @@ proposed change is a validated record rather than a checkbox in a 55 KB file:
   grounded in the checks that already enforce it (`tests/lint-plugins.py`, `tests/e2e-smoke.sh`,
   `schemas/project.schema.json`).
 - **[`openspec/changes/`](openspec/changes)** — what we have decided to do next. The former
-  "deepening the capability plane" roadmap is now four open changes: `add-compendium-capability`,
-  `add-deidentify-skill`, `add-liab-capability`, and `deepen-bids-nipoppy`.
+  "deepening the capability plane" roadmap is now three open changes: `add-compendium-capability`,
+  `add-liab-capability`, and `deepen-bids-nipoppy`.
 - **[`openspec/changes/archive/`](openspec/changes/archive)** — changes that shipped. A change leaves
   `changes/` only when its tasks are done and its spec delta has been merged into `specs/`, so the
   open list stays an accurate account of what is *not* built.

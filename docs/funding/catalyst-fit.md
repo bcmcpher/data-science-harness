@@ -27,7 +27,9 @@ There is no fourth value.
 **Source — three values, closed.** *repo* (checkable against a file), *training* (delivered through
 the help desk and the sessions described in [motivation.md](../motivation.md#practice)), *reference*
 (material maintained outside this repository). Repository evidence and delivered practice are
-different kinds of claim and are never merged into one row.
+different kinds of claim and are never merged into one row. A *repo* row may cite a **different**
+repository — the evaluation runner lives in one — in which case it names which; that is cheaper than
+opening a fourth value, and the closed vocabulary is what keeps this document checkable.
 
 **Where the claim stays narrow.** The fund is about AI-assisted *software engineering*. This project
 is about governance of the *research record* produced with AI assistance. Risks 2 and 5 land squarely
@@ -105,20 +107,22 @@ the harness is how one person serves a cohort without becoming the bottleneck.
 
 | Criterion | Evidence | Status |
 |---|---|---|
-| **Feasibility within six months** | [`docs/evaluation.md`](../evaluation.md) (protocol written), [`bench/probes/`](../../bench/probes) + `bench/tasks/routing-lifecycle.yaml` (fixtures exist, 4 probes / 1 suite / 27 tasks), [`tests/check-bench-fixtures.py`](../../tests/check-bench-fixtures.py) (CI-validated), ground truth machine-derived. Only the runner is missing — `bench/README.md` defers it "until the probe set is settled" | **specified**; the remaining work is one runner |
+| **Feasibility within six months** | [`docs/evaluation.md`](../evaluation.md) (protocol written), [`bench/probes/`](../../bench/probes) + `bench/tasks/routing-lifecycle.yaml` (fixtures exist, 4 probes / 1 suite / 42 tasks), [`tests/check-bench-fixtures.py`](../../tests/check-bench-fixtures.py) (CI-validated), ground truth machine-derived. The runner is [`wikiskill`](https://github.com/bcmcpher/wikiskill), a separate project whose pilot reads these fixtures in place; what is missing is a **run**, not a runner | **specified**; the remaining work is executing it |
 | **Concrete shareable outputs under open licenses** | MIT for code, CC BY 4.0 for content, with `REUSE.toml` and SPDX identifiers. The deliverable is mostly Markdown, and the split exists because the content licence is the one that matters | **built** |
 | **Relevance to trustworthy AI-assisted research software** | Table A. Risks 2 and 5 answered from the repository; 1 and 4 from the training work; 3 across both | **built** / **specified**, per row |
 | **Broader community benefit beyond the applicants** | Probes are declarative fixtures — *adding or dropping an integration is editing fixtures, not code* — so the instruments are usable by teams that do not adopt this harness. Routing metrics deliberately mirror Chen et al. for comparability. Content is harness-neutral Markdown and the install is reproducible by hand. **Training is already delivered**, with invitations to present and inbound requests as the reach that can be pointed at | **built** for the design; the reach is **built** qualitatively and unmeasured |
-| **Budget proportionality** | Four probes, model API spend for the executed runs, one runner. Sizing depends on the runner's shape, which is not settled | **to write** |
+| **Budget proportionality** | Four probes and model API spend for the executed runs, across the models the pilot compares. No runner to build, so the sizing question is how many models and how many repeats, not how much engineering | **to write** |
 
 ### Deliverables — artifacts, not intentions
 
 Drawn from the adoption gaps above. Each is a thing that exists at the end, not a thing attempted.
 
-1. A probe runner executing the four probes specified in [`docs/evaluation.md`](../evaluation.md).
-2. Executed results for routing, provenance, reproducibility and cost, reported **per-model** and
-   **per-dimension** — `per_model: required`, `aggregate_only: forbidden`, and provenance not
-   collapsed into a composite, on STAMPED-spectrum grounds.
+1. Executed results for the probes specified in [`docs/evaluation.md`](../evaluation.md), reported
+   **per-model** and **per-dimension** — `per_model: required`, `aggregate_only: forbidden`, and
+   provenance not collapsed into a composite, on STAMPED-spectrum grounds. The runner is
+   [`wikiskill`](https://github.com/bcmcpher/wikiskill) and is not part of this ask.
+2. A stated account of which probes were **not** run and why, which the protocol already requires of
+   any report carrying fewer than four.
 3. Fixtures, rubrics and harness-off controls published as **reusable instruments**, usable by teams
    who do not adopt this harness.
 4. **The adoption package**: a real install path, a worked example another group can run end to end
