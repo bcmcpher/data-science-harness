@@ -2,7 +2,7 @@
 #
 # check-tools.sh — offline presence check for one compendium build tool.
 #
-# Usage: check-tools.sh <myst> [--project <dir>]
+# Usage: check-tools.sh <myst|jupyter-book|repo2data|mcp-scaffold> [--project <dir>]
 #
 # Prints `result: available`, or `result: unavailable` followed by what is missing and how to enable
 # it. Exit codes: 0 = available, 1 = not available, 2 = usage error / unknown tool.
@@ -16,11 +16,15 @@
 # This is a different question from a credential check, which stays presence-only: a key can only be
 # validated by the service. Whether a local binary starts is answerable locally, so it is answered.
 #
-# Only tools that have a compendium-cli skill behind them are accepted here. `jupyter-book`,
-# `repo2data` and the MCP scaffold are named in add-compendium-capability and are NOT yet built, so
-# asking about them is a usage error rather than an `unavailable` answer. That distinction matters:
-# `unavailable` tells the doer "installable, try again once it is there", and returning that for a
-# tool with no skill would promise an invocation path that does not exist.
+# Only tools that have a compendium-cli skill behind them are accepted here; anything else is a
+# usage error rather than an `unavailable` answer, because `unavailable` tells the doer "installable,
+# try again once it is there" and returning that for a tool with no skill promises an invocation path
+# that does not exist.
+#
+# `mcp-scaffold` is the odd one: it wraps no external tool. Its skill writes files in the harness's
+# own format, so the thing worth checking is that the checker the emitted bundle must satisfy is
+# present and runnable — tests/lint-plugins.py. A bundle nobody can structurally check is a bundle
+# whose format claim is unverified.
 #
 # MyST ships two ways that both matter here. A repository that declares `mystmd` in package.json has
 # it at node_modules/.bin/myst after `npm ci` and does NOT need a global install; a user working
@@ -74,12 +78,45 @@ case "$tool" in
       fi
     fi
     ;;
-  jupyter-book|repo2data|mcp-scaffold)
-    echo "no skill for: $tool (named in add-compendium-capability, not built) — do not report this as unavailable, there is no invocation path behind it" >&2
-    exit 2
+  jupyter-book)
+    # Jupyter Book 2 IS mystmd under a different entry point; Jupyter Book 1 is Sphinx-based and a
+    # different tool with a different config file. Report which one is installed, because a procedure
+    # written for one fails on the other and the failure reads as a broken project.
+    if command -v jupyter-book >/dev/null 2>&1 && jupyter-book --version >/dev/null 2>&1; then
+      found="jupyter-book ($(jupyter-book --version 2>/dev/null | head -1))"
+    elif command -v jupyter-book >/dev/null 2>&1; then
+      missing+=("a runnable jupyter-book — the command is on PATH but failed to start")
+      enable+=("reinstall it; the entry point is present and broken, which is not the same as absent")
+    else
+      missing+=("jupyter-book")
+      enable+=("pip install jupyter-book (v2 is MyST-based and reads myst.yml; v1 is Sphinx-based and reads _config.yml — the skill checks which before doing anything)")
+    fi
+    ;;
+  repo2data)
+    if command -v repo2data >/dev/null 2>&1 && repo2data --help >/dev/null 2>&1; then
+      found="repo2data ($(command -v repo2data))"
+    elif python3 -c 'import repo2data' 2>/dev/null; then
+      found="repo2data (importable, no console script)"
+    else
+      missing+=("repo2data")
+      enable+=("pip install repo2data. It fetches declared data; it does not record having done so, so the fetch still has to run under the datalad doer to be provenanced")
+    fi
+    ;;
+  mcp-scaffold)
+    # No external tool. What must exist is the structural checker the emitted bundle has to pass.
+    lint="$(cd "$(dirname -- "${BASH_SOURCE[0]}")/../../.." && pwd)/tests/lint-plugins.py"
+    if [ -f "$lint" ] && python3 -c 'import yaml' 2>/dev/null; then
+      found="$lint (the checker an emitted bundle must pass)"
+    elif [ -f "$lint" ]; then
+      missing+=("PyYAML, which tests/lint-plugins.py needs to parse skill frontmatter")
+      enable+=("install PyYAML into the environment that runs python3. Without it the lint exits 2, which reads as a skip rather than a failure — so an unchecked bundle would look checked")
+    else
+      missing+=("tests/lint-plugins.py")
+      enable+=("this check runs from a harness checkout. A bundle emitted without it can still be written, but its format claim is unverified — say so rather than asserting the format is correct")
+    fi
     ;;
   *)
-    echo "unknown tool: $tool (expected myst)" >&2
+    echo "unknown tool: $tool (expected myst, jupyter-book, repo2data or mcp-scaffold)" >&2
     exit 2
     ;;
 esac

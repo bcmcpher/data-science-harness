@@ -604,12 +604,26 @@ assert "compendium-cli provides a myst skill to invoke" \
 # unavailable.
 MRC=$(rc_of bash "$COMPCHK" myst --project "$REPO")
 assert "myst gate answers available (0) or unavailable (1)" "[ $MRC -eq 0 ] || [ $MRC -eq 1 ]"
-# jupyter-book, repo2data and mcp-scaffold are named in the change and not built. `unavailable`
-# would mean "install it and retry", which would promise an invocation path that does not exist.
-for NOTBUILT in jupyter-book repo2data mcp-scaffold; do
-  NBRC=$(rc_of bash "$COMPCHK" "$NOTBUILT")
-  assert "unbuilt tool $NOTBUILT is a usage error (exit 2), not 'unavailable'" "[ $NBRC -eq 2 ]"
+# jupyter-book, repo2data and mcp-scaffold now have skills behind them, so the gate must answer
+# available/unavailable rather than the usage error it returned while they were unbuilt.
+for BUILT in jupyter-book repo2data mcp-scaffold; do
+  assert "compendium-cli provides a $BUILT skill to invoke" \
+         "[ -f '$REPO/plugins/compendium-cli/skills/$BUILT/SKILL.md' ]"
+  BRC=$(rc_of bash "$COMPCHK" "$BUILT")
+  assert "$BUILT gate answers available (0) or unavailable (1)" "[ $BRC -eq 0 ] || [ $BRC -eq 1 ]"
 done
+# mcp-scaffold wraps no external tool: what it needs is the structural checker the emitted bundle
+# must satisfy. The bundle format claim is only worth something if something checks it, so the
+# reference bundle -- the shape mcp-scaffold emits -- is linted here with the harness's own lint.
+BUNDLE="$REPO/plugins/compendium-cli/references/example-agent-bundle"
+assert "a reference agent bundle exists to emit against" "[ -f '$BUNDLE/.claude-plugin/marketplace.json' ]"
+BLRC=$(rc_of python3 "$REPO/tests/lint-plugins.py" "$BUNDLE")
+assert "the reference agent bundle passes the harness's structural lint (0 errors)" "[ $BLRC -eq 0 ]"
+python3 "$REPO/tests/lint-plugins.py" "$BUNDLE" > "$WORKDIR/bundle-lint.txt" 2>&1 || true
+assert_grep "the bundle lint reports zero errors explicitly" "0 error\\(s\\)" "$WORKDIR/bundle-lint.txt"
+# Not asserted, deliberately: that the bundle's MCP server starts, or that its reproduction test
+# passes. The test raises NotImplementedError on purpose -- a reproduction test that passed without
+# comparing anything against a recorded result is the thing mcp-scaffold refuses to emit.
 UNKRC=$(rc_of bash "$COMPCHK" bogus)
 assert "unknown compendium tool is a usage error (exit 2)" "[ $UNKRC -eq 2 ]"
 if [ "$MRC" -ne 0 ]; then

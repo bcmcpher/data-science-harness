@@ -1,0 +1,11 @@
+{
+  "name": "example-study-tools-bundle",
+  "owner": { "name": "the study's authors" },
+  "plugins": [
+    {
+      "name": "example-study-tools",
+      "source": "./plugins/example-study-tools",
+      "description": "The example study's provenanced analyses, exposed as callable tools. Each wraps a script that already ran under datalad run, and each ships a test asserting it reproduces that run's recorded result."
+    }
+  ]
+}

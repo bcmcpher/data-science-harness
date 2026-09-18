@@ -310,7 +310,12 @@ tasks:
       Package our methods so someone else's assistant could call them on their own data without
       reading our code.
     expected_skill: disseminate/agent-bundle
-    expected_delegates_to: [datalad]
+    expected_delegates_to: [compendium, datalad]
+    notes: >
+      Reaching datalad alone writes some files and commits them; reaching compendium is what reads
+      each script's real argument parser instead of inferring a signature, and runs the harness's own
+      lint over what was emitted. "Without reading our code" is the cue — the caller wants a
+      described interface, which is the half datalad cannot deliver.
 
   - id: disseminate-submission
     prompt: >

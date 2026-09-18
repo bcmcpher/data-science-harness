@@ -1,11 +1,14 @@
 {
   "name": "compendium-cli",
-  "description": "Compendium skill toolbox: MyST project scaffolding, building and preview, plus the offline check the compendium doer runs first. The skill is explicit that building a document is not the same as making it reproducible — figure provenance and environment pinning belong to the doer — and that a MyST build exits 0 with unresolved references, so a clean build is never reported without its warnings.",
-  "version": "0.1.0",
+  "description": "Compendium skill toolbox: MyST project scaffolding and building, Jupyter Book builds that report what was executed rather than only what rendered, repo2data fetches constructed as recorded runs, and MCP bundle scaffolding checked against the harness's own lint — plus the offline check the compendium doer runs first. Each is explicit about what a green build does not prove: building a document is not making it reproducible, a fetch is not provenance, and a bundle emitted in the harness format is a claim until the lint has run over it.",
+  "version": "0.2.0",
   "author": { "name": "bcmcpher" },
   "license": "MIT",
   "keywords": ["myst", "mystmd", "executable-article", "neurolibre", "reproducible-preprint", "compendium", "toolbox", "capability"],
   "skills": [
-    "./skills/myst"
+    "./skills/myst",
+    "./skills/jupyter-book",
+    "./skills/repo2data",
+    "./skills/mcp-scaffold"
   ]
 }
