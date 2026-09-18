@@ -3,11 +3,13 @@
 ## Purpose
 
 The workflow-plane plugin for project initialization and the Manage & Comply lane: scaffolding a new
-study, keeping the ledger's people and decisions current, rendering status reports, and orienting a
-returning user. Administration is treated as first-class here — funding, credit, and rationale are
-tracked with the same provenance discipline as the science, which is what makes a project's history
-explain itself months later. Provides four planner skills (`new-project`, `status-report`, `people`,
-`log-decision`) and the read-only `coordinator` agent.
+study, keeping the ledger's people, dates and decisions current, rendering status reports, reporting
+what the project's environment declares against what the machine has, writing the project's assistant
+configuration, and orienting a returning user. Administration is treated as first-class here —
+funding, credit, and rationale are tracked with the same provenance discipline as the science, which
+is what makes a project's history explain itself months later. Provides seven planner skills
+(`new-project`, `status-report`, `people`, `log-decision`, `track-milestone`, `env-check`,
+`claude-config`) and the read-only `coordinator` agent.
 
 ## Requirements
 

@@ -91,6 +91,23 @@ tasks:
     expected_skill: project/new-project
     expected_delegates_to: [datalad]
 
+  - id: project-env-check
+    prompt: >
+      Something told me a backend was unavailable. Work out what this project actually needs and
+      what's missing on this machine.
+    expected_skill: project/env-check
+    expected_delegates_to: [datalad]
+    notes: >
+      The honest answer has two halves — not declared anywhere, and declared but not installed — and
+      a route that reports one list of "missing tools" has lost the distinction the skill exists for.
+
+  - id: project-claude-config
+    prompt: >
+      A new student starts Monday and the assistant has no idea what this project is. Write the
+      project instructions it should load.
+    expected_skill: project/claude-config
+    expected_delegates_to: [datalad]
+
   # ---------------------------------------------------------------- 2. curate
   - id: curate-raw
     prompt: I have a folder of DICOMs from the scanner. Get them into the standard layout.
@@ -201,6 +218,16 @@ tasks:
       the methods.
     expected_skill: project/people
     expected_delegates_to: [datalad]
+
+  - id: project-milestone
+    prompt: >
+      The abstract deadline moved to the 14th of next month. Make sure that's somewhere I'll see it
+      alongside everything else we owe.
+    expected_skill: project/track-milestone
+    expected_delegates_to: [datalad]
+    notes: >
+      "Alongside everything else we owe" is the cue for the obligations registry. A route to
+      govern/obligations is the near miss — that skill resolves commitments, it does not add dates.
 
   - id: project-decision
     prompt: >

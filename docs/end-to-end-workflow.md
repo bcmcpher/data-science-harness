@@ -31,9 +31,9 @@ Before any research begins, stand up the tooling itself.
    With no arguments it installs every plugin for OpenCode at project scope. Use `--scope global` to install once for all projects, `--dry-run` to see what would be copied, and positional plugin names to install a subset (`bin/install.sh project analyze datalad datalad-cli`).
 2. **Install the dependencies the plugins drive.** At minimum `git`, `git-annex` and `datalad`; a container runtime (Apptainer or Docker) for anything that runs an analysis. `environment.yml` in the harness repo is a working conda environment for the first three.
 
-> 🔧 **Do-it-yourself:** dependency checking is manual. `project/env-check` *(planned)* would verify what each plugin declares it needs; until it exists, the failure mode is a skill reaching for a tool that is not there, and the fix is installing it.
+> 🔧 **Do-it-yourself:** installing is manual. `project/env-check` reports what the committed manifests declare against what the machine has, separating *present but undeclared* (a Portability defect — it works here and breaks for the next person) from *declared but absent* (a setup step). It never installs, because installing a tool to make a check pass destroys the finding.
 
-> ⚠️ **Scaffolding gap:** **there is no `ds-harness` CLI.** The README sketches one (`ds-harness install`, `list`, `update`, `validate`) and it is not built — `bin/install.sh` has no `update` or `remove`, so changing the harness version means re-running the installer. `project/claude-config` *(planned)* would generate `CLAUDE.md`, settings and MCP stubs; today you write them by hand.
+> ⚠️ **Scaffolding gap:** **there is no `ds-harness` CLI.** The README sketches one (`ds-harness install`, `list`, `update`, `validate`) and it is not built — `bin/install.sh` has no `update` or `remove`, so changing the harness version means re-running the installer. `project/claude-config` generates `CLAUDE.md`, settings and MCP stubs from what the project actually contains — it asks about anything it cannot source, because a CLAUDE.md is loaded into every session and followed rather than questioned.
 
 > 🔧 **Do-it-yourself:** choose your harness, your language (R / Python / Julia), and a package manager (`conda` / `renv` / `uv`). Analyses should run in a container (required for `datalad container-run`), and you list the preprocessing pipelines you expect to use (fMRIPrep, QSIPrep, …) so `project/new-project` can scaffold them into the Nipoppy / container config.
 
@@ -52,7 +52,7 @@ Set up the administrative and scientific *plan* before touching data.
 5. **`govern/dmp` *(planned)*** — author a Data Management Plan (RDA maDMP / funder template); its obligations are written into the ledger.
 6. **`govern/ethics-track` *(planned)*** — record the IRB/IACUC protocol, approval, and expiry (drives a renewal obligation).
 7. **`govern/preregister`** — register on OSF / ClinicalTrials.gov / PROSPERO; record the ID in the ledger. This is also how a **confirmatory comparison** freezes its spec.
-8. **`project/track-milestone` *(planned)*** — set the study's key dates and deliverables.
+8. **`project/track-milestone`** — set the study's key dates and deliverables, as `kind: milestone` obligations in the same registry as every other commitment.
 
 > 🔧 **Do-it-yourself:** this is where the *science* is designed. You decide the hypotheses, the primary and secondary outcomes, the inclusion/exclusion criteria, the model family, and the sample-size justification. `analyze/propose-comparison` computes power once you supply an expected effect size and design — it does not choose them for you.
 
@@ -170,7 +170,7 @@ Produce the living research compendium and the classic outputs.
 Running in parallel from Stage 0 onward:
 
 - **`govern/obligations`** (shared core with `govern`) — on demand, list what's due, including **pre-registered comparisons still to complete**; a Claude Code `SessionStart` hook surfaces items due soon.
-- **`project/track-milestone` *(planned)***, **`project/log-decision`**, **`project/people`**, **`project/status-report`** — keep the ledger current.
+- **`project/track-milestone`**, **`project/log-decision`**, **`project/people`**, **`project/status-report`** — keep the ledger current. A moved deadline updates `due` *and* logs the old date with the reason, because a slip is information.
 - **`govern/stamped-assess` *(planned)*** — re-run periodically, not just at QC.
 
 > ⚠️ **Scaffolding gap:** reminders are pull-based (a skill you invoke) plus an opt-in Claude hook. There's no cross-harness push for a deadline you'd miss while *not* in a session — acceptable for v1, but worth noting for users who live in their calendar, not their terminal.
