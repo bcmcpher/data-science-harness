@@ -97,7 +97,7 @@ the harness is how one person serves a cohort without becoming the bottleneck.
 |---|---|---|
 | [`docs/stamped.md`](../stamped.md) distils STAMPED into RFC 2119 requirements (S.1 … D.3) that are **mechanically enforced** — the lint validates every skill's `stamped:` letters against the closed set, and now validates the marketplace description's prose too | repo | **built** |
 | The **two-plane split** is a nameable, transferable adoption pattern: research vocabulary above, tool mechanics below, joined by a contract that fails a check rather than decaying into convention | repo | **built** |
-| [`openspec/specs/`](../../openspec/specs) is 20 validated specs — a shared, machine-checkable statement of what an assistant configuration must do, and a worked example of OpenSpec itself as an adoption framework | repo | **built** |
+| [`openspec/specs/`](../../openspec/specs) is 21 validated specs — a shared, machine-checkable statement of what an assistant configuration must do, and a worked example of OpenSpec itself as an adoption framework | repo | **built** |
 | [`docs/end-to-end-workflow.md`](../end-to-end-workflow.md) "When each decision must be finalized" — 16 rows of decision → stage → ledger location → why it locks there. An adoption-decision framework in its own right | repo | **built** |
 | Transfer of these frameworks to other groups is demonstrated through training, not measured | training | **gap** |
 

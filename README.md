@@ -838,7 +838,7 @@ CI checks **structure and specs, not agent behaviour** — see [Evaluating the h
 The forward plan no longer lives in this README. It lives in [`openspec/`](openspec), where each
 proposed change is a validated record rather than a checkbox in a 55 KB file:
 
-- **[`openspec/specs/`](openspec/specs)** — 20 specs describing what the harness *does today*,
+- **[`openspec/specs/`](openspec/specs)** — 21 specs describing what the harness *does today*,
   grounded in the checks that already enforce it (`tests/lint-plugins.py`, `tests/e2e-smoke.sh`,
   `schemas/project.schema.json`).
 - **[`openspec/changes/`](openspec/changes)** — what we have decided to do next. The former

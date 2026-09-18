@@ -136,14 +136,27 @@ and include tests that reproduce the product's recorded results.
 
 ### Requirement: Lab-in-a-Box deployment is planned before it touches a host
 
-`disseminate/liab-deploy` MUST scaffold a deployment configuration for self-hosted Forgejo and
-git-annex data serving and register the resulting sibling through the datalad doer. It MUST be able
-to produce a deployment plan without contacting a real host.
+`disseminate/liab-deploy` MUST delegate deployment to the liab doer and MUST declare
+`delegates_to: [liab, datalad]`. It MUST produce a reviewable deployment plan by default, and MUST
+register the resulting endpoint as a DataLad sibling through the datalad doer. It MUST record what
+was deployed and MUST NOT assert that the deployment satisfies any jurisdiction's data-residency
+requirements.
 
 #### Scenario: Planning a self-hosted deployment
 
-- **WHEN** a deployment is scaffolded in dry-run form
-- **THEN** the plan is produced and reviewable, and no remote host is modified
+- **WHEN** a deployment is scaffolded
+- **THEN** the plan is produced and reviewable, and no remote host is contacted
+
+#### Scenario: A deployment is applied and verified
+
+- **WHEN** the plan is applied and the sibling is registered
+- **THEN** the skill reports the deployment complete only after a clone can retrieve annexed content
+  from the self-hosted remote
+
+#### Scenario: Recording the deployment
+
+- **WHEN** the deployment is recorded in the ledger
+- **THEN** the entry states which hosts serve which data, without a compliance claim
 
 ### Requirement: Every product and release is recorded in the ledger
 
