@@ -7,7 +7,7 @@ description: >
   "set up a research project". This is the Stage-1 (Initialize) entry point.
 plane: workflow
 stamped: [S, M, T, P, E]
-delegates_to: [datalad]
+delegates_to: [containers, datalad]
 ---
 
 # Skill: new-project
@@ -49,12 +49,23 @@ You own the *what/why*; you delegate every DataLad operation to the **datalad do
    Raw BIDS data lives at the dataset root; `outputs/`/`derivatives/` hold results; `inputs/`
    holds linked source subdatasets (YODA P1). Do not copy raw data in by hand.
 
-4. **Scaffold a basic analysis container recipe** in `containers/` (recipe only; building/
-   registration happens on the first `analyze/run-comparison`):
-   - Python → `environment.yml` (pin interpreter + core scientific stack) and a minimal
-     `Dockerfile`/`Apptainer.def` built from it.
-   - R → an `renv.lock` stub + equivalent container def.
-   Note in the README that analyses run via `datalad container-run` (Portability + Ephemerality).
+4. **Declare the analysis environment, then delegate the recipe** (recipe only; building and
+   registration happen on the first `analyze/run-comparison`). Write the *manifest* — Python →
+   `environment.yml`, R → an `renv.lock` stub — and then delegate to the **containers doer**:
+
+   > "write a Dockerfile for the authored analysis environment from `<manifest>`"
+
+   **Do not hand-write the Dockerfile yourself.** A recipe written from recall beside a manifest that
+   declares something else is two descriptions of one environment that nothing compares, and they
+   drift. The doer derives it from the manifest or tells you the manifest is not pinned — and at
+   project start, "not pinned yet" is the correct and useful answer, not a failure.
+
+   A project will end up with **more than one** environment: this authored one, plus a vendored image
+   per preprocessing pipeline (fMRIPrep, QSIPrep), plus any derived image that adds project scripts
+   to a standard base. Each gets its own name at `datalad containers-add` time. Record the expected
+   pipelines here as notes; pinning their images happens when they are first run.
+
+   Note in the README that analyses run via `datalad containers-run` (Portability + Ephemerality).
 
 5. **Initialize the project ledger** — write `project.yaml` at the dataset root using the shape
    below, with one `new-project` log entry and empty `products:` / `obligations:` lists (later

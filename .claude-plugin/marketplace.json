@@ -52,6 +52,11 @@
       "description": "Containers doer: builds an Apptainer/Singularity .sif from a project's recipe (with the docker-archive workaround) so analyses have a pinned, rebuildable environment; registration/running stay with the datalad doer."
     },
     {
+      "name": "containers-cli",
+      "source": "./plugins/containers-cli",
+      "description": "Containers skill toolbox, split by job rather than by binary: dockerfile translates a declared environment into a Dockerfile and refuses when what it declares would not rebuild, oci-build builds it with Podman or Docker and says which ran and whether it was rootless, apptainer converts the result to the .sif a cluster runs. Two pins it will not waive: an unpinned manifest and a mutable image tag both yield containers that run and do not rebuild."
+    },
+    {
       "name": "bids",
       "source": "./plugins/bids",
       "description": "BIDS doer: read-only validation of a dataset against the Brain Imaging Data Structure (bids-validator + structural checks); reports conformance, never modifies the dataset."

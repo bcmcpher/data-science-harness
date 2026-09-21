@@ -30,12 +30,18 @@ you delegate to the **datalad doer**.
    - `-i` inputs — the data files/globs the script reads (e.g. `participants.tsv`, `sub-*/…`)
    - `-o` outputs — where results land (prefer `derivatives/cmp-<slug>/…`)
    - `-m` message — a meaningful description of the run
-   - container — the project container recipe from `containers/` (build/register on first use)
+   - container — **which** of the project's environments this comparison runs in (build/register on
+     first use). A project has several; name the one, do not assume there is only one
 3. **Ensure the container image exists (containers doer)** — if no `.sif` has been built yet for the
-   project recipe, delegate to the **containers doer**:
-   > "build a `.sif` from `containers/<recipe>` into `containers/<name>.sif`."
-   It returns the image path and the `datalad containers-add …` command to register it. Skip if the
-   image is already built and registered.
+   environment this comparison needs, delegate to the **containers doer**:
+   > "build a `.sif` for the `<name>` environment into `containers/<name>.sif`."
+   It returns the image path, how that environment is pinned, and the `datalad containers-add …`
+   command to register it. Skip if the image is already built and registered.
+
+   **Carry its pin forward rather than smoothing it over.** If the doer reports a pin as
+   `unresolved` — a vendored image whose tag could not be resolved to a digest, or a manifest that
+   is not pinned — the comparison can still run, and what it produces is not rebuildable. Say so in
+   the report instead of letting a green run imply otherwise.
 4. **Delegate execution to the datalad doer**:
    > "container-run `<command>` on branch `cmp/<slug>` using container `<name>` (register it with the
    > `containers-add` command from step 3 if not yet registered), inputs `<-i …>`, outputs `<-o …>`,

@@ -2,10 +2,9 @@
 
 > **Status: both planes are built, almost nothing has been run against its real tool, and nothing
 > has been measured.** Six workflow plugins and 74 skills are on disk, structurally checked, and
-> specified by 22 specs; `openspec/changes/` is empty. Beneath them, `datalad` has a 19-skill
+> specified by 22 specs, with no open changes. Beneath them, `datalad` has a 19-skill
 > toolbox, `annotate`, `nipoppy` and `compendium` 4 each, `archive` 3, `liab` 2, `bids` 1 — while
-> `containers` has none and no change proposes one, so a planner above it can express a step it
-> cannot fully perform. The wider gap is execution: deposits, document builds, data fetches and
+> and `containers` 3, one per job — so every capability now has a toolbox beneath it. The wider gap is execution: deposits, document builds, data fetches and
 > bundle emission are each gated, each gate is tested, and what sits behind them has not run. The evaluation protocol in
 > [`evaluation.md`](evaluation.md) is specified and **no probe has been run**; no number anywhere in
 > this repository comes from a measurement. When that changes, this banner is the first thing to
@@ -217,13 +216,13 @@ science" with that in mind.
 | | State |
 |---|---|
 | Workflow plane | **Built.** Six plugins — `project`, `govern`, `curate`, `analyze`, `process`, `disseminate` — and the 37 planner skills beneath them, structurally checked. One, `analyze/literature-search`, is deliberately unbuilt. |
-| Capability plane | **Built, unexercised.** `datalad` has a 19-skill toolbox; `nipoppy` four, one per command class; `annotate` one per backend (Neurobagel, NIDM, ReproSchema, SNOMED), most of which validate terms rather than find them; `archive` one per backend (OSF, Zenodo, DataCite); `compendium` four — MyST, Jupyter Book, repo2data and MCP bundle scaffolding; `bids` one, wrapping whichever validator distribution is installed; `liab` two — pyinfra, whose plan path the test exercises when pyinfra is installed and whose apply path is exercised only by hand because testing it needs a disposable host, and forgejo, exercised only as far as its credential gate. **`containers` still has a doer and no toolbox, and no change proposes one** — the one remaining hole in the plane's shape. The larger caveat is not shape but execution: no deposit, no MyST or Jupyter Book build, no repo2data fetch and no bundle emission has been run live here, because those tools are not installed. What the tests establish is that each gate answers correctly and refuses correctly, not that the tool behind it works. |
+| Capability plane | **Built, unexercised.** `datalad` has a 19-skill toolbox; `nipoppy` four, one per command class; `annotate` one per backend (Neurobagel, NIDM, ReproSchema, SNOMED), most of which validate terms rather than find them; `archive` one per backend (OSF, Zenodo, DataCite); `compendium` four — MyST, Jupyter Book, repo2data and MCP bundle scaffolding; `bids` one, wrapping whichever validator distribution is installed; `liab` two — pyinfra, whose plan path the test exercises when pyinfra is installed and whose apply path is exercised only by hand because testing it needs a disposable host, and forgejo, exercised only as far as its credential gate. `containers` three, split by job — authoring a Dockerfile from a pinned manifest, building it with Podman or Docker, converting it to the `.sif` a cluster runs. The larger caveat is not shape but execution: no deposit, no MyST or Jupyter Book build, no repo2data fetch and no bundle emission has been run live here, because those tools are not installed. What the tests establish for those is that each gate answers correctly and refuses correctly, not that the tool behind it works. **`containers` is the exception**, and so far the only one: Docker, Podman and Apptainer are all present on the development machine, and the full path — build, the `docker-daemon://` failure, the `docker-archive://` workaround, `inspect`, `exec`, and tag-to-digest resolution — has been run end to end. |
 | Ledger | **Built.** Schema-validated, with a worked example. |
 | Living compendium | **Designed, partly built.** The four artifacts are specified; the coupling is not complete. |
 | Portability | **Designed for six harnesses, exercised on two.** The installer supports Claude Code and OpenCode. |
 | Evaluation | **Specified, unrun.** Four probes, fixtures in `bench/`, CI-validated, no results. The runner is not built here: [`wikiskill`](https://github.com/bcmcpher/wikiskill) reads these fixtures in place, and nothing has been executed through it either. |
 
-Unbuilt work is tracked in [`openspec/changes/`](../openspec/changes) — currently empty — where each
+Unbuilt work is tracked in [`openspec/changes/`](../openspec/changes), where each
 item has a proposal and a task list; what is built is specified in the 22 specs in
 [`openspec/specs/`](../openspec/specs). Nothing in this
 document claims a fourth status. A capability is built, specified, or named here as a gap.

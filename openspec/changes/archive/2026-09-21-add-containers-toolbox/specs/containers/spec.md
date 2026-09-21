@@ -1,51 +1,13 @@
-# containers
+## RENAMED Requirements
 
-## Purpose
+- FROM: `### Requirement: The containers doer builds images and nothing else`
+- TO: `### Requirement: The containers doer authors and builds; it does not register or run`
+- FROM: `### Requirement: The build path is selected from the recipe`
+- TO: `### Requirement: The build path is selected from the source and the target`
+- FROM: `### Requirement: Absent tooling is reported, not worked around silently`
+- TO: `### Requirement: Absent or ambiguous tooling is reported, not worked around silently`
 
-The capability-plane wrapper over a project's compute environments, along the path people actually
-use: **Dockerfile → OCI image → `.sif`.** Environments are authored in Docker or Podman; Apptainer is
-what compute clusters provide, and a `.sif` is what `datalad containers-run` registers. An earlier
-version of this spec described the capability as a wrapper over Apptainer builds with Docker as a
-source to convert *from*, which had the arrow backwards.
-
-**A project has several environments, not one.** A real study runs an authored analysis environment
-beside vendored pipeline images such as fMRIPrep and QSIPrep, and often a derived image adding the
-project's own scripts to a standard base. Each is named and each records the pipeline it serves. No
-registry is introduced for this: `datalad containers-add <name>` already keys containers by name and
-`containers-run --container-name <name>` selects among them.
-
-The governing discipline is that **an image that runs is not an image that rebuilds.** The two fail
-identically on inspection — both build, both execute, both produce numbers — and diverge only when
-someone rebuilds a year later. So what this capability refuses is more characteristic of it than what
-it builds: an unpinned manifest, a `conda env export` carrying platform-specific build strings, a
-mutable image tag recorded as a pin, and an unpinned install step layered onto a pinned base. Each
-refusal names the command that would fix it, because a refusal without a remedy just gets worked
-around.
-
-A second discipline is that the capability reports what the machine required of it, not only what it
-produced. Podman and Docker build the same layers, so the artifact is identical; what differs is that
-a rootful Docker demands group membership the next user may not have. That belongs in the report
-rather than being discovered on a cluster.
-
-The boundaries are deliberate and narrow. This capability builds and pins; **registering
-(`datalad containers-add`) and running (`containers-run`) stay with the datalad doer**, so provenance
-has exactly one owner. And **`nipoppy` declares which pipeline and version a dataset runs** while
-this capability obtains, pins and converts the image that pipeline executes in — neither owns both.
-
-What it does not choose is the science: which packages an analysis needs is the user's, and this
-capability only translates what the project already declared.
-
-## Requirements
-### Requirement: The built image is reported, not assumed
-
-The doer MUST report the operation, the exact build command, `result`, and the resulting image path,
-and MUST show the constructed command before building.
-
-#### Scenario: A build fails
-
-- **WHEN** the build returns non-zero
-- **THEN** the doer surfaces the error, returns `result: failed`, and leaves no partial image
-  presented as usable
+## MODIFIED Requirements
 
 ### Requirement: The containers doer authors and builds; it does not register or run
 
@@ -105,6 +67,8 @@ OCI runtime is present, it MUST report which one it selected.
 - **WHEN** an OCI runtime is present but Apptainer is not, and a `.sif` was requested
 - **THEN** the doer reports the OCI image it produced and states that the conversion did not run,
   rather than presenting the OCI image as the requested artifact
+
+## ADDED Requirements
 
 ### Requirement: An authored environment is derived from a pinned manifest, never from recall
 
@@ -264,4 +228,3 @@ provide an offline check reporting which runtimes are usable.
 - **WHEN** the offline check is run
 - **THEN** it reports each runtime as available or unavailable with a stated reason, and answers a
   request for an unknown tool as a usage error
-
