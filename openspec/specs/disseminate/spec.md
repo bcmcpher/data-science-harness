@@ -11,7 +11,6 @@ its inputs rather than its procedure: its items are copied from checklist text b
 `plugins/disseminate/references/`, each file naming the openly licensed publication it derives from,
 because a checklist assembled from recall looks complete and omits exactly the items the guideline
 was written for.
-
 ## Requirements
 ### Requirement: Publishing verifies distributability rather than assuming it
 
@@ -134,27 +133,39 @@ checked. The skill MUST NOT state that a product is compliant with a guideline.
 
 ### Requirement: The executable article rebuilds its own figures
 
-`disseminate/executable-article` MUST scaffold a MyST or Jupyter Book article for a product whose
-figures are wired to the provenanced data and the project's container environment, so the article
-regenerates its results rather than embedding static images.
+`disseminate/executable-article` MUST delegate scaffolding and building to the compendium doer, and
+MUST declare `delegates_to: [compendium, datalad]`. The produced article's figures MUST be wired to
+the provenanced data and built in the project's container environment, so the article regenerates its
+results rather than embedding static images.
 
 #### Scenario: A reproducible preprint is scaffolded
 
 - **WHEN** an executable article is produced for a released product
-- **THEN** each figure traces to the run that generated it and the article builds from the pinned
+- **THEN** each figure names the run that generated it, and the article builds from the pinned
   environment
+
+#### Scenario: The build fails
+
+- **WHEN** the compendium doer reports a build failure
+- **THEN** the skill reports it and does not register the article product as buildable
 
 ### Requirement: The agent bundle exposes methods as callable tools
 
-`disseminate/agent-bundle` MUST extract candidate tools from the product's scripts and data
-dictionary, emit them in the harness's own skill and manifest format alongside an MCP configuration,
-and include tests that reproduce the product's recorded results.
+`disseminate/agent-bundle` MUST delegate bundle emission to the compendium doer and MUST declare
+`delegates_to: [compendium, datalad]`. The bundle MUST be emitted in the harness's own skill and
+manifest format alongside an MCP configuration, and MUST include tests that reproduce the product's
+recorded results.
 
 #### Scenario: Methods are made agent-callable
 
 - **WHEN** an agent bundle is produced
 - **THEN** it is loadable by an assistant as tools, and its reproduction tests check the results
   against what the provenance chain recorded
+
+#### Scenario: A tool's result cannot be reproduced
+
+- **WHEN** a reproduction test fails
+- **THEN** the failing tool is reported and the bundle records which tools are verified
 
 ### Requirement: Lab-in-a-Box deployment is planned before it touches a host
 
