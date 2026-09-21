@@ -2,6 +2,10 @@
 
 - FROM: `### Requirement: The containers doer builds images and nothing else`
 - TO: `### Requirement: The containers doer authors and builds; it does not register or run`
+- FROM: `### Requirement: The build path is selected from the recipe`
+- TO: `### Requirement: The build path is selected from the source and the target`
+- FROM: `### Requirement: Absent tooling is reported, not worked around silently`
+- TO: `### Requirement: Absent or ambiguous tooling is reported, not worked around silently`
 
 ## MODIFIED Requirements
 

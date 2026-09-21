@@ -229,9 +229,8 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | `liab-cli` | toolbox | pyinfra, Forgejo | 2 skills + offline tool check | D |
 
 Every capability plugin that had an OpenSpec change has now shipped, so there is no planned-plugin
-table here any more. One change is open — `add-containers-toolbox`, which gives `containers` the
-toolbox it lacks. What is still open beyond it is not depth inside these plugins but **execution**:
-the paths below the gates, described after the table.
+table here any more, and `openspec/changes/` is empty. What is still open is not depth inside these
+plugins but **execution**: the paths below the gates, described after the table.
 
 The capability plane is the uneven half of the harness. `datalad` has 19 toolbox skills; `annotate`,
 `nipoppy` and `compendium` have 4 each; `archive` has 3; `liab` has 2; `bids` has 1. **`containers`

@@ -2,7 +2,7 @@
 
 > **Status: both planes are built, almost nothing has been run against its real tool, and nothing
 > has been measured.** Six workflow plugins and 74 skills are on disk, structurally checked, and
-> specified by 22 specs, with one change open. Beneath them, `datalad` has a 19-skill
+> specified by 22 specs, with no open changes. Beneath them, `datalad` has a 19-skill
 > toolbox, `annotate`, `nipoppy` and `compendium` 4 each, `archive` 3, `liab` 2, `bids` 1 — while
 > and `containers` 3, one per job — so every capability now has a toolbox beneath it. The wider gap is execution: deposits, document builds, data fetches and
 > bundle emission are each gated, each gate is tested, and what sits behind them has not run. The evaluation protocol in
