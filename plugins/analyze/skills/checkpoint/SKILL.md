@@ -15,10 +15,17 @@ Take a clean, described snapshot of the dataset. This keeps the provenance chain
 dirty working tree produces misleading run records downstream). You delegate the save to the
 **datalad doer**.
 
-> v1 note: checkpoint is **on-demand** — invoked by the user or suggested by the coordinator. An
-> automatic end-of-session `datalad save` (a `Stop`/session-end hook) is intentionally deferred:
-> how often vs. how long to trigger it is a latency/tuning question that likely varies per study
-> (plan gap B5), best decided after real use.
+> **This skill is not the only thing checkpointing.** `datalad-cli` ships a `Stop` hook
+> (`hooks/scripts/datalad-checkpoint.sh`) that fires once per turn and saves any dirty tree with a
+> mechanical message — `Auto-checkpoint <ts>: <files>`. It is silent, guards on datalad being
+> present and on being inside a dataset, and opts out of `DATALAD_AUTOSAVE=0`.
+>
+> What this skill adds over the hook is a *described* snapshot and a ledger entry: it composes a
+> message saying what changed and appends to `project.yaml`. Reach for it when the state is worth
+> describing; the hook already keeps the tree from going stale between times.
+>
+> Because the hook runs continuously, checkpointing is **not a lifecycle stage** — it belongs to
+> the Manage & Comply lane, alongside `project/log-decision`.
 
 ## When to use
 - The user is pausing/ending a session, or wants intermediate state recorded.

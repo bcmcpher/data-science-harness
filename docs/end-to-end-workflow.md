@@ -5,9 +5,13 @@ A walkthrough for a researcher setting up and running a complete analysis **usin
 Skills are named as `plugin/skill`. **Workflow-plane** plugins (`govern`, `project`, `curate`, `analyze`, `process`, `disseminate`) drive each stage; they delegate down to **capability-plane** doers (`datalad`, `nipoppy`, `bids`, `containers`, `archive`) for the actual tool mechanics — shown as *(→ the `x` doer)*. See the [README architecture](../README.md#architecture) for the two-plane model and [STAMPED](stamped.md) for the principles.
 
 > **This walkthrough describes the intended workflow, not a fully built one.** A skill marked
-> ***(planned)*** does not exist on disk — it is design intent, and the authoritative list of what is
-> being built is [`openspec/changes/`](../openspec/changes). Everything unmarked is real and
-> installable today. The ⚠️ callouts below name the gaps that matter most in practice.
+> ***(planned)*** does not exist on disk — it is design intent. The authoritative list of what *does*
+> exist is [`openspec/specs/`](../openspec/specs); `openspec/changes/` is empty, because the
+> structure is finished. Everything unmarked here is real and installable today.
+>
+> **Built is not exercised.** Most capability paths are gated, the gates are tested, and the tools
+> behind them have not been run here — see the Status note in [the README](../README.md). The ⚠️
+> callouts below name the gaps that matter most in practice.
 
 Two kinds of callout are interleaved with the configuration steps:
 
@@ -37,7 +41,7 @@ Before any research begins, stand up the tooling itself.
 
 > 🔧 **Do-it-yourself:** choose your harness, your language (R / Python / Julia), and a package manager (`conda` / `renv` / `uv`). Analyses should run in a container (required for `datalad container-run`), and you list the preprocessing pipelines you expect to use (fMRIPrep, QSIPrep, …) so `project/new-project` can scaffold them into the Nipoppy / container config.
 
-> ✅ **Now planned:** container build is now a first-class capability. The `containers` plugin (`build-container`, `run-container`) scaffolds and pins a **basic scientific-Python container**; `project/new-project` invokes it and wires declared preprocessing pipelines into the Nipoppy config. The remaining refinement is pinning the recipe to your exact language/stack.
+> ✅ **Built:** container authoring is a first-class capability. The `containers` doer and its `containers-cli` toolbox (`dockerfile`, `oci-build`, `apptainer`) take the path people actually use — **Dockerfile → OCI image → `.sif`** — and expect *several* environments per project: an authored analysis environment, vendored pipeline images (fMRIPrep, QSIPrep), and derived images adding the project's own tools to a standard base. Each is named and each is pinned for its kind: a manifest, a digest, or both. `project/new-project` invokes it and wires declared preprocessing pipelines into the Nipoppy config. Two things it refuses: an unpinned manifest, and a mutable tag recorded as a pin — both produce an image that *runs* and does not *rebuild*.
 
 ---
 
@@ -107,16 +111,7 @@ The `analyze` workflow runs each comparison through the `datalad` capability so 
 
 ---
 
-## Stage 4 — Checkpoint
-
-1. **`analyze/run-comparison`** / **`project`** *(→ `datalad-cli/datalad-save`, `analyze/checkpoint`)* — structured commits of intermediate state; an auto-hook also checkpoints at session end.
-2. **`project/log-decision`** — record *why* you made each analytic choice, into the decision log, then `datalad save`.
-
-> 🔧 **Do-it-yourself:** analysis is iterative — loop Stage 3 ↔ 4. Capture the reasoning behind branch points (why this covariate set, why this transform); that log feeds your eventual Methods section.
-
----
-
-## Stage 5 — QC / Review
+## Stage 4 — QC / Review
 
 1. **`govern/stamped-assess`** — score the research object against the [STAMPED checklist](stamped.md): does the analysis reproduce from the DataLad log (Tracking/Actionability)? Are inputs available via `datalad get` (Self-containment)? Are ledger obligations, de-identification, DUA data-scope, and pre-registration adherence satisfied? **This one skill subsumes the earlier separate reproducibility-audit and compliance-audit.**
 2. **`curate`** *(→ the `bids` doer)* — re-validate after derivatives are added.
@@ -128,7 +123,7 @@ The `analyze` workflow runs each comparison through the `datalad` capability so 
 
 ---
 
-## Stage 6 — Export
+## Stage 5 — Export
 
 1. **`disseminate`** *(→ `publish/osf-push`)* — push the dataset version to an OSF node and register it as a DataLad sibling.
 2. Provenance summary from `datalad-cli/datalad-log` accompanies the bundle.
@@ -137,7 +132,7 @@ The `analyze` workflow runs each comparison through the `datalad` capability so 
 
 ---
 
-## Stage 7 — Publish
+## Stage 6 — Publish
 
 1. **`disseminate/dataset-release`** *(→ `publish/zenodo-deposit`, `datalad` tag)* — bump `dataset_description.json` version, write a BIDS `CHANGES` entry, create a git tag, and optionally mint a Zenodo DOI.
 2. Finalize **`curate/annotate`** *(→ the `annotate` doer)* and push the **Neurobagel** graph. The doer builds the graph file via `annotate-cli/bagel-cli`; pushing it to a Neurobagel node is still do-it-yourself.
@@ -146,7 +141,7 @@ The `analyze` workflow runs each comparison through the `datalad` capability so 
 
 ---
 
-## Stage 8 — Disseminate & Report
+## Stage 7 — Disseminate & Report
 
 Produce the living research compendium and the classic outputs.
 
@@ -172,6 +167,7 @@ Running in parallel from Stage 0 onward:
 - **`govern/obligations`** (shared core with `govern`) — on demand, list what's due, including **pre-registered comparisons still to complete**; a Claude Code `SessionStart` hook surfaces items due soon.
 - **`project/track-milestone`**, **`project/log-decision`**, **`project/people`**, **`project/status-report`** — keep the ledger current. A moved deadline updates `due` *and* logs the old date with the reason, because a slip is information.
 - **`govern/stamped-assess`** — re-run periodically, not just at QC.
+- **`analyze/checkpoint`** and the `datalad-cli` **`Stop` hook** — keep the tracking chain unbroken. The hook fires once per turn and saves any dirty tree with a mechanical message; the skill is for when the state is worth *describing*, and it writes a ledger entry as well as a commit. Checkpointing is deliberately **not a stage**: something that happens every turn is not a phase of a project. Pair it with **`project/log-decision`** — record *why* you made each analytic choice, because that log feeds your eventual Methods section.
 
 > ⚠️ **Scaffolding gap:** reminders are pull-based (a skill you invoke) plus an opt-in Claude hook. There's no cross-harness push for a deadline you'd miss while *not* in a session — acceptable for v1, but worth noting for users who live in their calendar, not their terminal.
 
@@ -231,14 +227,14 @@ Two things genuinely lock *early* because they shape everything downstream — *
 | Data-management & sharing obligations | **Stage 0** | ledger `dmp` | Funder-mandated; sets later deadlines |
 | Ethics scope & de-identification approach | **Stage 0–2** | ledger `ethics` | Gates what data may exist/leave |
 | Tech stack, env, container, naming conventions | **Stage 1** | `project/new-project` / `containers` | Cheap now, expensive to change after data lands |
-| Self-hosted infra (Lab-in-a-Box) | **Stage 1** *(optional)* or **Stage 8** | ledger `infrastructure` | Set up early for data sovereignty, or stand up at distribution |
+| Self-hosted infra (Lab-in-a-Box) | **Stage 1** *(optional)* or **Stage 7** | ledger `infrastructure` | Set up early for data sovereignty, or stand up at distribution |
 | Variable definitions, units, data dictionary | **Stage 2** | `curate/gen-data-dict` + annotations | Must be stable before analysis runs |
 | Missingness/outlier handling rules | **Stage 2–3** | decision log | Ideally pre-specified; otherwise log as analytic choice |
 | Software/package versions | **Stage 3** | container digest / lockfile | Pinned so results reproduce |
-| Which quick queries become products | **Stage 3–5** | `analyze/manage-product` | Promote only what tells the story |
-| Final result set & sensitivity analyses | **Stage 5** | `analyze/gen-report` + decision log | After interpretation, before publication |
-| Dataset version, license, DOI, access level | **Stage 6–7** | `disseminate/dataset-release` / `dataset_description.json` | At the point of sharing |
-| Target journal, reporting guideline, author order | **Stage 8** | ledger `products` + `disseminate/submission-track` | At write-up; affects format & credit |
-| Which living artifacts to produce (article, agent bundle, Lab-in-a-Box) | **Stage 8** | ledger `products` | Depends on a stable, reproducible pipeline existing first |
+| Which quick queries become products | **Stage 3–4** | `analyze/manage-product` | Promote only what tells the story |
+| Final result set & sensitivity analyses | **Stage 4** | `analyze/gen-report` + decision log | After interpretation, before publication |
+| Dataset version, license, DOI, access level | **Stage 5–6** | `disseminate/dataset-release` / `dataset_description.json` | At the point of sharing |
+| Target journal, reporting guideline, author order | **Stage 7** | ledger `products` + `disseminate/submission-track` | At write-up; affects format & credit |
+| Which living artifacts to produce (article, agent bundle, Lab-in-a-Box) | **Stage 7** | ledger `products` | Depends on a stable, reproducible pipeline existing first |
 
 **Rule of thumb:** if a decision changes a *compliance obligation* or the *data model* (variables, units, standards), finalize it early — before data lands. Pre-registration additionally locks the confirmatory analysis plan, but that's an *optional* mode. Analytic and interpretive decisions can be made — and added as new comparisons — as the work develops; just `project/log-decision` when you make them.

@@ -2,7 +2,7 @@
 
 A community-driven, harness-agnostic collection of AI assistant configurations for academic data science work — skills, agents, commands, hooks, MCP configs, and planning templates. The content is harness-neutral Markdown; `bin/install.sh` installs to **Claude Code and OpenCode today**, and Cursor, GitHub Copilot, Windsurf and Gemini CLI are the harnesses the format is designed to reach next (see [Install](#install)).
 
-> **Status:** both planes are built — 37 planner skills over 22 plugins / 77 skills / 9 agents, specified by 22 specs in [`openspec/specs/`](openspec/specs). **Every capability now has a toolbox.** What that does not mean: **most paths have never been run against their real tool** — deposits, document builds, fetches and bundle emission are each gated, the gates are tested, and what sits behind them is not. The exception is `containers`, whose Docker → OCI → `.sif` path is exercised end to end here. The [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
+> **Status:** both planes are built — 37 planner skills over 22 plugins / 77 skills / 9 agents, specified by 22 specs in [`openspec/specs/`](openspec/specs). **Every capability now has a toolbox.** What that does not mean: **most paths have never been run against their real tool** — deposits, document builds, fetches and bundle emission are each gated, the gates are tested, and what sits behind them is not. Read that narrowly: it is a claim about deposits, document builds, fetches and bundle emission. `datalad` is a hard precondition of the e2e suite and is exercised against the real tool unconditionally, and six other capabilities have real-tool paths behind gates. What is distinctive about `containers` is that its whole Docker → OCI → `.sif` path was run end to end here — and, ironically, that it is the one real path CI cannot run, because apptainer is deliberately not installed there. The [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
 
 ---
 
@@ -36,34 +36,43 @@ This project generalizes the best patterns from software development tooling for
 
 ## Research Lifecycle Model
 
-The lifecycle is **a linear scientific pipeline (stages 0–8) running inside a persistent administrative track**. DataLad is the connective tissue — every computation goes through `datalad run` / `datalad container-run`, and every administrative change is `datalad save`-d, so neither the analysis chain nor the administrative record is ever broken. Each stage is driven by a **workflow plugin** that calls down into one or more **capability plugins** (shown in parentheses).
+The lifecycle is **a scientific pipeline (stages 0–7) running inside a persistent administrative
+track**. DataLad is the connective tissue — every computation goes through `datalad run` /
+`datalad containers-run`, and every administrative change is `datalad save`-d, so neither the
+analysis chain nor the administrative record is ever broken. Each stage is driven by a **workflow
+plugin** that calls down into one or more **capability plugins** (shown in parentheses).
 
 | Stage | What happens | Workflow plugin (→ capabilities) |
 |-------|-------------|----------------------------------|
 | **0. Propose & Govern** | Funding metadata, Data Management Plan, IRB/ethics, *(optional)* pre-registration, project-ledger init | `govern` |
 | **1. Initialize** | YODA dataset + BIDS layout scaffolded; environment/container; *(optional)* self-hosted lab infra | `project` (→ `datalad`, `bids`, `containers`) |
 | **2. Curate** | Raw → BIDS conversion (optionally via Nipoppy); annotate variables with Neurobagel / SNOMED | `curate` (→ `nipoppy`, `bids`, `annotate`) |
-| **3. Analyze** | Run comparisons and preprocessing pipelines via `datalad run` / `datalad container-run` | `analyze` (→ `datalad`, `nipoppy`) |
-| **4. Checkpoint** | `datalad save` with structured commit; auto-hook on session end | `analyze`, `project` (→ `datalad`) |
-| **5. QC / Review** | BIDS validator; data quality checks; STAMPED / reproducibility audit | `govern` (stamped-assess), `curate` (→ `bids`), `analyze` |
-| **6. Export** | Bundle outputs; push dataset version to OSF / Zenodo | `disseminate` (→ `publish`) |
-| **7. Publish** | Update `dataset_description.json`; mint DOI; push Neurobagel graph | `disseminate` (→ `publish`, `datalad`), `curate` (→ `annotate`) |
-| **8. Disseminate & Report** | Manuscript **+ living compendium** (executable article + agent bundle + Lab-in-a-Box); reporting-guideline compliance; DOI cross-linking; progress/final reports | `disseminate`, `project` |
+| **3. Analyze** | Run comparisons and preprocessing pipelines via `datalad run` / `datalad containers-run` | `analyze`, `process` (→ `datalad`, `nipoppy`, `containers`) |
+| **4. QC / Review** | BIDS validator; data quality checks; STAMPED / reproducibility audit | `govern` (stamped-assess), `curate` (→ `bids`), `analyze` |
+| **5. Export** | Bundle outputs; push dataset version to OSF / Zenodo | `disseminate` (→ `archive`) |
+| **6. Publish** | Update `dataset_description.json`; mint DOI; push Neurobagel graph | `disseminate` (→ `archive`, `datalad`), `curate` (→ `annotate`) |
+| **7. Disseminate & Report** | Manuscript **+ living compendium** (executable article + agent bundle + Lab-in-a-Box); reporting-guideline compliance; DOI cross-linking; progress/final reports | `disseminate` (→ `compendium`, `liab`, `archive`), `project` |
 
 ```
-   ┌─────────────────────────────────────────────────────────────────────────┐
-   │  Manage & Comply lane  (cross-cutting, runs across ALL stages)            │
-   │  project ledger · obligations & deadlines · decision log · people/credit  │
-   │  · status & funder reports · compliance audits                            │
-   └─────────────────────────────────────────────────────────────────────────┘
-        ▲          ▲          ▲          ▲          ▲          ▲          ▲
-   ┌────┴───┐ ┌────┴───┐ ┌────┴───┐ ┌────┴───┐ ┌────┴───┐ ┌────┴───┐ ┌────┴───┐
-   │ 0 Gov  │→│ 1 Init │→│2 Curate│→│3 Analyze│→│ 4-5 QC │→│6-7 Pub │→│ 8 Disse│
-   │        │ │        │ │        │ │ +4 Chk │ │        │ │ +DOI   │ │ minate │
-   └────────┘ └────────┘ └────────┘ └────────┘ └────────┘ └────────┘ └────────┘
+   ┌───────────────────────────────────────────────────────────────────────────────────────────────┐
+   │  Manage & Comply lane  (cross-cutting, runs across ALL stages)                                │
+   │  project ledger · obligations & deadlines · decision log · people/credit                      │
+   │  · status & funder reports · compliance audits · checkpointing (every turn)                   │
+   └───────────────────────────────────────────────────────────────────────────────────────────────┘
+         ▲             ▲             ▲             ▲             ▲             ▲             ▲
+   ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐
+   │  0 Govern │→│   1 Init  │→│  2 Curate │→│ 3 Analyze │→│    4 QC   │→│  5-6 Pub  │→│ 7 Dissem- │
+   │           │ │           │ │           │ │           │ │           │ │   + DOI   │ │   inate   │
+   └───────────┘ └───────────┘ └───────────┘ └───────────┘ └───────────┘ └───────────┘ └───────────┘
 ```
 
 The **Manage & Comply lane** is the key conceptual addition: administration is not a single stage, it is a continuous track the whole pipeline runs inside. It is served by the tracking skills in the `project` workflow plugin and the compliance skills in `govern`, and it is backed by a single versioned [Project Ledger](#the-project-ledger-projectyaml).
+
+**Checkpointing lives in the lane, not on the spine.** There used to be a *Stage 4 — Checkpoint*
+here. It is gone, because a step that happens continuously is not a phase of a project: `datalad-cli`
+ships a `Stop` hook that saves any dirty tree once per turn, and the ledger has always recorded
+`{ op: checkpoint, stage: analyze }` — an action *inside* a stage. The `analyze/checkpoint` skill
+remains, for when the state is worth describing rather than merely saving.
 
 ---
 
@@ -197,9 +206,10 @@ agent's model rather than failing to load.
 6 **workflow** plugins encode the research process and call down into them.
 
 Tables below separate what is **built** from what is **planned**. Planned entries are kept because
-they carry design intent, but nothing in them exists on disk — the authoritative list of planned
-work is [`openspec/changes/`](openspec/changes), where each item has a proposal and a task list.
-Within the per-plugin skill lists, an unbuilt skill is marked *(planned)*.
+they carry design intent, but nothing in them exists on disk. The authoritative list of what *is*
+built is [`openspec/specs/`](openspec/specs); [`openspec/changes/`](openspec/changes) holds what has
+been decided next and is currently empty. Within the per-plugin skill lists, an unbuilt skill is
+marked *(planned)*.
 
 ### Capability plugins (technical plane)
 
@@ -223,8 +233,8 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | `archive-cli` | toolbox | OSF / Zenodo / DataCite APIs | 3 skills, one per backend, + offline readiness check | D |
 | `annotate` | doer | Neurobagel / SNOMED / ReproSchema / NIDM | `annotate-doer` | M, A |
 | `annotate-cli` | toolbox | bagel-cli / pynidm / reproschema / SNOMED source | 4 skills, one per backend, + offline per-backend check | M, A |
-| `compendium` | doer | MyST (Jupyter Book / repo2data / MCP planned) | `compendium-doer` | A, P, E |
-| `compendium-cli` | toolbox | mystmd | 1 skill + offline tool check | A, P, E |
+| `compendium` | doer | MyST / Jupyter Book / repo2data / MCP bundles | `compendium-doer` | A, P, E |
+| `compendium-cli` | toolbox | mystmd, jupyter-book, repo2data | 4 skills, one per build job, + offline tool check | A, P, E |
 | `liab` | doer | pyinfra, Forgejo | `liab-doer` — plans by default | D |
 | `liab-cli` | toolbox | pyinfra, Forgejo | 2 skills + offline tool check | D |
 
@@ -316,8 +326,8 @@ nothing about *why* or *when* you run them.
 - `submission-track` — record venue, date, status and decision as an append-only `submissions[]` history on the product, so a resubmission does not erase the first venue's outcome. Never records an outcome that has not happened
 
 *Living research compendium:*
-- `executable-article` — scaffold a **NeuroLibre-style reproducible preprint**: MyST `myst.yml` + Jupyter Book content, a `binder/` environment from the DataLad container digest, and a `repo2data` file pointing at the OSF/DataLad-published dataset; wire figures to regenerate from the provenanced pipeline. *Delegates to the `compendium` doer, which invokes MyST, resolves each figure's output to the run that produced it, and builds in the project's container — reporting an untraceable figure as `unprovenanced` and a host build as unpinned. `jupyter-book`, `repo2data` and the MCP scaffold are still unbuilt; see [`add-compendium-capability`](openspec/changes/add-compendium-capability).*
-- `agent-bundle` — **Paper2Agent-style**: synthesize an MCP server + parameterized tools from the project's scripts + data dictionary, emitted as the harness's *own* universal `SKILL.md` + `plugin.json` + MCP config, with result-reproduction tests. This dogfoods the project's own content format. *Still delegates only to `datalad`: the `compendium` doer exists but its MCP-scaffold skill does not, so this can describe the bundle and commit it. See [`add-compendium-capability`](openspec/changes/add-compendium-capability) section 3.3.*
+- `executable-article` — scaffold a **NeuroLibre-style reproducible preprint**: MyST `myst.yml` + Jupyter Book content, a `binder/` environment from the DataLad container digest, and a `repo2data` file pointing at the OSF/DataLad-published dataset; wire figures to regenerate from the provenanced pipeline. *Delegates to the `compendium` doer, which invokes MyST, resolves each figure's output to the run that produced it, and builds in the project's container — reporting an untraceable figure as `unprovenanced` and a host build as unpinned. `jupyter-book`, `repo2data` and the MCP scaffold all shipped in [`add-compendium-capability`](openspec/changes/archive/2026-09-21-add-compendium-capability).*
+- `agent-bundle` — **Paper2Agent-style**: synthesize an MCP server + parameterized tools from the project's scripts + data dictionary, emitted as the harness's *own* universal `SKILL.md` + `plugin.json` + MCP config, with result-reproduction tests. This dogfoods the project's own content format. *Delegates to the `compendium` doer, whose `mcp-scaffold` skill emits the bundle and then checks it with this repository's own `tests/lint-plugins.py` — the step that separates “emitted in the harness format” from “emitted in something that resembles it”. What it does not do is start the MCP server. See [`add-compendium-capability`](openspec/changes/archive/2026-09-21-add-compendium-capability).*
 - `liab-deploy` — **Lab-in-a-Box-style**: scaffold a `liab-deployments` (pyinfra) config that stands up self-hosted Forgejo + git-annex data serving and publishes the provenanced DataLad dataset via git-annex remotes — a **data-sovereign distribution channel** alongside the cloud-hosted article and agent bundle. *Delegates to the `liab` doer, which plans by default and applies only on an explicit instruction naming the target host, and which reports `applied` rather than `working` until a `datalad get` retrieves annexed content from the self-hosted remote. Standing the instance up stays in the declarative deployment; creating the repository on a running instance is the `forgejo` toolbox skill, which refuses to guess whether it should be private.*
 - `link-outputs` — cross-link dataset / code / paper / preprint / pre-registration / executable-article / agent-bundle / Lab-in-a-Box DOIs & URLs using DataCite `RelatedIdentifier` relation types; write back to the ledger `products:` and `dataset_description.json`
 - References: `references/equator-guidelines.md`, `references/datacite-relations.md`
@@ -409,7 +419,7 @@ The ledger ships with a JSON Schema (`schemas/project.schema.json`) so editors a
 
 ## Living Research Products
 
-Stage 8 produces a **living research compendium**: four coupled artifacts, all generated from the *same* DataLad provenance chain and cross-linked by DOI in the ledger.
+Stage 7 produces a **living research compendium**: four coupled artifacts, all generated from the *same* DataLad provenance chain and cross-linked by DOI in the ledger.
 
 | Artifact | What it is | How it's built | External tooling |
 |----------|-----------|----------------|------------------|
@@ -852,8 +862,9 @@ proposed change is a validated record rather than a checkbox in a 55 KB file:
   `schemas/project.schema.json`).
 - **[`openspec/changes/`](openspec/changes)** — what we have decided to do next. **It is currently
   empty.** The "deepening the capability plane" roadmap that lived here has shipped: every change it
-  named is archived, and the capability plane's remaining hole (`containers` has no toolbox) has no
-  change proposing one yet.
+  named is archived, `add-containers-toolbox` closed the last hole, and every capability now has a
+  toolbox. An empty `changes/` means the *structure* is finished; it does not mean the work is. What
+  is open is execution, and the honest list of it is the Status note at the top of this file.
 - **[`openspec/changes/archive/`](openspec/changes/archive)** — changes that shipped. A change leaves
   `changes/` only when its tasks are done and its spec delta has been merged into `specs/`, so the
   open list stays an accurate account of what is *not* built.
@@ -868,13 +879,17 @@ openspec validate --all --strict
 [`openspec/README.md`](openspec/README.md) covers the conventions — including the fact that OpenSpec
 calls a spec folder a "capability", which is *not* this repository's "capability plane".
 
-**Where the harness stands.** The workflow plane is complete: 37 planner skills across six workflow
-plugins, each naming concrete ledger fields, log-entry shapes, and delegations. The capability plane
-beneath them is uneven — `datalad` has 19 toolbox skills, `annotate` has 4, `archive` has 3, and
-`liab` has 2 and `bids` has 1, so most steps can express
-what should happen but can only actually *do* the git-annex, annotation, archive, validation,
-article-build and deployment-planning parts. Closing that gap is what the changes above are for. The observable signal that one has shipped
-is a planner's `delegates_to:` growing beyond `[datalad]`.
+**Where the harness stands.** Both planes are built. The workflow plane is 37 planner skills across
+six plugins, each naming concrete ledger fields, log-entry shapes, and delegations; the capability
+plane is eight doers, each paired 1:1 with a `*-cli` toolbox. Depth across those toolboxes is still
+uneven by design rather than by omission — `datalad` has 19 skills because a provenance chain has
+that many distinct operations, while `bids` has 1 because validation is one operation — and every
+planner's `delegates_to:` has grown beyond `[datalad]` wherever a capability exists to grow into.
+
+What is *not* closed is execution. `openspec/changes/` is empty because the structure is finished,
+not because the work is: most capability paths are gated, the gates are tested, and the tools behind
+them have never run here. That is the subject of the next phase, and it is stated honestly at the
+top of this file rather than tracked as an open change.
 
 ## Evaluating the harness
 
