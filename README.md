@@ -2,7 +2,7 @@
 
 A community-driven, harness-agnostic collection of AI assistant configurations for academic data science work — skills, agents, commands, hooks, MCP configs, and planning templates. The content is harness-neutral Markdown; `bin/install.sh` installs to **Claude Code and OpenCode today**, and Cursor, GitHub Copilot, Windsurf and Gemini CLI are the harnesses the format is designed to reach next (see [Install](#install)).
 
-> **Status:** the workflow plane is built, the capability plane is uneven — `datalad` has a 19-skill toolbox, `annotate` a 4-skill one, `archive` a 3-skill one, `liab` a 2-skill one, and `bids` and `compendium` a 1-skill one each, while `containers` has none — and the [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
+> **Status:** both planes are built — 37 planner skills over 21 plugins / 74 skills / 9 agents, specified by 22 specs in [`openspec/specs/`](openspec/specs), with `openspec/changes/` empty. Two things that sounds like but is not: **`containers` is the only doer with no toolbox**, and **almost nothing here has been run against its real tool** — deposits, builds, fetches and bundle emission are each gated, the gates are tested, and what sits behind them is not. The [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
 
 ---
 
@@ -227,16 +227,22 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | `liab` | doer | pyinfra, Forgejo | `liab-doer` — plans by default | D |
 | `liab-cli` | toolbox | pyinfra, Forgejo | 2 skills + offline tool check | D |
 
-Every capability plugin that had an OpenSpec change has now shipped at least its minimal core, so
-there is no planned-plugin table here any more. What is still open is *depth* inside the plugins
-above, tracked in [`openspec/changes/`](openspec/changes).
+Every capability plugin that had an OpenSpec change has now shipped, so there is no planned-plugin
+table here any more — and `openspec/changes/` is empty. What is still open is not depth inside these
+plugins but **execution**: the paths below the gates, described after the table.
 
-The capability plane is the uneven half of the harness. `datalad` has 19 toolbox skills, `annotate`
-has 4, `archive` has 3, `liab` has 2, and `bids` and `compendium` have 1 each; `containers` has none, so a planner above them can express
-what should happen and can only actually do the parts a toolbox covers. The archive skills were written against
-the live OSF, Zenodo, and DataCite APIs, but no deposit has yet been run through them against a live
-archive. Closing that is what the open changes are for, and the
-observable signal that one has shipped is a planner's `delegates_to:` growing beyond `[datalad]`.
+The capability plane is the uneven half of the harness. `datalad` has 19 toolbox skills; `annotate`,
+`nipoppy` and `compendium` have 4 each; `archive` has 3; `liab` has 2; `bids` has 1. **`containers`
+has none — it is the only doer with no toolbox, and no change proposes one.** That is the remaining
+hole: a planner above `containers` can express what should happen and can only actually do the parts
+a toolbox covers.
+
+Unevenness in skill *count* is no longer the main gap, though. The sharper one is that **most of
+these paths have never run live.** The archive skills were written against the real OSF, Zenodo and
+DataCite APIs, but no deposit has been made through them. The same holds for MyST and Jupyter Book
+builds, `repo2data` fetches, MCP bundle emission, and every annotate backend: each is gated, each
+gate is tested, and what sits behind the gate is not. A green test suite here is evidence about the
+gates, not about the tools.
 
 Capability plugins are deliberately thin: they hold tool mechanics and the STAMPED primitives,
 nothing about *why* or *when* you run them.
@@ -838,12 +844,13 @@ CI checks **structure and specs, not agent behaviour** — see [Evaluating the h
 The forward plan no longer lives in this README. It lives in [`openspec/`](openspec), where each
 proposed change is a validated record rather than a checkbox in a 55 KB file:
 
-- **[`openspec/specs/`](openspec/specs)** — 21 specs describing what the harness *does today*,
+- **[`openspec/specs/`](openspec/specs)** — 22 specs describing what the harness *does today*,
   grounded in the checks that already enforce it (`tests/lint-plugins.py`, `tests/e2e-smoke.sh`,
   `schemas/project.schema.json`).
-- **[`openspec/changes/`](openspec/changes)** — what we have decided to do next. The former
-  "deepening the capability plane" roadmap is now three open changes: `add-compendium-capability`,
-  `add-liab-capability`, and `deepen-bids-nipoppy`.
+- **[`openspec/changes/`](openspec/changes)** — what we have decided to do next. **It is currently
+  empty.** The "deepening the capability plane" roadmap that lived here has shipped: every change it
+  named is archived, and the capability plane's remaining hole (`containers` has no toolbox) has no
+  change proposing one yet.
 - **[`openspec/changes/archive/`](openspec/changes/archive)** — changes that shipped. A change leaves
   `changes/` only when its tasks are done and its spec delta has been merged into `specs/`, so the
   open list stays an accurate account of what is *not* built.

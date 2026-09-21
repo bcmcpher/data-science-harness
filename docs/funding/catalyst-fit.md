@@ -141,16 +141,21 @@ these in order and instructs *"Do not soften this."*
 1. **Nothing has been evaluated.** The protocol is specified and unrun. Every claim about the
    harness's effect on work quality is a design argument, not a measurement. This is the limitation a
    reader should take away, and it goes first.
-2. **The capability plane is uneven.** The workflow plane is now complete — 37 planner skills, one
-   deliberately unbuilt — which sharpens rather than softens this: several planners can express a
-   step and cannot perform it, and they describe the output and commit it. `datalad` has a 19-skill
-   toolbox, `annotate` a 4-skill one, `archive` a 3-skill one, `liab` a 2-skill one, and `bids` and
-   `compendium` a 1-skill one each; `containers` has none. Two paths have been exercised against their real tools:
-   `tests/e2e-smoke.sh` builds a scaffolded MyST project, and it produces a `pyinfra --dry` plan
-   and asserts the host was unchanged. The archive deposit paths, the annotate backends and the
-   BIDS validators have not been run live, because none of those tools is installed here; most of
-   the annotate toolbox validates terms rather than finding them; and the `liab` **apply** path is
-   exercised by hand rather than by the suite, which the doer states rather than implies.
+2. **Built is not exercised.** Both planes are now complete — 37 planner skills over 21 plugins and
+   74 skills, specified by 22 specs, with no open changes — and that sharpens rather than softens
+   the limitation. Every capability now has a toolbox except one: **`containers` has a doer and no
+   toolbox, and no change proposes one.** `datalad` has 19 toolbox skills; `annotate`, `nipoppy` and
+   `compendium` 4 each; `archive` 3; `liab` 2; `bids` 1.
+
+   The real caveat is that having a toolbox is not having run it. Two paths have been exercised
+   against their real tools: `tests/e2e-smoke.sh` builds a scaffolded MyST project, and it produces
+   a `pyinfra --dry` plan and asserts the host was unchanged. Everything else stops at its gate —
+   the archive deposit paths, the annotate backends, the BIDS validators, Jupyter Book, `repo2data`
+   and MCP bundle emission have not been run live, because those tools are not installed here. Most
+   of the annotate toolbox validates terms rather than finding them, and the `liab` **apply** path
+   is exercised by hand rather than by the suite. What the 105-assertion suite establishes is that
+   each gate answers and refuses correctly, which is a real property and a smaller one than it
+   looks.
 3. **Single-project experience.** The design comes from one context; generality is asserted, not
    demonstrated.
 4. **Governance scope is project-level.** Botes (2026) asks for agent-level access control and
