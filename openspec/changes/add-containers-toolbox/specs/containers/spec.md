@@ -66,7 +66,7 @@ OCI runtime is present, it MUST report which one it selected.
 
 ## ADDED Requirements
 
-### Requirement: A Dockerfile is derived from a pinned manifest, never from recall
+### Requirement: An authored environment is derived from a pinned manifest, never from recall
 
 The toolbox MUST emit a Dockerfile only from a committed, version-pinned environment manifest, and
 MUST NOT select a package or resolve a version itself. When the manifest is absent or unpinned, it
@@ -94,6 +94,83 @@ surfaces only when the rebuild produces something else.
 - **WHEN** the project declares no environment manifest
 - **THEN** the toolbox reports that there is nothing to translate, rather than proposing a set of
   packages
+
+### Requirement: A project has several environments, each named and each pinned for its kind
+
+The capability MUST support more than one compute environment per project and MUST NOT assume a
+single one. Each environment MUST be named, MUST record which pipeline or analysis it serves, and
+MUST carry a pin appropriate to how it came to exist:
+
+| Kind | What pins it |
+|---|---|
+| **authored** — built from a manifest the project owns | the pinned manifest |
+| **vendored** — a published pipeline image | the image digest |
+| **derived** — a vendored base plus the project's own additions | the base digest **and** a pinned manifest for what was added |
+
+No new registry is introduced: `datalad containers-add <name>` already keys containers by name, and
+`containers-run --container-name <name>` already selects among them.
+
+#### Scenario: A study runs several pipelines
+
+- **WHEN** a project uses fMRIPrep, QSIPrep and a local analysis environment
+- **THEN** each is built and registered under its own name, and the report states which pipeline each
+  serves
+
+#### Scenario: A request does not say which environment
+
+- **WHEN** a build or conversion is requested and the project holds more than one environment
+- **THEN** the doer asks which one rather than defaulting to the only one it happens to find
+
+### Requirement: A mutable tag is not a pin
+
+A vendored or derived environment MUST be pinned by image digest. The toolbox MUST resolve a tag to
+its digest and record the digest, and MUST NOT accept a tag alone as a pin.
+
+A tag can be re-pushed, so two runs a year apart can name `fmriprep:23.2.0` and execute different
+code. This is the same failure as an unpinned manifest, arriving by a different route, and it is
+invisible in the same way.
+
+#### Scenario: An image is requested by tag
+
+- **WHEN** a pipeline container is named by tag
+- **THEN** the tag is resolved to a digest, the digest is what is recorded, and the report shows both
+
+#### Scenario: The digest cannot be resolved
+
+- **WHEN** no registry can be reached to resolve the tag
+- **THEN** the toolbox reports that the pin could not be resolved and does not record the tag as
+  pinned, while still accepting a digest the user supplies directly
+
+### Requirement: A derived environment pins both its base and its additions
+
+A derived environment MUST pin its base by digest and MUST install its additions from a pinned
+manifest. The toolbox MUST NOT emit an unpinned install step into a derived image.
+
+An unpinned layer on a pinned base is the quiet version of this failure: the base is identical a year
+later and the layer on top is not.
+
+#### Scenario: Tools are added to a standard container
+
+- **WHEN** a project adds its own scripts and extra packages to a vendored pipeline image
+- **THEN** the emitted Dockerfile names the base by digest and installs the additions from a pinned
+  manifest
+
+#### Scenario: The additions are not pinned
+
+- **WHEN** the tools to add are given as bare package names
+- **THEN** the toolbox refuses, and names what would pin them, rather than emitting a plain install
+  step
+
+### Requirement: Declaring a pipeline and obtaining its image have different owners
+
+The `containers` capability MUST own obtaining, pinning, building and converting images. Declaring
+which pipeline and which version a dataset runs MUST remain with `nipoppy`. Neither MUST claim both.
+
+#### Scenario: A pipeline version is declared
+
+- **WHEN** a dataset declares a pipeline and version in its nipoppy configuration
+- **THEN** the containers capability pins and obtains the image for that version, and does not
+  change the declaration
 
 ### Requirement: The build runtime is reported, because it changes what the image requires
 

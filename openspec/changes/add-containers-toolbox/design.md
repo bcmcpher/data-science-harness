@@ -43,6 +43,37 @@ environment into a container recipe at all.
   unpinned and what would pin it (`conda env export --no-builds`, `uv lock`, `renv::snapshot()`), so
   the user fixes the manifest rather than working around the skill.
 
+- **An environment comes to exist in one of three ways, and the pin differs for each.** This is the
+  distinction the toolbox must carry, because the three look identical once built:
+
+  | Kind | What it is | What pins it |
+  |---|---|---|
+  | **authored** | built from a manifest the project owns | the pinned manifest |
+  | **vendored** | a published pipeline image — fMRIPrep, QSIPrep, MRIQC | the image **digest** |
+  | **derived** | a vendored base plus the project's own scripts and tools | the base digest **and** a pinned manifest for what was added |
+
+  **A tag is not a pin.** `nipreps/fmriprep:23.2.0` is mutable: the same tag can be re-pushed, so two
+  runs a year apart can name it and execute different code. Resolving the tag to
+  `@sha256:…` at registration time is the whole difference, and it costs one command. Accepting a
+  tag would reproduce, for vendored images, exactly the failure the unpinned-manifest refusal exists
+  to prevent — an image that runs, produces numbers, and is not rebuildable.
+
+  **Derived is where this breaks quietly.** A `RUN pip install nilearn` appended to a standard
+  container is the most natural thing to write and pins nothing; a year later the base is the same
+  and the layer on top is not. So a derived environment is held to both pins, not one.
+
+- **Environments are plural, named, and keyed by the pipeline they serve.** The capability must stop
+  saying "the project's environment". A real study has an authored analysis environment, one vendored
+  image per pipeline, and sometimes a derived one. **No new registry is added**: `datalad
+  containers-add <name>` already keys containers by name in `.datalad/config`, and `containers-run
+  --container-name <name>` already selects among them. The containers capability builds and pins;
+  naming and selection stay where they already work.
+
+- **The boundary with `nipoppy` is declaration versus image.** Nipoppy's config declares which
+  pipeline and which version a dataset runs; this capability obtains, pins and converts the image
+  that pipeline executes in. Neither owns both. Stated here because both plausibly could claim it,
+  and a capability boundary that is only implied is one that gets crossed.
+
 - **Split by job, not by binary.** `dockerfile` (author), `oci-build` (build), `apptainer` (convert
   and ship). Docker and podman are CLI-compatible and produce the same layers, so a skill each would
   be two near-duplicates that drift. Splitting by job also puts each refusal in exactly one place:
@@ -81,5 +112,16 @@ environment into a container recipe at all.
   produces build-string pins that are not portable across platforms; a plain `environment.yml`
   written by hand usually has none. The skill must distinguish *unpinned* from *over-pinned* and say
   which, or it will read as broken.
+- **Digest resolution needs the network, and the refusal must not become unusable offline.** Turning
+  a tag into a digest requires contacting a registry. On a cluster login node or an air-gapped
+  machine that will fail, and the skill must then report that the pin could not be resolved rather
+  than silently accepting the tag — while still letting a user supply a digest they already have.
+  This is the most likely place for the pinning rule to be worked around in practice.
+
+- **Derived images invite scope creep toward a package manager.** Once the toolbox emits
+  `FROM <base>@sha256:…` plus added tools, the obvious next asks are dependency resolution and
+  conflict handling against the base image's existing environment. It must stay a translator: what
+  gets added comes from a manifest the user owns.
+
 - **`renv.lock` is the weakest leg.** The R path is specified for symmetry, but no R project exists
   in this repository to check it against, and it should be marked as unexercised rather than assumed.

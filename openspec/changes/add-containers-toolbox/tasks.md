@@ -29,6 +29,25 @@ path first: it is the arrow that is missing, not the one that is weak.
         resolve on another platform. This looks maximally pinned and is less portable, so it must
         not be silently accepted as "pinned".
 
+- [ ] 1.1a Extend `dockerfile` to the other two environment kinds. The skill is not only a manifest
+      translator; it must handle how an environment actually came to exist:
+      - **vendored** — a published pipeline image (fMRIPrep, QSIPrep, MRIQC). There is no manifest in
+        the project. Resolve the tag to a digest and record the digest.
+      - **derived** — emit `FROM <base>@sha256:…` plus the project's additions, installed from a
+        pinned manifest. Refuse bare package names: an unpinned `RUN pip install nilearn` on a pinned
+        base is the quiet version of this failure, because the base is identical a year later and the
+        layer on top is not.
+
+      **A tag is not a pin.** `nipreps/fmriprep:23.2.0` is mutable and can be re-pushed. Resolving it
+      costs one command (`docker buildx imagetools inspect`, `podman manifest inspect`, or a registry
+      HEAD) and is the entire difference between a reproducible pipeline run and one that looks
+      reproducible.
+
+      Handle the offline case explicitly: resolution needs a registry, and on a cluster login node it
+      will fail. Report that the pin could not be resolved rather than silently accepting the tag,
+      and still accept a digest the user supplies directly. This is the most likely place for the
+      rule to get worked around.
+
 - [ ] 1.2 `plugins/containers-cli/skills/oci-build/SKILL.md` — build a Dockerfile with `docker build`
       or `podman build`. Detect which runtimes are present; prefer podman when both are, and say why
       (rootless by default, no daemon, no docker group). Report which runtime built the image and
@@ -87,6 +106,22 @@ path first: it is the arrow that is missing, not the one that is weak.
 - [ ] 3.3 Check whether `analyze/run-comparison`'s delegation prose still matches the doer's new
       shape. It is the only existing skill with `delegates_to: [containers, datalad]`.
 
+- [ ] 3.4 **Environments are plural everywhere they are mentioned.** The doer, the skills and
+      `new-project` all currently say "the project's environment", singular. A real study has an
+      authored analysis environment, one vendored image per pipeline, and sometimes a derived one.
+      Each is named and each records the pipeline it serves; when a request does not say which, the
+      doer asks rather than defaulting to whichever it finds.
+
+      **Add no registry for this.** `datalad containers-add <name>` already keys containers by name
+      in `.datalad/config`, and `datalad containers-run --container-name <name>` already selects
+      among them — both already covered by `datalad-cli/skills/datalad-container-run`. The naming
+      stays where it already works; this capability builds and pins.
+
+- [ ] 3.5 State the `nipoppy` boundary in both doers, since both could plausibly claim it: nipoppy
+      declares which pipeline and version a dataset runs; `containers` obtains, pins, builds and
+      converts the image that pipeline executes in. A capability boundary that is only implied is one
+      that gets crossed.
+
 ## 4. Verify
 
 - [ ] 4.1 `python3 tests/lint-plugins.py --strict` — 0 errors, 0 warnings. Record the new counts:
@@ -105,5 +140,9 @@ path first: it is the arrow that is missing, not the one that is weak.
       and apptainer **have** both run in `tests/e2e-smoke.sh` before (the containers-run block). This
       is therefore the capability most likely to become the first genuinely exercised path. That is a
       follow-up change, not this one.
-- [ ] 4.6 `renv.lock` is specified for symmetry and **unexercised** — no R project exists here to
+- [ ] 4.6 Assert the three environment kinds are distinguishable in the gate and skill reports — a
+      vendored image reported without a digest is the failure mode this change exists to prevent, and
+      it should be visible in a report rather than only in prose.
+
+- [ ] 4.7 `renv.lock` is specified for symmetry and **unexercised** — no R project exists here to
       check it against. Mark it as such rather than letting the spec imply it was tried.
