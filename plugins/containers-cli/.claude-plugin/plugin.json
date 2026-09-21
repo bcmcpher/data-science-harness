@@ -1,0 +1,13 @@
+{
+  "name": "containers-cli",
+  "description": "Containers skill toolbox, split by job rather than by binary: dockerfile translates a project's declared environment into a Dockerfile and refuses when what it declares would not rebuild, oci-build builds it with Podman or Docker and reports which runtime and whether it was rootless, and apptainer converts the result to the .sif a cluster runs — plus the offline runtime check the containers doer runs first. It holds two pins that look like pedantry and are not: an unpinned manifest and a mutable image tag both produce containers that run, produce numbers, and do not rebuild.",
+  "version": "0.1.0",
+  "author": { "name": "bcmcpher" },
+  "license": "MIT",
+  "keywords": ["docker", "dockerfile", "podman", "apptainer", "singularity", "oci", "containers", "reproducibility", "portability", "hpc", "fmriprep", "toolbox", "capability"],
+  "skills": [
+    "./skills/dockerfile",
+    "./skills/oci-build",
+    "./skills/apptainer"
+  ]
+}

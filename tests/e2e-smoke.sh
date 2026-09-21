@@ -669,6 +669,66 @@ MDEOF
   assert "the build produced output" "[ -d '$MYSTPROJ/_build' ]"
 fi
 
+# =========================================================== containers-cli (runtime gates)
+echo; echo "## containers-cli (runtime gates; the pins the toolbox will not waive) [gated on runtimes]"
+# Deliberately NOT asserted here: that a Dockerfile builds, that an image converts, or that a .sif
+# runs on a cluster. The containers-run block above already does a real docker->apptainer conversion
+# when the runtimes are present; what this block checks is that each gate answers correctly and that
+# the two pinning rules are actually written down where a skill will read them.
+CONCHK="$REPO/plugins/containers-cli/scripts/check-runtimes.sh"
+assert "containers-cli ships the runtime gate" "[ -x '$CONCHK' ]"
+for CSKILL in dockerfile oci-build apptainer; do
+  assert "containers-cli provides a $CSKILL skill to invoke" \
+         "[ -f '$REPO/plugins/containers-cli/skills/$CSKILL/SKILL.md' ]"
+done
+for RT in docker podman apptainer oci digest; do
+  RTRC=$(rc_of bash "$CONCHK" "$RT")
+  assert "runtime gate answers available (0) or unavailable (1) for $RT" \
+         "[ $RTRC -eq 0 ] || [ $RTRC -eq 1 ]"
+done
+UNKRT=$(rc_of bash "$CONCHK" bogus)
+assert "unknown container runtime is a usage error (exit 2)" "[ $UNKRT -eq 2 ]"
+
+# Rootless vs rootful is the one question this gate answers that a presence check cannot. A rootful
+# docker is `available` and still unusable to someone outside the docker group, so the gate must say
+# so rather than reporting it as plainly available.
+bash "$CONCHK" docker > "$WORKDIR/docker-gate.txt" 2>&1 || true
+if grep -q '^result: available' "$WORKDIR/docker-gate.txt"; then
+  assert_grep "docker gate states rootless or rootful rather than bare availability" \
+              "rootless|rootful" "$WORKDIR/docker-gate.txt"
+  if grep -q rootful "$WORKDIR/docker-gate.txt"; then
+    assert_grep "a rootful docker carries an explicit caveat" "^caveat: " "$WORKDIR/docker-gate.txt"
+  fi
+else
+  skip "docker unusable - $(grep -h '^missing: ' "$WORKDIR/docker-gate.txt" | sed 's/^missing: //')"
+fi
+
+OCIRC=$(rc_of bash "$CONCHK" oci)
+if [ "$OCIRC" -ne 0 ]; then
+  bash "$CONCHK" oci > "$WORKDIR/oci-gate.txt" 2>&1 || true
+  skip "no OCI builder - $(grep -h '^missing: ' "$WORKDIR/oci-gate.txt" | sed 's/^missing: //')"
+  echo "    $(grep -h '^enable: ' "$WORKDIR/oci-gate.txt" | sed 's/^enable: //')"
+else
+  assert_grep "the OCI gate names which builder it selected and why" \
+              "selected:" <(bash "$CONCHK" oci)
+fi
+
+# The apptainer<->Docker archive path is the most easily-lost fact in this capability: apptainer
+# 1.1.x cannot read a modern Docker daemon, and the failure reads as a broken image rather than an
+# API mismatch. Assert it is written in the skill, not only remembered by an agent.
+APPSKILL="$REPO/plugins/containers-cli/skills/apptainer/SKILL.md"
+assert_grep "the apptainer skill carries the docker-archive path"  "docker-archive://" "$APPSKILL"
+assert_grep "the apptainer skill warns against docker-daemon"      "docker-daemon://"  "$APPSKILL"
+assert "the apptainer skill forbids rather than recommends docker-daemon" \
+       "grep -q 'Never use .docker-daemon' '$APPSKILL'"
+
+# The two pins the capability exists to hold. Both produce containers that run and do not rebuild,
+# so both have to be refusals in the skill text rather than advice.
+DFSKILL="$REPO/plugins/containers-cli/skills/dockerfile/SKILL.md"
+assert_grep "the dockerfile skill refuses a mutable tag as a pin"  "tag is not a pin"  "$DFSKILL"
+assert_grep "the dockerfile skill distinguishes unpinned from over-pinned" "over-pinned" "$DFSKILL"
+assert_grep "the dockerfile skill names the three environment kinds" "derived" "$DFSKILL"
+
 # =========================================================== bids validation (bids-cli toolbox)
 echo; echo "## bids (validator presence check; validation gated on an installed validator)"
 # The bids doer is an agent prompt, so this asserts the deterministic part: the toolbox's offline

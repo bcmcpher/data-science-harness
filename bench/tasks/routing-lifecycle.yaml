@@ -89,7 +89,7 @@ tasks:
       I'm starting a new imaging study. Set me up somewhere sensible to work with the data organized
       the way the field expects and a pinned environment.
     expected_skill: project/new-project
-    expected_delegates_to: [datalad]
+    expected_delegates_to: [containers, datalad]
 
   - id: project-env-check
     prompt: >

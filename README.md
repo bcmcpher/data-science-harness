@@ -2,7 +2,7 @@
 
 A community-driven, harness-agnostic collection of AI assistant configurations for academic data science work — skills, agents, commands, hooks, MCP configs, and planning templates. The content is harness-neutral Markdown; `bin/install.sh` installs to **Claude Code and OpenCode today**, and Cursor, GitHub Copilot, Windsurf and Gemini CLI are the harnesses the format is designed to reach next (see [Install](#install)).
 
-> **Status:** both planes are built — 37 planner skills over 21 plugins / 74 skills / 9 agents, specified by 22 specs in [`openspec/specs/`](openspec/specs), with one change open ([`add-containers-toolbox`](openspec/changes/add-containers-toolbox)). Two things that sounds like but is not: **`containers` is the only doer with no toolbox**, and **almost nothing here has been run against its real tool** — deposits, builds, fetches and bundle emission are each gated, the gates are tested, and what sits behind them is not. The [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
+> **Status:** both planes are built — 37 planner skills over 22 plugins / 77 skills / 9 agents, specified by 22 specs in [`openspec/specs/`](openspec/specs). **Every capability now has a toolbox.** What that does not mean: **most paths have never been run against their real tool** — deposits, document builds, fetches and bundle emission are each gated, the gates are tested, and what sits behind them is not. The exception is `containers`, whose Docker → OCI → `.sif` path is exercised end to end here. The [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
 
 ---
 
@@ -193,7 +193,7 @@ agent's model rather than failing to load.
 
 ## Plugins
 
-**21 plugins**, split across the two planes: 15 **capability** plugins wrap the technical tools, and
+**22 plugins**, split across the two planes: 16 **capability** plugins wrap the technical tools, and
 6 **workflow** plugins encode the research process and call down into them.
 
 Tables below separate what is **built** from what is **planned**. Planned entries are kept because
@@ -217,7 +217,8 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | `nipoppy-cli` | toolbox | Nipoppy CLI | 4 skills, one per command class | S, T, M, A |
 | `bids` | doer | bids-validator | `bids-doer` | S, M |
 | `bids-cli` | toolbox | `@bids/validator` / legacy `bids-validator` | 1 skill + offline validator-presence check | S, M |
-| `containers` | doer | Apptainer / Docker | `containers-doer` — no toolbox yet | P, E |
+| `containers` | doer | Docker / Podman / Apptainer | `containers-doer` | P, E |
+| `containers-cli` | toolbox | Docker, Podman, Apptainer | 3 skills, one per job (author / build / convert), + offline runtime check | P, E |
 | `archive` | doer | OSF / Zenodo / DataCite | `archive-doer` | D |
 | `archive-cli` | toolbox | OSF / Zenodo / DataCite APIs | 3 skills, one per backend, + offline readiness check | D |
 | `annotate` | doer | Neurobagel / SNOMED / ReproSchema / NIDM | `annotate-doer` | M, A |
@@ -234,11 +235,11 @@ the paths below the gates, described after the table.
 
 The capability plane is the uneven half of the harness. `datalad` has 19 toolbox skills; `annotate`,
 `nipoppy` and `compendium` have 4 each; `archive` has 3; `liab` has 2; `bids` has 1. **`containers`
-has none — it is the only doer with no toolbox.** `add-containers-toolbox` proposes one, reframing
-the capability around the path people actually use: author a Dockerfile from the project's pinned
-manifest, build it with Docker or Podman, convert it to a `.sif` for a cluster. Until it lands, a
-planner above `containers` can express what should happen and can only actually do the parts a
-toolbox covers.
+has 3, one per job.** `containers` was the last capability without a toolbox; `add-containers-toolbox`
+built one and reframed the capability around the path people actually use — author a Dockerfile from
+the project's pinned manifest, build it with Docker or Podman, convert it to a `.sif` for a cluster.
+It holds two pins that look like pedantry and are not: an unpinned manifest and a mutable image tag
+both produce containers that run, produce numbers, and do not rebuild.
 
 Unevenness in skill *count* is no longer the main gap, though. The sharper one is that **most of
 these paths have never run live.** The archive skills were written against the real OSF, Zenodo and
@@ -871,7 +872,7 @@ calls a spec folder a "capability", which is *not* this repository's "capability
 **Where the harness stands.** The workflow plane is complete: 37 planner skills across six workflow
 plugins, each naming concrete ledger fields, log-entry shapes, and delegations. The capability plane
 beneath them is uneven — `datalad` has 19 toolbox skills, `annotate` has 4, `archive` has 3, and
-`liab` has 2, and `bids` and `compendium` have 1 each, while `containers` has none, so most steps can express
+`liab` has 2 and `bids` has 1, so most steps can express
 what should happen but can only actually *do* the git-annex, annotation, archive, validation,
 article-build and deployment-planning parts. Closing that gap is what the changes above are for. The observable signal that one has shipped
 is a planner's `delegates_to:` growing beyond `[datalad]`.
