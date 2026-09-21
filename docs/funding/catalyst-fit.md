@@ -142,9 +142,9 @@ these in order and instructs *"Do not soften this."*
    harness's effect on work quality is a design argument, not a measurement. This is the limitation a
    reader should take away, and it goes first.
 2. **Built is not exercised.** Both planes are now complete — 37 planner skills over 21 plugins and
-   74 skills, specified by 22 specs, with no open changes — and that sharpens rather than softens
-   the limitation. Every capability now has a toolbox except one: **`containers` has a doer and no
-   toolbox, and no change proposes one.** `datalad` has 19 toolbox skills; `annotate`, `nipoppy` and
+   74 skills, specified by 22 specs — and that sharpens rather than softens the limitation. Every
+   capability now has a toolbox except one: **`containers` has a doer and no toolbox**, which the
+   one open change, `add-containers-toolbox`, is written to close. `datalad` has 19 toolbox skills; `annotate`, `nipoppy` and
    `compendium` 4 each; `archive` 3; `liab` 2; `bids` 1.
 
    The real caveat is that having a toolbox is not having run it. Two paths have been exercised
