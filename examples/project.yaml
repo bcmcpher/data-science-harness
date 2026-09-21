@@ -25,6 +25,14 @@ products:
     dois: []
     relations:
       - { relation: IsSupplementedBy, target: data-release }
+    submissions:
+      # A history, not a state: the product stays `in-progress` across both, and the resubmission
+      # appends rather than overwriting the first venue's outcome.
+      - { venue: "Journal of Cohort Studies", submitted: 2026-08-04, status: rejected,
+          decision: "Reject after review — reviewers asked for a second cohort",
+          ref: JCS-2026-0412 }
+      - { venue: "Imaging Methods Reports", submitted: 2026-09-12, status: under-review,
+          ref: IMR-2026-1187 }
   - id: data-release
     kind: dataset
     title: "Cohort Z curated BIDS dataset"
@@ -35,13 +43,30 @@ products:
     relations: []
 
 obligations:
-  # Manage & Comply commitments (govern/*). Resolved by flipping status, never by deletion.
+  # Manage & Comply commitments (govern/*). Resolved by flipping status, never by deletion — and a
+  # status of `met` must name the recorded action that met it in `resolved_by`. `ref` is the
+  # EXTERNAL reference; `resolved_by` is internal evidence a reader can check against this dataset.
   - id: prereg-h1
     kind: preregistration
     description: "Primary hypothesis (group difference in Y) frozen before data lock"
     due: 2026-09-01
-    status: pending
+    status: met
     ref: https://osf.io/xxxxx
+    resolved_by: a1b2c3d   # the run-comparison commit that executed the registered spec
+
+  - id: ethics-renewal
+    kind: ethics
+    description: "IRB protocol 2026-0417 expires; renewal submitted 60 days prior"
+    due: 2027-06-30
+    status: pending
+    ref: IRB-2026-0417
+
+  - id: ms-first-submission
+    kind: milestone
+    description: "Main paper submitted to a first venue"
+    due: 2026-08-31
+    status: met
+    resolved_by: 2026-08-04T09:15:00Z   # the submission-track log entry below
 
 contributors:
   # People + CRediT credit (project/people); mirrored to dataset_description.json Authors.
@@ -68,3 +93,21 @@ log:
 
   - { ts: 2026-07-10T16:30:00Z, op: manage-product, stage: analyze,
       note: "grouped cmp/group-diff-y into product main-paper", branch: main }
+
+  - { ts: 2026-07-11T10:00:00Z, op: ethics-track, stage: govern,
+      note: "IRB protocol 2026-0417 approved 2026-07-01, expires 2027-06-30; renewal obligation
+             recorded. Approval date and amendments live here, not in a structured field.",
+      branch: main }
+
+  - { ts: 2026-08-04T09:15:00Z, op: submission-track, stage: disseminate,
+      note: "main-paper submitted to Journal of Cohort Studies (JCS-2026-0412)", branch: main }
+
+  - { ts: 2026-09-05T11:20:00Z, op: submission-track, stage: disseminate,
+      note: "JCS-2026-0412 rejected after review; milestone ms-first-submission already met by the
+             2026-08-04 submission and is not reopened",
+      branch: main }
+
+  - { ts: 2026-09-12T08:40:00Z, op: submission-track, stage: disseminate,
+      note: "main-paper resubmitted to Imaging Methods Reports (IMR-2026-1187); the JCS outcome
+             stays in submissions[] rather than being replaced",
+      branch: main }

@@ -190,8 +190,19 @@ bench/
 └── rubrics/<name>.yaml     dimensions[]: {id, evidence, anchors}
 ```
 
-There is no runner. The fixtures specify what a runner would consume; building one is deferred until
-the probe set is settled.
+**There is no runner in this repository, and there will not be one.** The fixtures specify what a
+runner consumes; executing them belongs to [`wikiskill`](https://github.com/bcmcpher/wikiskill), a
+separate project that runs task suites in isolated headless sessions across models and harnesses.
+Its pilot reads `bench/tasks/routing-lifecycle.yaml` in place and modifies nothing here.
+
+That division is deliberate. Ground truth in these fixtures is *derived from this repository* —
+`expected_delegates_to` is checked against each planner's declared `delegates_to` by
+`tests/check-bench-fixtures.py` — and it stops being derived the moment a field is added to suit a
+particular runner's schema. A consumer that needs something these fixtures do not declare, such as a
+train/validation/test split, supplies it on its own side.
+
+Nothing has been executed by that runner or any other. The banner at the top of this document
+stands.
 
 ## Open questions
 

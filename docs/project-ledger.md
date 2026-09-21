@@ -28,14 +28,19 @@ products:           # named deliverables (Phase 2: analyze/manage-product, disse
     dois: []
     relations:       # DataCite RelatedIdentifier links to other products / external DOIs
       - { relation: IsDocumentedBy, target: preprint }
+    submissions:     # submission HISTORY (disseminate/submission-track) — see below
+      - { venue: "Journal of X", submitted: 2026-08-04, status: rejected,
+          decision: "Reject after review", ref: JX-2026-0412 }
+      - { venue: "Reports in Y", submitted: 2026-09-12, status: under-review, ref: RY-2026-1187 }
 
 obligations:        # Manage & Comply lane (Phase 3: govern/*)
   - id: prereg-h1
-    kind: preregistration   # preregistration | confirmatory-comparison | dmp | ethics | funder-report | other
+    kind: preregistration   # preregistration | confirmatory-comparison | dmp | ethics | milestone | funder-report | other
     description: "H1 frozen before data lock"
     due: 2026-09-01
-    status: pending         # pending | met | waived
-    ref: https://osf.io/xxxxx
+    status: met             # pending | met | waived
+    ref: https://osf.io/xxxxx   # the EXTERNAL reference
+    resolved_by: a1b2c3d        # internal evidence — REQUIRED when status is `met`
 
 contributors:       # people + CRediT credit (Phase 5: project/people)
   - name: Ada Researcher
@@ -61,11 +66,38 @@ These are the only ways a skill mutates the ledger. Follow them exactly, then de
    set its fields. A product groups the `comparisons` (cmp/* branches) that constitute it, the
    `outputs` it publishes, its `dois`, and its `relations`. Do not duplicate ids.
 
-3. **Add / resolve an `obligations[]` entry** — add `{ id, kind, description, due?, status, ref? }`
-   when a commitment is made (e.g. a pre-registration); flip `status` to `met`/`waived` (never
-   delete the entry) when it is discharged.
+3. **Add / resolve an `obligations[]` entry** — add
+   `{ id, kind, description, due?, status, ref?, resolved_by? }` when a commitment is made (e.g. a
+   pre-registration); flip `status` to `met`/`waived` (never delete the entry) when it is discharged.
 
-4. **Provenance by default** — every ledger write is followed by a `datalad save` via the datalad
+   **Resolving means naming the evidence.** An obligation at `status: met` MUST carry `resolved_by`:
+   a commit SHA, a `log:` entry timestamp, or a product id. The schema enforces this, so a status
+   flip cannot stand in for a record of what actually happened.
+
+   `ref` and `resolved_by` are deliberately different fields. `ref` is the **external** reference —
+   a registration id, an IRB protocol number, a funder award URL. `resolved_by` is **internal**
+   evidence, checkable against the dataset in hand. Whoever audits the claim later needs to know
+   which of the two they are reading: an external URL can rot, a commit SHA cannot.
+
+   A deadline is an obligation with `kind: milestone`, not a separate registry — a milestone is a
+   commitment with a date, and `govern/obligations` surfaces it alongside every other one.
+
+4. **Append to a product's `submissions[]`** — a submission is a **history, not a state**. Append an
+   entry per submission; never overwrite the previous one, and never fold submission state into the
+   product's own `status`. A paper under review and a paper whose submission was rejected are both
+   still `in-progress`, and a resubmission must leave the first venue's outcome readable.
+
+   `venue` is required — a submission with no destination is not a submission. `status` is one of
+   `preparing`, `submitted`, `under-review`, `revision-requested`, `accepted`, `rejected`,
+   `withdrawn`; `decision` is free text, because editors do not use a closed vocabulary.
+
+5. **Ethics protocol detail is an obligation plus log entries**, not a structured block. An IRB or
+   IACUC record is an `obligations[]` entry with `kind: ethics`, the expiry in `due`, and the
+   protocol number or URL in `ref`. The approval date and every amendment are appended to `log:`,
+   where the append-only rule already provides an amendment history. `govern/ethics-track` reads and
+   writes exactly that shape.
+
+6. **Provenance by default** — every ledger write is followed by a `datalad save` via the datalad
    doer. The ledger is never edited "off to the side".
 
 ## Which skills touch which sections
@@ -74,8 +106,8 @@ These are the only ways a skill mutates the ledger. Follow them exactly, then de
 |---|---|
 | `project` | `project/new-project` (once) |
 | `log` | every planner (append); `project/log-decision` records decisions + rationale |
-| `products` | `analyze/manage-product` (create/group), `disseminate/dataset-release` + `link-outputs` (dois/relations) |
-| `obligations` | `govern/preregister`, `govern/obligations`; resolved as work completes |
+| `products` | `analyze/manage-product` (create/group), `disseminate/dataset-release` + `link-outputs` (dois/relations), `disseminate/submission-track` (submissions) |
+| `obligations` | `govern/preregister`, `govern/obligations`, `govern/dmp`, `govern/ethics-track`, `project/track-milestone`; resolved as work completes |
 | `contributors` | `project/people` (CRediT roles + ORCID/ROR; mirrored to `dataset_description.json` Authors) |
 
 `project/status-report` reads the whole ledger and renders `PROJECT.md` / funder reports — it never
@@ -84,5 +116,11 @@ writes project state, only the append-only `status-report` log entry.
 ## Evolution
 
 The schema is intentionally strict (`additionalProperties: false`) to catch typos, and grows one
-phase at a time. Later phases (govern) will add funding/ethics detail; when they do, extend
-`schemas/project.schema.json` in the same commit that introduces the writing skill.
+phase at a time. For a single new skill, extend `schemas/project.schema.json` in the same commit
+that introduces the writing skill.
+
+That rule inverts when several skills land at once. `extend-ledger-for-planned-skills` grew
+`milestone`, `resolved_by` and `submissions[]` in one pass, ahead of the five changes that write
+them, because five concurrent edits to one closed schema would each design their own corner of it
+and discover the conflicts at merge time. `openspec/README.md` states the governing convention:
+**ledger-first — formalize the schema before the skills that write to it.**

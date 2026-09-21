@@ -42,8 +42,8 @@ Neurotechnology, and the NIH BRAIN Initiative's Neuroethics Guiding Principles.
   separation between what was recorded when data entered the project and what a skill may do with it
   now. `govern/obligations` tracks the first; there is no mechanism for the second.
 - **`curate`** — machine-readable consent is a controlled-term annotation problem, which puts it in
-  the same territory as `add-annotate-capability`. GA4GH's data-use vocabulary is a candidate
-  alongside Neurobagel and SNOMED.
+  the same territory as the `annotate` capability, now built. GA4GH's data-use vocabulary is a
+  candidate backend alongside Neurobagel, SNOMED, ReproSchema and NIDM.
 - **`liab`** — cross-border complexity is the clearest external argument for the self-hostable arm of
   the living compendium. It is also a caution: self-hosting changes where data sits, which is not the
   same as satisfying a jurisdiction's requirements. `add-liab-capability` records this as a

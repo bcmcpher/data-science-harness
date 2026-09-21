@@ -3,8 +3,15 @@
 Declarative fixtures for the evaluation protocol in [`docs/evaluation.md`](../docs/evaluation.md).
 
 **There is no runner here, and nothing in this directory has been executed.** These files specify
-what a runner would consume. Building one is deferred until the probe set is settled — see the open
-questions at the end of the protocol.
+what a runner consumes. Executing them belongs to
+[`wikiskill`](https://github.com/bcmcpher/wikiskill), a separate project; its pilot reads
+`tasks/routing-lifecycle.yaml` in place and modifies nothing in this repository. Which probes a
+given report carries is still open — see the questions at the end of the protocol.
+
+**Do not add fields to these fixtures to suit a consumer.** Every expected outcome here is derived
+from the repository, which is what makes it checkable rather than hand-maintained. A runner that
+needs something these files do not declare — a train/validation/test split, a distractor between a
+planner and a toolbox skill — supplies it on its own side.
 
 The point of keeping this as data rather than code is composability: which probes and which
 integrations appear in a given report is not yet decided, so adding or dropping one must be a fixture

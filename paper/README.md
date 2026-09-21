@@ -63,5 +63,5 @@ Recorded constraints (verify against the journal's current author guidelines bef
    other. See [the note](../docs/references/notes/chen-2026-brain-researcher.md).
 3. **Cite from `docs/references/references.bib`.** Do not add a second bibliography.
 4. **Describe what is built.** The README's own drift between documentation and disk
-   ([`reconcile-docs-with-disk`](../openspec/changes/reconcile-docs-with-disk)) is the failure mode to
+   ([`reconcile-docs-with-disk`](../openspec/changes/archive/2026-09-11-reconcile-docs-with-disk)) is the failure mode to
    avoid here. Every architectural claim should be checkable against `openspec/specs/`.

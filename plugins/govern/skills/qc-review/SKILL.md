@@ -42,15 +42,31 @@ the **bids doer** and state inspection to the **datalad doer**; you do not modif
      (`process/run-pipeline`, `run-comparison`)
    - **D** distributable → a sibling exists / a product is released (`disseminate/publish`,
      `dataset-release`)
-4. **Log it** — append `{ ts, op: qc-review, stage: qc, note: "bids <result>; STAMPED gaps: <letters>", branch: <branch> }`, then delegate the save to the datalad doer.
-5. **Report** — a compact scorecard: BIDS result (errors/warnings), the STAMPED letters that are
-   satisfied vs. the gaps, and for each gap the single skill that closes it. Recommend the highest
-   priority next action.
+4. **For an MRI dataset, read the COBIDAS sharing and reproducibility items** —
+   `plugins/disseminate/references/cobidas/data-sharing.md` and
+   `plugins/disseminate/references/cobidas/reproducibility.md`. Those two tables are the part of
+   COBIDAS a dataset can satisfy before a paper exists: a stable identifier, stated access
+   conditions, what was shared and how complete it is, whether the analysis workflow and its
+   environment are available. Report which of their **mandatory** items the project can evidence
+   today, reading each from the ledger and the dataset rather than from the recommendation.
+   If the file is absent — the `disseminate` plugin is not installed alongside `govern` — say the
+   COBIDAS check was skipped and why. Do not substitute recalled items for the bundled ones, and do
+   not extend this to the acquisition, preprocessing or modeling tables: those describe a study, not
+   a dataset, and they belong to `disseminate/reporting-checklist` at submission time.
+5. **Log it** — append `{ ts, op: qc-review, stage: qc, note: "bids <result>; STAMPED gaps: <letters>", branch: <branch> }`, then delegate the save to the datalad doer.
+6. **Report** — a compact scorecard: BIDS result (errors/warnings), the STAMPED letters that are
+   satisfied vs. the gaps, the COBIDAS sharing/reproducibility items evidenced or skipped, and for each
+   gap the single skill that closes it. Recommend the highest priority next action.
 
 ## Constraints
 - Read-only: never modify, rename, or "fix" dataset files here — diagnose and route to the fixing
   skill. Validation and state inspection go through the bids and datalad doers respectively.
 - Never assert BIDS validity the bids doer did not verify (an absent validator is `unverified`, not
   a pass).
+- **Never state that a project is COBIDAS-compliant.** This step reads two of seven tables, and
+  only the ones a dataset can answer before a paper exists. Compliance is assessed against the whole
+  guideline at submission, by `disseminate/reporting-checklist`.
+- **Never recall a COBIDAS item.** If the bundled reference is not installed, the check is skipped
+  with that reason. A recalled neuroimaging checklist is exactly what COBIDAS was written to replace.
 - The STAMPED assessment is a snapshot, not a gate — report it plainly with gaps; do not block other
   work. Keep `log:` append-only and the ledger schema-valid.

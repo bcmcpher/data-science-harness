@@ -41,6 +41,48 @@ tasks:
       Discriminator for capability@k — the only built planner reaching the bids doer. A route that
       reaches datalad alone scores 0.5, not 0.
 
+  - id: govern-init-ledger
+    prompt: >
+      This study has been running for two years and there's no administrative record anywhere.
+      Start one.
+    expected_skill: govern/init-ledger
+    expected_delegates_to: [datalad]
+    notes: >
+      "Has been running for two years" is the discriminator: the dataset exists, so this is the
+      brownfield entry point. A route to the new-project scaffolder is the expected failure — it
+      would try to create a dataset that is already there.
+
+  - id: govern-dmp
+    prompt: >
+      The funder wants a data management plan, and I want whatever we promise in it to actually be
+      tracked rather than filed away.
+    expected_skill: govern/dmp
+    expected_delegates_to: [datalad]
+    notes: >
+      The second clause is what distinguishes this from a writing task: the promises become
+      obligations. A route to the obligations tracker alone scores 0 — that resolves commitments,
+      it does not extract them from a plan.
+
+  - id: govern-ethics
+    prompt: >
+      Our board approval has a number and an expiry and I keep losing track of it. Put it somewhere
+      that will warn me before it lapses.
+    expected_skill: govern/ethics-track
+    expected_delegates_to: [datalad]
+
+  - id: govern-stamped
+    prompt: >
+      Give me a full readout of where this research object stands on every reproducibility dimension,
+      with the evidence, before I answer the funder.
+    expected_skill: govern/stamped-assess
+    expected_delegates_to: [bids, datalad]
+    notes: >
+      Near-miss against govern/qc-review, which also assesses STAMPED but leads with BIDS
+      conformance as a gate before data moves. "Full readout on every dimension, with the evidence"
+      is the seven-dimension report. Both reach [bids, datalad], so capability@k cannot separate
+      them — this task discriminates on route@1 alone, which is why the prompt avoids "check" and
+      "before we release".
+
   # ------------------------------------------------------------ 1. initialize
   - id: project-new
     prompt: >
@@ -49,21 +91,69 @@ tasks:
     expected_skill: project/new-project
     expected_delegates_to: [datalad]
 
+  - id: project-env-check
+    prompt: >
+      Something told me a backend was unavailable. Work out what this project actually needs and
+      what's missing on this machine.
+    expected_skill: project/env-check
+    expected_delegates_to: [datalad]
+    notes: >
+      The honest answer has two halves — not declared anywhere, and declared but not installed — and
+      a route that reports one list of "missing tools" has lost the distinction the skill exists for.
+
+  - id: project-claude-config
+    prompt: >
+      A new student starts Monday and the assistant has no idea what this project is. Write the
+      project instructions it should load.
+    expected_skill: project/claude-config
+    expected_delegates_to: [datalad]
+
   # ---------------------------------------------------------------- 2. curate
   - id: curate-raw
     prompt: I have a folder of DICOMs from the scanner. Get them into the standard layout.
     expected_skill: curate/raw-to-bids
     expected_delegates_to: [nipoppy, datalad]
 
+  - id: curate-merge
+    prompt: >
+      The clinical scores and the demographics came from two different exports. Get them into one
+      table, and I want to know if anyone falls out along the way.
+    expected_skill: curate/merge-data
+    expected_delegates_to: [datalad]
+    notes: >
+      "If anyone falls out" is the row arithmetic. A route that produces a merged file without
+      reporting rows in / rows out has produced something that looks correct either way.
+
+  - id: curate-datadict
+    prompt: >
+      Write me the participants.json for this table — I'll tell you what the coded columns mean.
+    expected_skill: curate/gen-data-dict
+    expected_delegates_to: [annotate, datalad]
+    notes: >
+      Near miss with curate/annotate, which is the whole metadata pass including sidecars. "I'll
+      tell you what they mean" is the cue that meanings are supplied rather than looked up, though
+      the annotate doer is still reached for controlled terms.
+
   - id: curate-annotate
     prompt: >
       Our participants table has columns nobody outside the lab would understand. Make the dataset
       self-describing, with standard terms where they exist.
     expected_skill: curate/annotate
+    expected_delegates_to: [annotate, datalad]
+    notes: >
+      Reaching datalad alone commits hand-written metadata; reaching annotate is what makes the
+      terms checked rather than recalled. Partial credit is the point of capability@k here.
+
+  - id: curate-deidentify
+    prompt: >
+      Before this goes anywhere I need the participant identifiers out of it, and I need to be able
+      to show what I did.
+    expected_skill: curate/deidentify
     expected_delegates_to: [datalad]
     notes: >
-      Expected delegation is [datalad] TODAY. add-annotate-capability changes this to
-      [annotate, datalad] — update this task in that change, not before.
+      "Before this goes anywhere" plus "show what I did" is the discriminator: the request is for a
+      recorded, provenanced removal, not an audit. A route to a governance assessment scores 0 —
+      that checks for exposure after the fact and owns no action.
 
   # --------------------------------------------------------------- 3. process
   - id: process-pipeline
@@ -72,6 +162,16 @@ tasks:
     expected_delegates_to: [nipoppy, datalad]
 
   # --------------------------------------------------------------- 3. analyze
+  - id: analyze-plan
+    prompt: >
+      I have one outcome measure, two groups, and age and sex to adjust for. What test should I be
+      running here?
+    expected_skill: analyze/plan-analysis
+    expected_delegates_to: [datalad]
+    notes: >
+      The design is stated and no branch is asked for. A route to propose-comparison opens a branch
+      before the approach is settled, which is the expected failure.
+
   - id: analyze-propose
     prompt: >
       I want to look at whether hippocampal volume differs between the two groups. Nothing formal
@@ -79,6 +179,16 @@ tasks:
     expected_skill: analyze/propose-comparison
     expected_delegates_to: [datalad]
     rigor: exploratory
+
+  - id: analyze-scaffold
+    prompt: >
+      Give me the skeleton of the script for that comparison — where it reads the tsv from, where
+      the results go — I'll write the model myself.
+    expected_skill: analyze/scaffold-analysis
+    expected_delegates_to: [datalad]
+    notes: >
+      "I'll write the model myself" is the whole contract. A route that produces a working analysis
+      is the expected failure, not a partial credit.
 
   - id: analyze-run
     prompt: >
@@ -94,6 +204,22 @@ tasks:
     prompt: These three analyses belong together as one paper. Track them as a unit.
     expected_skill: analyze/manage-product
     expected_delegates_to: [datalad]
+
+  - id: analyze-plot
+    prompt: >
+      Make me a figure of the group difference from those results, good enough to go in the paper.
+    expected_skill: analyze/plot
+    expected_delegates_to: [datalad]
+
+  - id: analyze-report
+    prompt: >
+      Pull together what came out of that analysis — the tables, the QC numbers, and what's still
+      missing — into something I can circulate before lab meeting.
+    expected_skill: analyze/gen-report
+    expected_delegates_to: [datalad]
+    notes: >
+      "Circulate" is internal; draft-manuscript is the near miss. "What's still missing" is the cue
+      that the gaps section is the point.
 
   - id: analyze-checkpoint
     prompt: I'm done for the day — make sure nothing is left uncommitted.
@@ -112,6 +238,16 @@ tasks:
       the methods.
     expected_skill: project/people
     expected_delegates_to: [datalad]
+
+  - id: project-milestone
+    prompt: >
+      The abstract deadline moved to the 14th of next month. Make sure that's somewhere I'll see it
+      alongside everything else we owe.
+    expected_skill: project/track-milestone
+    expected_delegates_to: [datalad]
+    notes: >
+      "Alongside everything else we owe" is the cue for the obligations registry. A route to
+      govern/obligations is the near miss — that skill resolves commitments, it does not add dates.
 
   - id: project-decision
     prompt: >
@@ -141,7 +277,10 @@ tasks:
       The dataset, the code, and the paper are all separate now. Connect them so someone landing on
       any one of them can find the others.
     expected_skill: disseminate/link-outputs
-    expected_delegates_to: [datalad]
+    expected_delegates_to: [archive, datalad]
+    notes: >
+      Relations are registered with the archive that owns the identifier, so datalad alone records
+      the links locally and publishes nothing resolvable.
 
   - id: disseminate-manuscript
     prompt: >
@@ -160,20 +299,43 @@ tasks:
       I want a version of the paper where the figures rebuild themselves from the data rather than
       being pasted in.
     expected_skill: disseminate/executable-article
-    expected_delegates_to: [datalad]
+    expected_delegates_to: [compendium, datalad]
+    notes: >
+      Reaching datalad alone scaffolds and commits a document; reaching compendium is what wires each
+      figure to the run that produced it and builds in the pinned container. The prompt's "rather
+      than being pasted in" is exactly the half datalad cannot deliver.
 
   - id: disseminate-bundle
     prompt: >
       Package our methods so someone else's assistant could call them on their own data without
       reading our code.
     expected_skill: disseminate/agent-bundle
+    expected_delegates_to: [compendium, datalad]
+    notes: >
+      Reaching datalad alone writes some files and commits them; reaching compendium is what reads
+      each script's real argument parser instead of inferring a signature, and runs the harness's own
+      lint over what was emitted. "Without reading our code" is the cue — the caller wants a
+      described interface, which is the half datalad cannot deliver.
+
+  - id: disseminate-submission
+    prompt: >
+      The first journal turned it down and we're sending it to another one this week. Keep the
+      record straight.
+    expected_skill: disseminate/submission-track
     expected_delegates_to: [datalad]
+    notes: >
+      "Keep the record straight" across two venues is the append cue. A route that updates one venue
+      field in place loses the rejection, which is the entry the history exists for.
 
   - id: disseminate-liab
     prompt: >
       We can't put this data on someone else's cloud. Set up serving it from hardware we control.
     expected_skill: disseminate/liab-deploy
-    expected_delegates_to: [datalad]
+    expected_delegates_to: [liab, datalad]
+    notes: >
+      Reaching datalad alone scaffolds a pyinfra config and commits it; reaching liab is what plans
+      it against a named inventory and later proves the dataset is retrievable from the host. The
+      liab doer plans by default, so a route that reaches it is not a route that deploys anything.
 
   # ------------------------------------------------- near-miss discriminators
   # Pairs that a keyword-matching model will confuse. These carry most of the
@@ -198,7 +360,7 @@ tasks:
   - id: nearmiss-annotate-vs-qc
     prompt: The sidecars are incomplete — sort out the metadata.
     expected_skill: curate/annotate
-    expected_delegates_to: [datalad]
+    expected_delegates_to: [annotate, datalad]
     notes: >
       qc-review would *report* incomplete sidecars; annotate fixes them. A read-only route here is
       the expected failure.

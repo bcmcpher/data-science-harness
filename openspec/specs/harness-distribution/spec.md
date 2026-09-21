@@ -7,9 +7,7 @@ Claude Code-compatible and is the single authored form; installed copies are ada
 target directory, never in the repository. `bin/install.sh` is deliberately a small file copier and
 translator so a user in a locked-down environment can reproduce it by hand. This spec covers the
 installer contract and the portability constraints it imposes on authored content.
-
 ## Requirements
-
 ### Requirement: The source layout is the only authored form
 
 Plugin content MUST be authored once under `plugins/<name>/` in the Claude Code layout
@@ -80,7 +78,9 @@ modify the repository.
 
 Authored skills and agents MUST remain loadable after the OpenCode translation. Any frontmatter
 field that a target harness interprets differently MUST either be translated by the installer or be
-absent from authored content.
+removed from the installed copy. Specifically, `model:` MUST be translated to the target harness's
+identifier form, and MUST be stripped when no translation exists, so the installed agent falls back
+to the harness default rather than failing to resolve.
 
 #### Scenario: A field is passed through untranslated
 
@@ -88,3 +88,37 @@ absent from authored content.
   bare `model:` name where the target expects a provider-prefixed identifier
 - **THEN** the installer either translates or removes it, so the installed agent resolves in the
   target harness
+
+#### Scenario: A model value has a known translation
+
+- **WHEN** an agent declaring an allowed `model:` value is installed for OpenCode
+- **THEN** the installed copy carries the provider-prefixed form that OpenCode resolves
+
+#### Scenario: A model value has no translation for the target
+
+- **WHEN** no mapping exists for the target harness
+- **THEN** the installer strips the field, and the installed agent runs on the harness default
+
+#### Scenario: Installing for Claude Code
+
+- **WHEN** the same agent is installed for Claude Code
+- **THEN** the authored value is used as written, because the source layout is Claude Code-compatible
+  by definition and needs no translation for that target
+
+### Requirement: Licensing travels with the content and is resolvable
+
+The repository MUST declare licensing separately for code and for content, using SPDX short
+identifiers rather than prose descriptions, and the declaration MUST be machine-readable. Content
+MUST carry a licence that permits reuse with attribution.
+
+#### Scenario: A reuser takes a single skill
+
+- **WHEN** someone copies one `SKILL.md` out of the repository
+- **THEN** the terms covering it are determinable from the repository's declared path mapping,
+  without reading prose
+
+#### Scenario: The paper declares its own licence
+
+- **WHEN** `paper/myst.yml` declares a content and code licence for the manuscript
+- **THEN** it agrees with the repository-wide declaration rather than contradicting it
+

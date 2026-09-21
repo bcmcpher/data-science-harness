@@ -11,6 +11,8 @@ description: >
 # plane: workflow            # workflow (planner) | capability (doer/tool)
 # stamped: [T, A]            # STAMPED letters this skill advances (see docs/stamped.md)
 # delegates_to: [datalad]    # doer subagent(s) this planner invokes
+# model: haiku               # AGENTS only: haiku | sonnet | opus | fable; omit = harness default.
+#                            # Read-only agents only; the installer translates it per harness.
 ---
 
 # Skill: skill-name

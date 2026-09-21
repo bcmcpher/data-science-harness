@@ -6,7 +6,8 @@ SKELETON.
 RULE FOR THIS SECTION: every claim about what the harness does must be checkable against
 openspec/specs/. If a spec does not cover it, either it is not built or the spec is missing — in
 both cases, do not claim it here. The README's own documentation-versus-disk drift
-(openspec/changes/reconcile-docs-with-disk) is the failure mode this rule exists to prevent.
+(openspec/changes/archive/2026-09-11-reconcile-docs-with-disk) is the failure mode this rule
+exists to prevent.
 
 Pull the real counts from the repository when drafting. Do not write them from memory.
 -->

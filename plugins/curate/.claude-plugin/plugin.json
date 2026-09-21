@@ -1,12 +1,29 @@
 {
   "name": "curate",
-  "description": "Curation planner (workflow plane): make raw data standardized and self-describing. raw-to-bids converts DICOMs to a BIDS layout via nipoppy with DataLad provenance; annotate enriches metadata (dataset_description.json, participants.json data dictionary, BIDS sidecars, controlled terms). All mutations are provenanced via the datalad doer.",
-  "version": "0.1.0",
-  "author": { "name": "bcmcpher" },
+  "description": "Curation planner (workflow plane): make raw data standardized, self-describing and safe to move. raw-to-bids converts DICOMs to a BIDS layout via nipoppy with DataLad provenance; merge-data combines tabular sources as a provenanced run and reports the row/column arithmetic so a silent join failure cannot pass as success; gen-data-dict describes columns from the data and the user, never from a guessed meaning; annotate enriches metadata and controlled terms; deidentify makes identifier removal a provenanced run with a required residual-risk statement. All mutations are provenanced via the datalad doer.",
+  "version": "0.3.0",
+  "author": {
+    "name": "bcmcpher"
+  },
   "license": "MIT",
-  "keywords": ["data-science", "curate", "annotate", "metadata", "bids", "data-dictionary", "neurobagel", "stamped", "workflow"],
+  "keywords": [
+    "data-science",
+    "curate",
+    "annotate",
+    "deidentify",
+    "phi",
+    "metadata",
+    "bids",
+    "data-dictionary",
+    "neurobagel",
+    "stamped",
+    "workflow"
+  ],
   "skills": [
     "./skills/raw-to-bids",
-    "./skills/annotate"
+    "./skills/annotate",
+    "./skills/deidentify",
+    "./skills/merge-data",
+    "./skills/gen-data-dict"
   ]
 }
