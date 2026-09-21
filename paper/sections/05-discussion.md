@@ -29,22 +29,45 @@ ORDER MATTERS. First limitation first.
    the harness's effect on work quality is a design argument, not a measurement. This is the
    limitation a reader should take away, and it goes first.
 
-2. The capability plane is uneven. Several planners can express a step and cannot perform it — they
-   describe the output and commit it. Give the real state from openspec/specs/ and point at
-   openspec/changes/ for what is proposed. Do not soften this.
+2. BUILT IS NOT EXERCISED. This replaces the old "uneven capability plane" limitation. Both planes
+   are now structurally complete — 8 doers, each paired 1:1 with a toolbox, no orphan on either
+   side — and that sharpens the limitation rather than softening it, because shape is no longer
+   what is missing. Be specific, from `tests/e2e-smoke.sh` and `.github/workflows/ci.yml`:
 
-3. Single-project experience. The design comes from one context; generality is asserted, not
+     - `nipoppy` and `process` have **no test of any kind** — no gate test, no real-tool test.
+       `process` is the plugin that runs fMRIPrep.
+     - ~19 gate assertions take the form `[ $RC -eq 0 ] || [ $RC -eq 1 ]`. They pass whether or not
+       the tool is installed. What they establish is that the gate script does not crash.
+     - The e2e job is `if: github.event_name == 'workflow_dispatch'` — it never runs on push or PR.
+       CI checks structure and specs, and says so in its own header.
+     - `containers` is the one capability whose full real-tool path was run end to end here, and it
+       is also the one CI cannot run, because apptainer is deliberately not installed there.
+
+   State what a green suite does and does not mean. It means the gates answer and refuse correctly
+   and the structure is consistent. It does not mean the tools behind the gates work, and it says
+   nothing about whether the harness improves anyone's research record.
+
+   Do not point a reader at `openspec/changes/` for the remaining work. It is empty, and an empty
+   changes/ now means the structure is finished rather than that nothing is left.
+
+3. The lint checks structure, not meaning. It catches a stale count, a dead change-link, a
+   delegation naming a plugin that provides no agent. It cannot catch a sentence that is simply
+   wrong: a reconciliation pass on this repository found eleven documentation drifts, of which the
+   extended lint caught five. Concede this directly — the mechanically checkable contract is one of
+   the contribution claims, so its limits belong in the same paper.
+
+4. Single-project experience. The design comes from one context; generality is asserted, not
    demonstrated.
 
-4. Governance scope is project-level. @botes2026lawinsidemachine asks for agent-level access control
+5. Governance scope is project-level. @botes2026lawinsidemachine asks for agent-level access control
    and machine-decidable consent across federated repositories. A project-level tool cannot deliver
    that. The narrow claim is that a durable, versioned governance record is a precondition, and that
    the ledger schema does not yet carry consent scope or use restrictions at all.
 
-5. No claim adjudication. We record what was done; we do not judge whether a claim is supported.
+6. No claim adjudication. We record what was done; we do not judge whether a claim is supported.
    @chen2026brainresearcher does, and does it better than we could bolt on.
 
-6. Harness dependence. The content is Markdown and portable in principle, but it is exercised on two
+7. Harness dependence. The content is Markdown and portable in principle, but it is exercised on two
    assistants. Portability to the other four named targets is designed, not tested.
 
 Follow @chen2026brainresearcher's example here — their limitations section is direct about

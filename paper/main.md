@@ -8,7 +8,9 @@ exports:
 
 +++ {"part": "abstract"}
 
-<!-- DRAFT SKELETON. Not written prose. ~200 words when drafted. -->
+<!-- DRAFT. All four moves are now written (~200 words). Revisit after the evaluation section
+settles: this is the paragraph most likely to overclaim, and the Status move is the one that
+goes stale first. -->
 
 **Problem.** Assistants can now execute analyses faster than the surrounding record can be
 maintained by hand, so provenance, administrative context, and the terms under which data may be
@@ -22,13 +24,16 @@ project ledger carries products, obligations, and credit alongside the data. The
 living compendium: a provenanced dataset, a re-executable article, an agent-callable method bundle,
 and a self-hostable deployment, cross-linked by persistent identifier.
 
-**Status.** <!-- State plainly: the workflow plane is complete, the capability plane is uneven, and
-the evaluation protocol is specified but unrun. Give the real numbers — plugins, planner skills,
-capability doers — from openspec/specs/, not from memory. -->
+**Status.** Both planes are built: 22 plugins, 77 skills, and 8 capability doers each paired with a
+command-level toolbox, specified by 22 OpenSpec records and held to a structural lint. What is not
+built is evidence. Most capability paths are gated, the gates are tested, and the tools behind them
+have not been run here; two capabilities have no test of any kind. The evaluation protocol in this
+paper is specified and **unrun**, and no number reported anywhere in this work comes from a
+measurement of the harness's effect.
 
-**Contribution.** <!-- One sentence. Candidate: an architecture in which governance is a by-product
-of ordinary work rather than a compliance step, plus a specified evaluation protocol for measuring
-whether that holds. -->
+**Contribution.** An architecture in which governance is a by-product of ordinary work rather than a
+compliance step applied afterwards, together with an evaluation protocol — specified before any
+capability was measured — for determining whether that claim holds.
 
 +++
 
@@ -41,6 +46,11 @@ written here will overclaim.
 Two things this abstract must NOT do:
   - report a benchmark number (none exist)
   - describe Brain Researcher as complementary without saying where the interface is
+
+The Status move must be regenerated from disk, never edited from memory. As of this draft:
+22 plugins, 77 registered skills (37 planner / 40 toolbox), 8 doers paired 1:1 with 8 `*-cli`
+toolboxes, 9 agents, 22 specs. `nipoppy` and `process` are the two capabilities with no test of
+any kind; check `tests/e2e-smoke.sh` before repeating that claim.
 
 Structure to follow (Schwabe 2016 funnel; see docs/writing/article-anatomy.md):
 problem → why existing approaches fall short → what we built → what we found → what it means.

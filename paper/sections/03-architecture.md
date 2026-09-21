@@ -27,9 +27,29 @@ This split is STAMPED Modularity applied to the harness itself. The payoff is co
 stating as such: capabilities recombine under different workflows, and a workflow can swap one
 capability for another — Zenodo for OSF — without rewriting the process.
 
-Figure 1: the two planes with the delegation edges. Generate from the repository (each planner's
-declared delegates_to) rather than drawing by hand, so the figure cannot drift from the code.
+Figure 1 is generated, not drawn: `paper/figures/make-two-planes.py` reads each planner skill's
+declared `delegates_to:` and emits the SVG, so the figure cannot drift from the code. Re-run it
+after any delegation change. It carries the asymmetry that is the real claim of this section and is
+easy to miss in prose: all 37 planner skills delegate to `datalad`, and no other doer is reached by
+more than 2 of the 6 planners.
+
+One honest asymmetry to state here rather than leave for a reader to find: the two-plane split is
+declared in frontmatter on the workflow side only. Planner skills carry `plane: workflow`,
+`stamped:` and `delegates_to:`; toolbox skills carry none of the three, and `plane: capability`
+appears on no shipped skill. The capability plane is expressed as doer agents plus toolbox skills,
+and the lint exempts `*-cli` plugins from the harness rules by name (`is_harness =
+not plugin_name.endswith("-cli")`). This is defensible — a toolbox skill is a command wrapper, not
+a research step — but it means the architecture is enforced asymmetrically, and a paper claiming a
+mechanically checkable contract should say so.
 -->
+
+:::{figure} ../figures/two-planes.svg
+:name: fig-two-planes
+:width: 100%
+
+The two planes and every delegation edge between them, generated from the repository's own
+`delegates_to:` declarations. The provenance chain is the one dependency that is not swappable.
+:::
 
 ## The planner/doer contract
 
@@ -45,6 +65,37 @@ when a declared delegation names a plugin that provides no agent, and when prose
 disagree in either direction. A contract that is only a convention decays; this one fails a check.
 
 Figure 2 or a table: what the lint enforces. Derive from openspec/specs/skill-format.
+-->
+
+## What the harness refuses
+
+<!--
+NEW SECTION. This is the most distinctive thing in the repository and no other header holds it.
+
+The argument: what a harness refuses to do is more characteristic of it than what it does, because
+the failure this design targets is invisible on inspection. An image built from guessed pins and an
+image built from declared pins both build, both run, and both produce numbers; they differ only when
+someone rebuilds a year later. So the refusals are where the design commitment is actually spent.
+
+Five to draw on, each with the spec requirement behind it:
+
+  1. An unpinned environment manifest — `containers` refuses to emit a Dockerfile from it, and names
+     the command that would pin it. (openspec/specs/containers)
+  2. A mutable image tag recorded as a pin — resolved to a digest or refused. A tag can be
+     re-pushed, so two runs a year apart can name `fmriprep:23.2.0` and execute different code.
+  3. An unpinned install step layered onto a pinned base — the quiet version of the same failure:
+     the base is identical a year later and the layer on top is not.
+  4. A figure that cannot be traced to the run that produced it — reported as `unprovenanced` rather
+     than embedded. (openspec/specs/compendium)
+  5. An invented tool parameter in an emitted agent bundle — asked for, never inferred, because an
+     invented default produces a plausible number and nothing marks it as not-the-analysis.
+     (plugins/compendium-cli/skills/mcp-scaffold)
+
+The through-line, and the sentence this section exists to earn: each refusal names the command that
+would fix it, because a refusal without a remedy just gets worked around.
+
+Do NOT claim these refusals are validated in practice. What is checked is that the skill *says* it
+refuses; only the containers path has been exercised against real tools.
 -->
 
 ## One provenance chain

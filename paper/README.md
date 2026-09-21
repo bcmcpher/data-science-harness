@@ -2,9 +2,14 @@
 
 Draft of the manuscript describing this harness.
 
-**Status: skeleton.** Every section is an outline with the argument, the evidence it needs, and the
-claims it must not make. No section is written prose yet, and **no benchmark has been run** — see
+**Status: outlined, with the abstract drafted.** Every section carries its headers, the argument
+each one must make, the evidence it needs, and the claims it must not make. The abstract in
+`main.md` is written; the five sections are still skeletons. **No benchmark has been run** — see
 [`docs/evaluation.md`](../docs/evaluation.md).
+
+Figures are generated, not drawn. `figures/make-two-planes.py` reads each planner skill's
+`delegates_to:` and emits `figures/two-planes.svg`, so Figure 1 cannot disagree with the code it
+illustrates. Re-run it after any delegation change.
 
 ## Why MyST
 
@@ -50,9 +55,9 @@ Recorded constraints (verify against the journal's current author guidelines bef
 | `main.md` | Abstract and the one-paragraph claim |
 | `sections/01-intro.md` | The problem: AI-accelerated analysis outpacing governable provenance |
 | `sections/02-related.md` | Brain Researcher, STAMPED, NeuroLibre, Paper2Agent, Lab-in-a-Box — and the positioning |
-| `sections/03-architecture.md` | Two planes, planner/doer, ledger, comparison→product, living compendium |
+| `sections/03-architecture.md` | Two planes (Fig. 1), planner/doer, **what the harness refuses**, ledger, comparison→product, living compendium |
 | `sections/04-evaluation.md` | The protocol as **planned work**. No results. |
-| `sections/05-discussion.md` | Limitations, led by the absence of executed evaluation |
+| `sections/05-discussion.md` | Limitations, led by the absence of executed evaluation, then *built is not exercised* |
 
 ## Rules for this draft
 
