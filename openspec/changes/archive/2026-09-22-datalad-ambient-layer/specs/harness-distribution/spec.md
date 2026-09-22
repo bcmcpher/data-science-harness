@@ -8,7 +8,7 @@ passing them a Claude Code-shaped JSON payload on stdin. The mapping is:
 
 - PreToolUse with a `Bash` matcher → `tool.execute.before` on the shell tool, where exit status 2
   blocks the call with the script's stderr;
-- SessionStart → `session.created`, where stdout is delivered to the session as context;
+- SessionStart → the `session.created` event, where stdout is delivered to the model as context (through the system-prompt transform hook);
 - Stop → `session.idle`, where a block decision's reason is delivered to the session as a message.
 
 A hook event with no mapping MUST produce an installer warning naming the plugin and the event.

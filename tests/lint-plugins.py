@@ -43,6 +43,8 @@ PINNABLE_AGENTS = {"bids-doer", "coordinator"}
 KEBAB = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 PLANNER_SECTIONS = ("## When to use", "## Steps", "## Constraints")
 DESCRIPTION_MAX = 1024
+# A plugin's rules/*.md is loaded into every session's main thread, so it carries a hard budget.
+RULES_MAX_WORDS = 300
 CHECK_SCRIPT_DIRS = ("tests", "schemas")
 
 # Third-party modules whose import name differs from the distribution providing it. There is no
@@ -287,7 +289,43 @@ def check_plugin(root: str, plugin_dir: str, doers: dict[str, list[str]]) -> str
             if f.endswith(".md"):
                 check_agent(root, os.path.join(agents_root, f))
 
+    rules_root = os.path.join(plugin_dir, "rules")
+    if os.path.isdir(rules_root):
+        for f in sorted(os.listdir(rules_root)):
+            if f.endswith(".md"):
+                path = os.path.join(rules_root, f)
+                with open(path) as fh:
+                    words = len(fh.read().split())
+                if words > RULES_MAX_WORDS:
+                    error(rel(root, path), f"is {words} words; always-loaded rules are capped at {RULES_MAX_WORDS}")
+
+    hooks_json = os.path.join(plugin_dir, "hooks", "hooks.json")
+    if os.path.exists(hooks_json):
+        check_hooks(root, plugin_dir, hooks_json)
+
     return declared_name
+
+
+def check_hooks(root: str, plugin_dir: str, path: str) -> None:
+    """A plugin hooks.json nests events under a top-level `hooks` key, and its scripts exist."""
+    p = rel(root, path)
+    try:
+        with open(path) as fh:
+            data = json.load(fh)
+    except json.JSONDecodeError as exc:
+        error(p, f"is not valid JSON: {exc}")
+        return
+    events = data.get("hooks") if isinstance(data, dict) else None
+    if not isinstance(events, dict):
+        error(p, "has no top-level `hooks` object — Claude Code will not register any of its hooks")
+        return
+    for event, groups in events.items():
+        for group in groups if isinstance(groups, list) else []:
+            for hook in group.get("hooks", []) if isinstance(group, dict) else []:
+                cmd = hook.get("command", "") if isinstance(hook, dict) else ""
+                m = re.match(r"\$\{CLAUDE_PLUGIN_ROOT\}/(\S+)", cmd)
+                if m and not os.path.exists(os.path.join(plugin_dir, m.group(1))):
+                    error(p, f"{event} runs `{m.group(1)}`, which does not exist in the plugin")
 
 
 # ------------------------------------------------------------------------- marketplace

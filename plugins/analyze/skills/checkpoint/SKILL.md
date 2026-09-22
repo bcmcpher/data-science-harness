@@ -15,14 +15,13 @@ Take a clean, described snapshot of the dataset. This keeps the provenance chain
 dirty working tree produces misleading run records downstream). You delegate the save to the
 **datalad doer**.
 
-> **This skill is not the only thing checkpointing.** `datalad-cli` ships a `Stop` hook
-> (`hooks/scripts/datalad-checkpoint.sh`) that fires once per turn and saves any dirty tree with a
-> mechanical message — `Auto-checkpoint <ts>: <files>`. It is silent, guards on datalad being
-> present and on being inside a dataset, and opts out of `DATALAD_AUTOSAVE=0`.
+> **The hook raises unsaved work; this skill describes it.** `datalad-cli` ships a `Stop` hook
+> (`hooks/scripts/datalad-checkpoint.sh`) that, once per distinct dirty state, reminds the
+> assistant to save with a message stating what and why. It does not commit unless the user set
+> `DATALAD_AUTOSAVE=1`, which restores a silent `Auto-checkpoint <ts>: <files>` save.
 >
-> What this skill adds over the hook is a *described* snapshot and a ledger entry: it composes a
-> message saying what changed and appends to `project.yaml`. Reach for it when the state is worth
-> describing; the hook already keeps the tree from going stale between times.
+> What this skill adds is a *described* snapshot and a ledger entry: it composes a message saying
+> what changed and appends to `project.yaml`. Reach for it when the state is worth describing.
 >
 > Because the hook runs continuously, checkpointing is **not a lifecycle stage** — it belongs to
 > the Manage & Comply lane, alongside `project/log-decision`.

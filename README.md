@@ -70,7 +70,7 @@ The **Manage & Comply lane** is the key conceptual addition: administration is n
 
 **Checkpointing lives in the lane, not on the spine.** There used to be a *Stage 4 — Checkpoint*
 here. It is gone, because a step that happens continuously is not a phase of a project: `datalad-cli`
-ships a `Stop` hook that saves any dirty tree once per turn, and the ledger has always recorded
+ships a `Stop` hook that raises any unsaved work at the end of a turn, and the ledger has always recorded
 `{ op: checkpoint, stage: analyze }` — an action *inside* a stage. The `analyze/checkpoint` skill
 remains, for when the state is worth describing rather than merely saving.
 
@@ -645,7 +645,25 @@ copied out of its plugin no longer knows which plane it belongs to.
 Every plugin must also appear in the top-level `.claude-plugin/marketplace.json`, or it is not
 installable. The lint checks that too.
 
-A plugin may ship a `hooks/` directory — `datalad-cli` is the only one that currently does.
+A plugin may ship a `hooks/` directory — `datalad-cli` is the only one that currently does — and a
+`rules/` directory of short, always-loaded rules files.
+
+### DataLad hooks
+
+`datalad-cli` makes DataLad ambient, the way git is. Its hooks act only inside a DataLad dataset,
+and do nothing when `datalad` is absent. [`plugins/datalad-cli/README.md`](plugins/datalad-cli/README.md#hooks-and-rules)
+has the full table.
+
+- **Session start** (`dsh-status.sh`): puts the DataLad rules and a status block in context:
+  dataset, branch, dirty counts, subdatasets, siblings ahead or behind as of the last fetch, and
+  the ledger stage and open obligations. It never touches the network.
+- **Before a shell command** (`dsh-guard.sh`): blocks `git commit` and `git push` and names the
+  DataLad command to use. It warns on `git annex add`/`drop`/`unlock` and on a repeated `-m`,
+  which DataLad silently drops. `DSH_GUARD=0` turns it off.
+- **End of turn** (`datalad-checkpoint.sh`): if unsaved changes remain that it has not already
+  raised, it asks the assistant once to save them with a message stating what and why, or to say
+  why not. **It does not commit.** `DATALAD_AUTOSAVE=1` restores the old silent auto-save;
+  `DATALAD_AUTOSAVE=0` turns the reminder off.
 
 ## Install
 
@@ -685,6 +703,25 @@ For OpenCode, the installer writes:
 |-------|--------|-----------|-----------------------------|
 | Project | `.opencode/skills/<name>/SKILL.md` | `.opencode/agents/<name>.md` | `.opencode/dsh/plugins/<plugin>/` |
 | Global | `~/.config/opencode/skills/<name>/SKILL.md` | `~/.config/opencode/agents/<name>.md` | `~/.config/opencode/dsh/plugins/<plugin>/` |
+
+Plugins with hooks also get `plugins/dsh-<plugin>.js`, and plugins with rules get an entry in
+`opencode.json`, in the same directory.
+
+**Hooks and rules for OpenCode.** A plugin's `hooks/hooks.json` is written for Claude Code. For
+OpenCode, the installer generates `plugins/dsh-<plugin>.js` in the target. That file reads the
+installed `hooks.json` and runs the same scripts from OpenCode's plugin API:
+
+| Claude Code hook | OpenCode plugin API | Effect |
+|---|---|---|
+| `SessionStart` | `session.created` event + `experimental.chat.system.transform` | output is added to the system prompt, once computed per session |
+| `PreToolUse` (matcher `Bash`) | `tool.execute.before` on `bash` | exit 2 blocks the call with the script's message; a warning is prepended to the tool output |
+| `Stop` | `session.idle` event | a block decision's reason is sent to the session with `client.session.prompt`, once per state |
+
+Any other event or matcher produces an installer warning naming it; nothing is dropped silently.
+A plugin's `rules/*.md` files are added to the target's `opencode.json` `instructions` (created if
+absent, other keys kept, no duplicates; needs `python3` or `node`). The generated files are never
+committed. For Claude Code, `claude plugin install` registers the hooks; a `--harness claude-code`
+copy install does not, and says so.
 
 OpenCode also discovers Claude-compatible skill paths such as `.claude/skills/`, but this installer writes to `.opencode/` explicitly so OpenCode installs are easy to inspect and remove. Installed skill and agent copies have prompt-visible reference paths rewritten to the installed bundle location; source files under `plugins/` are not rewritten.
 

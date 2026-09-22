@@ -47,8 +47,8 @@ each installed plugin's `hooks/hooks.json` and writes one plugin file,
 | Claude hook | OpenCode hook | What the adapter does |
 |---|---|---|
 | PreToolUse with a `Bash` matcher | `tool.execute.before` for the `bash` tool | runs the script; exit 2 → `throw new Error(stderr)` |
-| SessionStart | `session.created` | runs the script; stdout goes to the session as a context message (the exact SDK call is verified in task 4.1) |
-| Stop | `session.idle` | runs the script; a block decision's `reason` is sent to the session as a message |
+| SessionStart | `session.created` event + `experimental.chat.system.transform` | runs the script once per session; stdout is pushed onto the system prompt (verified in task 4.1) |
+| Stop | `session.idle` event | runs the script; a block decision's `reason` is sent with `client.session.prompt` |
 
 An event with no mapping produces an installer warning naming the event. It is never dropped
 silently. This keeps `harness-distribution`'s rule of a single authored form.
@@ -61,7 +61,7 @@ OpenCode through `session.created`. As a fallback, the rules text tells the assi
 `dsh-status.sh` if no status block is in context. So even if the injection path fails, the
 harness degrades to an assistant that checks the status itself.
 
-**D4. Stop reminds, once per state.** The script hashes `datalad status --annex none` output.
+**D4. Stop reminds, once per state.** The script hashes `git status --porcelain` output (empty exactly when the tree is clean, unlike `datalad status`).
 
 - If the tree is dirty and that hash differs from the hash stored in
   `.git/dsh-last-reminded` (per dataset and never committed), it records the hash and returns a
@@ -108,6 +108,41 @@ No command wrapper is shipped.
 
 Reinstalling the plugin picks up the new hooks. Existing datasets need nothing. Rollback: set
 `DSH_GUARD=0` and `DATALAD_AUTOSAVE=1`, or reinstall the previous version.
+
+## Verified OpenCode behaviour (task 4.1)
+
+Checked on 2026-09-22 against `@opencode-ai/plugin` 1.14.22 type definitions and a live
+`opencode run` (1.18.31) in a scratch project with a probe plugin and a local model.
+
+- **Session events arrive through the generic `event` hook**, not as named hooks:
+  `event({event})` with `event.type === "session.created"` or `"session.idle"`, and
+  `event.properties.sessionID` (for idle) or `event.properties.info.id` (for created). Both fired
+  in the live run.
+- **Status injection uses `experimental.chat.system.transform`**, not a session message. The hook
+  receives `(input: {sessionID, model}, output: {system: string[]})` before every model call, and
+  anything pushed onto `output.system` reaches the model. The adapter computes the status once
+  per session (on `session.created`, or lazily on the first transform) and pushes the cached
+  text on each call. This is invisible in the transcript, as SessionStart output is in Claude
+  Code. It is marked experimental; if it disappears, D3's fallback (the rules tell the assistant
+  to run `dsh-status.sh`) still holds.
+- **Stop maps to `session.idle` plus `client.session.prompt`.** The adapter runs the checkpoint
+  script with `{"stop_hook_active": <bool>}` and, on a block decision, calls
+  `client.session.prompt({path: {id}, body: {parts: [{type: "text", text: reason}]}})`, which
+  starts a new turn as a Claude Code block does. The adapter sets `stop_hook_active` to true for
+  the idle that follows its own prompt, so the loop guard carries over.
+- **`tool.execute.before`** receives `(input: {tool, sessionID, callID}, output: {args})`; the
+  shell tool is `bash` and its command is `output.args.command`. A throw blocks the call and the
+  message is shown to the model. Guard *warnings* (exit 0 with `additionalContext`) are stashed by
+  `callID` and prepended to the tool's output in `tool.execute.after`.
+- **End to end.** A live `opencode run -m opencode/big-pickle` in a dirty scratch dataset with the
+  generated plugin installed: the model quoted the status block's `tree:` line from its system
+  prompt, `git commit -am wip` was blocked with the guard's message, and on `session.idle` the
+  reminder was delivered to the session as a user message. The same run in Claude Code
+  (`claude -p --plugin-dir`) showed the same three behaviours, with the Stop block producing
+  exactly one follow-up turn. The reminder shows in OpenCode as an ordinary user message, which
+  is visible in the transcript, unlike Claude Code's hook feedback.
+- **`opencode.json` `instructions` accepts absolute paths.** A rules file listed as
+  `/tmp/…/r.md` in a project `.opencode/opencode.json` was in the system prompt of the live run.
 
 ## Open Questions
 

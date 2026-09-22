@@ -135,6 +135,18 @@ WARN_CASES = [
 
 CASES = [
     (
+        "always-loaded rules exceed the word budget",
+        lambda r: sub(f"{r}/plugins/datalad-cli/rules/datalad.md", "# DataLad rules", "# DataLad rules\n\n" + "word " * 300),
+    ),
+    (
+        "hooks.json lacks the top-level hooks key",
+        lambda r: sub(f"{r}/plugins/datalad-cli/hooks/hooks.json", '"hooks": {\n    "SessionStart"', '"events": {\n    "SessionStart"'),
+    ),
+    (
+        "hooks.json runs a script that does not exist",
+        lambda r: sub(f"{r}/plugins/datalad-cli/hooks/hooks.json", "dsh-guard.sh", "dsh-gaurd.sh"),
+    ),
+    (
         "delegates_to names a nonexistent doer",
         lambda r: sub(f"{r}/plugins/analyze/skills/checkpoint/SKILL.md", "delegates_to: [datalad]", "delegates_to: [ghost]"),
     ),
