@@ -9,3 +9,6 @@ node_modules/
 .venv/
 __pycache__/
 *.egg-info/
+
+# Talk material — kept local, not versioned
+/docs/talk/
