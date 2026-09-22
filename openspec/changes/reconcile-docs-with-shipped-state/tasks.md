@@ -1,6 +1,6 @@
 # Tasks
 
-**Status:** sections 1–3 complete. Section 4 is the verification record.
+**Status:** complete. Ready to archive.
 
 ## 1. Extend the lint before fixing anything
 
@@ -63,8 +63,8 @@
 
 - [x] 4.1 `python3 tests/lint-plugins.py --strict` — 0 errors, 0 warnings, with the extended checks.
 - [x] 4.2 `python3 tests/lint-plugins-selftest.py` — 28/28, control (pristine repo) clean.
-- [ ] 4.3 Remainder of the gauntlet: bench fixtures, ledger schema, `spec:validate`, `paper:check`,
-      e2e.
+- [x] 4.3 Remainder of the gauntlet: fixtures clean at 42; ledger VALID; spec:validate 24/24;
+      paper builds; e2e 140 passed, 0 failed.
 
 ## Scope limits
 
