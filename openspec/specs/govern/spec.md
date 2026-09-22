@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The workflow-plane plugin for Stage 0 (Propose & Govern) and Stage 5 (QC / Review), plus the
+The workflow-plane plugin for Stage 0 (Propose & Govern) and Stage 4 (QC / Review), plus the
 compliance half of the Manage & Comply lane. It holds the two mechanisms that make rigor checkable
 rather than aspirational: freezing a comparison's specification before it is executed, and tracking
 every outstanding commitment as a ledger obligation with a due date and a status. Provides

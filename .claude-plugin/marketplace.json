@@ -1,8 +1,10 @@
 {
   "name": "data-science-harness",
-  "owner": { "name": "bcmcpher" },
+  "owner": {
+    "name": "bcmcpher"
+  },
   "metadata": {
-    "description": "Governance as a by-product of doing the work: a harness-agnostic set of assistant configurations for academic data science. 6 workflow-plane planner skills (project, govern, curate, analyze, process, disseminate) delegate to capability-plane doers (datalad, nipoppy, bids, containers, archive, annotate) and their CLI toolboxes, so every computation and every administrative change runs through one DataLad provenance chain and every research object is Self-contained, Tracked, Actionable, Modular, Portable, Ephemeral and Distributable (see docs/stamped.md). The default export is a living compendium — provenanced dataset, re-executable article, agent-callable method bundle, self-hostable deployment — cross-linked by DOI. Status: the workflow plane is built, the capability plane is uneven, and the evaluation protocol is unrun (see docs/motivation.md).",
+    "description": "Governance as a by-product of doing the work: a harness-agnostic set of assistant configurations for academic data science. 6 workflow-plane planner plugins (project, govern, curate, analyze, process, disseminate) delegate to capability-plane doers (datalad, nipoppy, bids, containers, archive, annotate, compendium, liab) and their CLI toolboxes, so every computation and every administrative change runs through one DataLad provenance chain and every research object is Self-contained, Tracked, Actionable, Modular, Portable, Ephemeral and Distributable (see docs/stamped.md). The default export is a living compendium — provenanced dataset, re-executable article, agent-callable method bundle, self-hostable deployment — cross-linked by DOI. Status: both planes are built and every capability has a toolbox; what has not happened is execution — most paths are gated, the gates are tested, and the tools behind them have not been run. The evaluation protocol is specified and unrun (see docs/motivation.md).",
     "version": "0.1.0"
   },
   "plugins": [
@@ -29,7 +31,7 @@
     {
       "name": "curate",
       "source": "./plugins/curate",
-      "description": "Curation planner: raw-to-bids converts raw acquisitions to a BIDS layout via nipoppy with DataLad provenance; annotate enriches a dataset's metadata (dataset_description.json, participants.json data dictionary, BIDS sidecars, controlled-term mappings); deidentify makes identifier removal a provenanced run with a recorded approach and a required residual-risk statement, and refuses to present that record as a compliance determination. Advances STAMPED Self-containment + Actionability."
+      "description": "Curation planner: raw-to-bids converts raw acquisitions to a BIDS layout via nipoppy with DataLad provenance; annotate and gen-data-dict enrich a dataset's metadata (dataset_description.json, participants.json data dictionary, BIDS sidecars, controlled-term mappings); merge-data joins external tabular sources on a declared key and reports what did not match rather than dropping it; deidentify makes identifier removal a provenanced run with a recorded approach and a required residual-risk statement, and refuses to present that record as a compliance determination. Advances STAMPED Self-containment + Actionability."
     },
     {
       "name": "process",
@@ -49,7 +51,7 @@
     {
       "name": "containers",
       "source": "./plugins/containers",
-      "description": "Containers doer: builds an Apptainer/Singularity .sif from a project's recipe (with the docker-archive workaround) so analyses have a pinned, rebuildable environment; registration/running stay with the datalad doer."
+      "description": "Containers doer: authors and builds a project's compute environments along the path people actually use — Dockerfile → OCI image → .sif — and expects several per project (an authored analysis environment beside vendored pipeline images, and derived images that add the project's own tools to a standard base), each named and each pinned for its kind. Registration and running stay with the datalad doer."
     },
     {
       "name": "containers-cli",
@@ -74,7 +76,7 @@
     {
       "name": "compendium",
       "source": "./plugins/compendium",
-      "description": "Compendium doer: scaffolds and builds living research products (MyST executable articles today), wiring each figure to the provenanced run that produced it and building inside the project's pinned container. Reports an untraceable figure as 'unprovenanced' rather than embedding it, a partial build as partial, and refuses to build on the host and call it pinned."
+      "description": "Compendium doer: scaffolds and builds living research products — MyST and Jupyter Book projects, repo2data fetches, and Paper2Agent-style agent bundles — wiring each figure to the provenanced run that produced it and building inside the project's pinned container. Reports an untraceable figure as 'unprovenanced' rather than embedding it, a partial build as partial, and refuses to build on the host and call it pinned."
     },
     {
       "name": "liab",

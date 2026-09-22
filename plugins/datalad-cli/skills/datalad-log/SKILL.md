@@ -73,14 +73,14 @@ When the user asks "what command produced `<file>`":
 
 ### Identifying checkpoint commits
 
-The auto-checkpoint hook creates commits with messages like:
+With `DATALAD_AUTOSAVE=1`, the checkpoint hook creates commits with messages like:
 ```
-[datalad] checkpoint 2026-03-12T14:05:22Z: code/analysis.py outputs/result.csv
+Auto-checkpoint 2026-03-12T14:05:22Z: code/analysis.py outputs/result.csv
 ```
 These are **not** run records — they are auto-saves. They will appear in `git log` and
 `datalad log` output. To show only `datalad run` commits (excludes checkpoints and saves):
 ```bash
-git log --oneline --grep="\[datalad run\]"
+git log --oneline --grep="\[DATALAD RUNCMD\]"
 ```
 Note: using `--invert-grep` with multiple `--grep` flags uses OR logic and will not
 correctly exclude checkpoints — use the single `--grep="\[datalad run\]"` form instead.

@@ -84,6 +84,27 @@ def readme_with(root, text):
         fh.write(text)
 
 
+def readme_row(root, row):
+    """A README whose repo-wide counts are correct, so only the per-plugin row can be at fault."""
+    readme_with(root, f"**22 plugins**, split across the two planes.\n\n{row}\n")
+
+
+def archived_change_link(root):
+    """A doc linking to a change that has since archived. Both halves have to exist: the archive
+    entry the link should have been re-pointed at, and the stale link itself."""
+    os.makedirs(os.path.join(root, "openspec", "changes", "archive", "2026-01-01-add-a-thing"))
+    readme_with(root, "**22 plugins**\n\nsee [`add-a-thing`](openspec/changes/add-a-thing).\n")
+
+
+def drop_doer_from_marketplace_prose(root, name):
+    p = os.path.join(root, ".claude-plugin", "marketplace.json")
+    m = json.load(open(p))
+    d = m["metadata"]["description"]
+    assert f", {name}" in d, f"{name} not enumerated in the marketplace description"
+    m["metadata"]["description"] = d.replace(f", {name}", "", 1)
+    json.dump(m, open(p, "w"), indent=2)
+
+
 WARN_CASES = [
     (
         "argument-hint parses as a list, not a string",
@@ -113,6 +134,18 @@ WARN_CASES = [
 ]
 
 CASES = [
+    (
+        "always-loaded rules exceed the word budget",
+        lambda r: sub(f"{r}/plugins/datalad-cli/rules/datalad.md", "# DataLad rules", "# DataLad rules\n\n" + "word " * 300),
+    ),
+    (
+        "hooks.json lacks the top-level hooks key",
+        lambda r: sub(f"{r}/plugins/datalad-cli/hooks/hooks.json", '"hooks": {\n    "SessionStart"', '"events": {\n    "SessionStart"'),
+    ),
+    (
+        "hooks.json runs a script that does not exist",
+        lambda r: sub(f"{r}/plugins/datalad-cli/hooks/hooks.json", "dsh-guard.sh", "dsh-gaurd.sh"),
+    ),
     (
         "delegates_to names a nonexistent doer",
         lambda r: sub(f"{r}/plugins/analyze/skills/checkpoint/SKILL.md", "delegates_to: [datalad]", "delegates_to: [ghost]"),
@@ -165,8 +198,16 @@ CASES = [
         "marketplace's workflow-planner count disagrees with disk",
         lambda r: sub(
             f"{r}/.claude-plugin/marketplace.json",
+            "6 workflow-plane planner plugins",
+            "2 workflow-plane planner plugins",
+        ),
+    ),
+    (
+        "marketplace counts planner *skills* where the checkable number is plugins",
+        lambda r: sub(
+            f"{r}/.claude-plugin/marketplace.json",
+            "6 workflow-plane planner plugins",
             "6 workflow-plane planner skills",
-            "2 workflow-plane planner skills",
         ),
     ),
     (
@@ -177,6 +218,15 @@ CASES = [
     ),
     ("agent declares a model outside the allowed set", lambda r: set_agent_model(r, "bids", "bids-doer", "haikoo")),
     ("mutating doer declares a model", lambda r: set_agent_model(r, "datalad", "datalad-doer", "haiku")),
+    (
+        "README's per-plugin skill count disagrees with disk",
+        lambda r: readme_row(r, "| `bids-cli` | toolbox | validator | 7 skills, one per command | S, M |"),
+    ),
+    ("a doc links to a change that has been archived", archived_change_link),
+    (
+        "marketplace omits a capability doer from its enumerated list",
+        lambda r: drop_doer_from_marketplace_prose(r, "liab"),
+    ),
 ]
 
 

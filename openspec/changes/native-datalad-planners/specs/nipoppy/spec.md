@@ -1,0 +1,53 @@
+## MODIFIED Requirements
+
+### Requirement: Mutating commands are never executed bare
+
+The doer MUST NOT execute a dataset-mutating nipoppy command directly. It MUST classify the request,
+construct the command with its inputs and outputs, and return it for the planner to run under
+`datalad run` with provenance.
+
+#### Scenario: A processing command is requested
+
+- **WHEN** a `process` invocation is requested
+- **THEN** the doer returns the constructed command with explicit inputs and outputs, and the planner
+  executes it under `datalad run`
+
+#### Scenario: A read-only command is requested
+
+- **WHEN** `status` or `track-processing` is requested
+- **THEN** the doer may run it directly, because it changes nothing
+
+### Requirement: Every operation returns a structured result
+
+The doer MUST report the operation, the constructed or executed command, `result`, and any outputs
+or next-step handoff.
+
+#### Scenario: Handing off to datalad
+
+- **WHEN** the doer returns a mutating command
+- **THEN** the report names the planner as the next executor, to run it under `datalad run`, and
+  includes the inputs and outputs that run requires
+
+### Requirement: The nipoppy toolbox is split by command class
+
+`plugins/nipoppy-cli/` MUST provide separate `user-invocable: true` skills for each command class
+the nipoppy doer distinguishes — read-only queries, bookkeeping writes, dataset-mutating
+computations, and setup declarations — each with an `argument-hint` and scoped `allowed-tools`. A
+class's handling rule MUST be stated in its own skill rather than restated per verb.
+
+#### Scenario: A mutating command is constructed
+
+- **WHEN** the doer is asked for a `process` invocation
+- **THEN** it follows the mutating-class skill, which states that the command is returned for the
+  planner to execute under `datalad run`
+
+#### Scenario: A read-only command is run
+
+- **WHEN** `status` is requested
+- **THEN** the doer follows the read-only-class skill and may run it directly
+
+#### Scenario: A command writes derived state without producing data
+
+- **WHEN** `track-curation` or `track-processing` is requested
+- **THEN** the doer follows the bookkeeping skill, which runs it directly and hands the save back as
+  a checkpoint rather than recording a run whose inputs would be the whole dataset

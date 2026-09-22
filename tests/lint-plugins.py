@@ -43,6 +43,8 @@ PINNABLE_AGENTS = {"bids-doer", "coordinator"}
 KEBAB = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 PLANNER_SECTIONS = ("## When to use", "## Steps", "## Constraints")
 DESCRIPTION_MAX = 1024
+# A plugin's rules/*.md is loaded into every session's main thread, so it carries a hard budget.
+RULES_MAX_WORDS = 300
 CHECK_SCRIPT_DIRS = ("tests", "schemas")
 
 # Third-party modules whose import name differs from the distribution providing it. There is no
@@ -287,7 +289,43 @@ def check_plugin(root: str, plugin_dir: str, doers: dict[str, list[str]]) -> str
             if f.endswith(".md"):
                 check_agent(root, os.path.join(agents_root, f))
 
+    rules_root = os.path.join(plugin_dir, "rules")
+    if os.path.isdir(rules_root):
+        for f in sorted(os.listdir(rules_root)):
+            if f.endswith(".md"):
+                path = os.path.join(rules_root, f)
+                with open(path) as fh:
+                    words = len(fh.read().split())
+                if words > RULES_MAX_WORDS:
+                    error(rel(root, path), f"is {words} words; always-loaded rules are capped at {RULES_MAX_WORDS}")
+
+    hooks_json = os.path.join(plugin_dir, "hooks", "hooks.json")
+    if os.path.exists(hooks_json):
+        check_hooks(root, plugin_dir, hooks_json)
+
     return declared_name
+
+
+def check_hooks(root: str, plugin_dir: str, path: str) -> None:
+    """A plugin hooks.json nests events under a top-level `hooks` key, and its scripts exist."""
+    p = rel(root, path)
+    try:
+        with open(path) as fh:
+            data = json.load(fh)
+    except json.JSONDecodeError as exc:
+        error(p, f"is not valid JSON: {exc}")
+        return
+    events = data.get("hooks") if isinstance(data, dict) else None
+    if not isinstance(events, dict):
+        error(p, "has no top-level `hooks` object — Claude Code will not register any of its hooks")
+        return
+    for event, groups in events.items():
+        for group in groups if isinstance(groups, list) else []:
+            for hook in group.get("hooks", []) if isinstance(group, dict) else []:
+                cmd = hook.get("command", "") if isinstance(hook, dict) else ""
+                m = re.match(r"\$\{CLAUDE_PLUGIN_ROOT\}/(\S+)", cmd)
+                if m and not os.path.exists(os.path.join(plugin_dir, m.group(1))):
+                    error(p, f"{event} runs `{m.group(1)}`, which does not exist in the plugin")
 
 
 # ------------------------------------------------------------------------- marketplace
@@ -431,7 +469,10 @@ def check_script_imports(root: str) -> None:
 # filename the Contributing steps send a new contributor to edit, the plugin count, and the two
 # claims the marketplace description makes about the closed STAMPED set and the workflow plane.
 _PLUGIN_COUNT = re.compile(r"\*\*(\d+) plugins\*\*")
-_PLANNER_COUNT = re.compile(r"(\d+) workflow-plane planner skills")
+_PLANNER_COUNT = re.compile(r"(\d+) workflow-plane planner (plugins|skills)")
+_TABLE_ROW_SKILLS = re.compile(r"\b(\d+) skills?\b")
+_CHANGE_LINK = re.compile(r"openspec/changes/(?!archive\b)([A-Za-z0-9][A-Za-z0-9._-]*)")
+_DOER_LIST = re.compile(r"capability-plane doers \(([^)]*)\)")
 # "STAMPED Metadata" shipped in the marketplace for months because the closed-set check only ever
 # read skill frontmatter. Any capitalised word introduced as a STAMPED dimension is a candidate.
 _STAMPED_PROSE = re.compile(r"STAMPED[- ]([A-Z][a-z]+)")
@@ -484,8 +525,16 @@ def check_marketplace_claims(root: str, plugin_dirs: list[str]) -> None:
     if not claimed:
         warn(
             p,
-            "states no planner count in the form `N workflow-plane planner skills`, so the "
+            "states no planner count in the form `N workflow-plane planner plugins`, so the "
             "description's account of the workflow plane cannot be checked",
+        )
+    elif claimed.group(2) == "skills":
+        # The count that can be checked here is of plugins containing a workflow skill, not of
+        # the skills themselves; the two differ by a factor of six and the wording hid that.
+        error(
+            p,
+            f"says `{claimed.group(1)} workflow-plane planner skills`; that count is of planner "
+            "*plugins*. Write `planner plugins`, or state the skill count separately",
         )
     elif int(claimed.group(1)) != len(workflow_dirs):
         error(
@@ -493,6 +542,42 @@ def check_marketplace_claims(root: str, plugin_dirs: list[str]) -> None:
             f"claims {claimed.group(1)} workflow-plane planners; {len(workflow_dirs)} plugins on "
             f"disk contain a `plane: workflow` skill ({', '.join(sorted(os.path.basename(d) for d in workflow_dirs))})",
         )
+
+    # The description enumerates the doers by name. A capability added after the description was
+    # written is silently absent from the project's own one-paragraph account of itself.
+    listed = _DOER_LIST.search(text)
+    if listed:
+        named = {n.strip().strip("`") for n in listed.group(1).split(",") if n.strip()}
+        actual = _capability_doers(plugin_dirs)
+        missing = sorted(actual - named)
+        unknown = sorted(named - actual)
+        if missing:
+            error(p, f"enumerates the capability-plane doers but omits {', '.join(missing)}")
+        if unknown:
+            error(p, f"names {', '.join(unknown)} as capability-plane doers; no such doer is on disk")
+
+
+def _skill_count(plugin_dir: str) -> int:
+    """Skill directories on disk, which is what a README row claiming `N skills` is asserting."""
+    skills = os.path.join(plugin_dir, "skills")
+    if not os.path.isdir(skills):
+        return 0
+    return sum(1 for s in os.listdir(skills) if os.path.isfile(os.path.join(skills, s, "SKILL.md")))
+
+
+def _capability_doers(plugin_dirs: list[str]) -> set[str]:
+    """Plugins that provide a doer agent and are not planners. `project` ships an agent
+    (`coordinator`) but is a workflow plugin, so it is not a capability-plane doer."""
+    out = set()
+    for d in plugin_dirs:
+        if not os.path.isdir(os.path.join(d, "agents")):
+            continue
+        skills = os.path.join(d, "skills")
+        names = os.listdir(skills) if os.path.isdir(skills) else []
+        if any(_has_workflow_skill(os.path.join(skills, s)) for s in names):
+            continue
+        out.add(os.path.basename(d))
+    return out
 
 
 def _has_workflow_skill(skill_dir: str) -> bool:
@@ -526,6 +611,71 @@ def check_doc_claims(root: str, plugin_dirs: list[str]) -> None:
             "README.md",
             f"claims {claimed.group(1)} plugins; {len(plugin_dirs)} are on disk",
         )
+
+    # The repo-wide plugin count above is coarse: it stays correct while an individual plugin's
+    # row goes stale, which is exactly how `compendium-cli` sat at "1 skill" through two changes
+    # that took it to four. Check the per-plugin column too.
+    by_name = {os.path.basename(d): d for d in plugin_dirs}
+    for lineno, line in enumerate(text.splitlines(), start=1):
+        if not line.lstrip().startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) < 2:
+            continue
+        head = cells[0].strip("`")
+        if head not in by_name:
+            continue
+        stated = _TABLE_ROW_SKILLS.search(" | ".join(cells[1:]))
+        if not stated:
+            continue
+        actual = _skill_count(by_name[head])
+        if int(stated.group(1)) != actual:
+            error(
+                f"README.md:{lineno}",
+                f"the `{head}` row claims {stated.group(1)} skill(s); {actual} are on disk",
+            )
+
+
+_DOC_GLOBS = ("README.md", "docs")
+
+
+def check_change_links(root: str) -> None:
+    """A link to `openspec/changes/<name>` is a promise that the change is still open. When the
+    change archives, the link 404s and the sentence around it usually describes the work as
+    pending — which is worse than the dead link, because it reads as current."""
+    changes = os.path.join(root, "openspec", "changes")
+    if not os.path.isdir(changes):
+        return
+    archive = os.path.join(changes, "archive")
+    archived = sorted(os.listdir(archive)) if os.path.isdir(archive) else []
+
+    docs: list[str] = []
+    readme = os.path.join(root, "README.md")
+    if os.path.isfile(readme):
+        docs.append(readme)
+    docs_dir = os.path.join(root, "docs")
+    for dirpath, _dirnames, filenames in os.walk(docs_dir):
+        docs.extend(os.path.join(dirpath, f) for f in sorted(filenames) if f.endswith(".md"))
+
+    for path in docs:
+        with open(path) as fh:
+            lines = fh.read().splitlines()
+        for lineno, line in enumerate(lines, start=1):
+            for m in _CHANGE_LINK.finditer(line):
+                name = m.group(1)
+                if os.path.isdir(os.path.join(changes, name)):
+                    continue
+                match = [a for a in archived if a.endswith(f"-{name}")]
+                where = f"{rel(root, path)}:{lineno}"
+                if match:
+                    error(
+                        where,
+                        f"links to `openspec/changes/{name}`, which archived to "
+                        f"`openspec/changes/archive/{match[0]}/`. Re-point the link and re-read "
+                        "the sentence around it — it likely still describes the work as pending",
+                    )
+                else:
+                    error(where, f"links to `openspec/changes/{name}`, which does not exist")
 
 
 def main() -> None:
@@ -564,6 +714,7 @@ def main() -> None:
     check_script_imports(root)
     check_doc_claims(root, plugin_dirs)
     check_marketplace_claims(root, plugin_dirs)
+    check_change_links(root)
 
     errors = [f for f in findings if f[0] == "ERROR"]
     warnings = [f for f in findings if f[0] == "WARN"]

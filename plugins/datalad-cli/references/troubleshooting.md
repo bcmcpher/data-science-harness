@@ -71,9 +71,9 @@ git log --oneline -1   # most recent commit (before the failed run)
 datalad status         # see what changed
 ```
 
-**Important**: never leave a dataset in an unlocked state between sessions — the
-auto-checkpoint hook will save unlocked files with a checkpoint message, which can
-obscure the failure context.
+**Important**: never leave a dataset in an unlocked state between sessions. The checkpoint
+hook will prompt a save of the unlocked files (or, with `DATALAD_AUTOSAVE=1`, save them with an
+`Auto-checkpoint` message), which can obscure the failure context.
 
 ---
 

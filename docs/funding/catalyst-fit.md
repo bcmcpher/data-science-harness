@@ -141,8 +141,8 @@ these in order and instructs *"Do not soften this."*
 1. **Nothing has been evaluated.** The protocol is specified and unrun. Every claim about the
    harness's effect on work quality is a design argument, not a measurement. This is the limitation a
    reader should take away, and it goes first.
-2. **Built is not exercised.** Both planes are now complete — 37 planner skills over 21 plugins and
-   74 skills, specified by 22 specs — and that sharpens rather than softens the limitation. Every
+2. **Built is not exercised.** Both planes are now complete — 37 planner skills over 22 plugins and
+   77 skills, specified by 22 specs — and that sharpens rather than softens the limitation. Every
    capability now has a toolbox, `containers` included — it was the last, and closing it also
    reframed that capability around the Dockerfile → OCI → `.sif` path people actually use. `datalad` has 19 toolbox skills; `annotate`, `nipoppy` and
    `compendium` 4 each; `archive` 3; `liab` 2; `bids` 1.

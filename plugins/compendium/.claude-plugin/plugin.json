@@ -1,10 +1,25 @@
 {
   "name": "compendium",
-  "description": "Compendium doer (capability plane): the tool subagent that scaffolds and builds living research products — MyST executable articles today — wiring each figure to the provenanced run that produced it and building inside the project's pinned container. Reports an untraceable figure as unprovenanced rather than embedding it, a partial build as partial, and refuses to build on the host and call it pinned.",
+  "description": "Compendium doer (capability plane): the tool subagent that scaffolds and builds living research products — MyST and Jupyter Book projects, repo2data fetches, and Paper2Agent-style agent bundles — wiring each figure to the provenanced run that produced it and building inside the project's pinned container. Reports an untraceable figure as unprovenanced rather than embedding it, a partial build as partial, and refuses to build on the host and call it pinned.",
   "version": "0.1.0",
-  "author": { "name": "bcmcpher" },
+  "author": {
+    "name": "bcmcpher"
+  },
   "license": "MIT",
-  "keywords": ["compendium", "myst", "executable-article", "neurolibre", "reproducibility", "actionability", "portability", "doer", "capability"],
+  "keywords": [
+    "compendium",
+    "myst",
+    "jupyter-book",
+    "repo2data",
+    "mcp",
+    "executable-article",
+    "neurolibre",
+    "reproducibility",
+    "actionability",
+    "portability",
+    "doer",
+    "capability"
+  ],
   "agents": [
     "./agents/compendium-doer.md"
   ]

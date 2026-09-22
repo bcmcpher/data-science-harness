@@ -59,32 +59,53 @@ claude plugin install ./plugins/datalad-cli
 - **P2**: Data origins recorded via `datalad download-url` or `datalad clone`
 - **P3**: `inputs/` treated as read-only; all results go to `outputs/`
 
-## Auto-checkpoint hook
+## Hooks and rules
 
-The plugin installs a `Stop` hook that runs after every Claude turn. If the current
-directory is inside a DataLad dataset and there are unsaved changes, it automatically
-commits them:
+The plugin ships three hooks and one always-loaded rules file. Together they let the assistant
+treat a DataLad dataset the way it treats a git repository: it knows the state when the session
+starts, the data-losing git commands are stopped, and unsaved work is raised rather than silently
+committed. All three hooks do nothing outside a DataLad dataset, and nothing when `datalad` is not
+on `$PATH`.
 
-```
-[datalad] checkpoint 2026-03-12T14:05:22Z: code/analysis.py outputs/result.csv
-```
+**Auto-save is off by default.** Before this version, the Stop hook committed every dirty tree at
+the end of every turn with an `Auto-checkpoint` message. It now reminds instead. To get the old
+behaviour back, set `DATALAD_AUTOSAVE=1`.
 
-**Opt out** for a session:
+| Hook | Fires | Does | Never does | Controlled by |
+|---|---|---|---|---|
+| `dsh-status.sh` (SessionStart) | once when a session starts, resumes, clears or compacts | prints `rules/datalad.md` and a status block: dataset root, branch, clean or dirty counts, subdatasets, siblings ahead or behind, and the ledger stage and open obligations | touch the network (ahead/behind is as of the last fetch); change anything | — |
+| `dsh-guard.sh` (PreToolUse, Bash) | before every shell command | blocks `git commit` (use `datalad save -m`) and `git push` (use `datalad push --to`); warns on `git annex add`/`drop`/`unlock` and on a repeated `-m` to `datalad save`/`run` | block `git add`, quoted mentions such as `echo "git commit"`, or anything in a plain git repo | `DSH_GUARD=0` turns it off |
+| `datalad-checkpoint.sh` (Stop) | at the end of every turn | if the tree is dirty and this exact state was not already raised, asks the assistant once to save with a message stating what and why, or to tell you why not | commit anything (unless `DATALAD_AUTOSAVE=1`); repeat a reminder for unchanged state; re-fire on the turn it caused | `DATALAD_AUTOSAVE=1` saves silently as before; `DATALAD_AUTOSAVE=0` turns it off |
+
+The reminder remembers the last state it raised in `.git/dsh-last-reminded`, a hash of
+`git status --porcelain`. The file lives inside `.git/`, so it is never committed. Leaving work unsaved on
+purpose is fine: say so once, and the reminder stays quiet until the changes change.
+
+The guard reads the command by token after splitting on `;`, `&&`, `||` and `|`, and follows
+`cd <dir>` and `git -C <dir>`. It acts only when the innermost repository has `.datalad/`, so a
+plain git repository nested inside a dataset is left alone. It needs `python3`; without it the
+guard allows everything.
+
 ```bash
-DATALAD_AUTOSAVE=0 claude --plugin-dir ./plugins/datalad-cli
+DSH_GUARD=0 claude             # no guard for this session
+DATALAD_AUTOSAVE=1 claude      # silent auto-save, the old behaviour
+DATALAD_AUTOSAVE=0 claude      # no reminder and no save
 ```
 
-The hook exits silently (no error, no commit) when:
-- `datalad` is not on `$PATH`
-- The cwd is not inside a DataLad dataset
-- `DATALAD_AUTOSAVE=0` is set
-- There are no modified or untracked files
+**Rules.** `rules/datalad.md` (300 words at most, enforced by the lint) states the working rules:
+save rather than commit, run with provenance, keep the tree clean before a run, push rather than
+`git push`, get before reading, keep output quiet, and ask before publishing. Claude Code gets it
+from `dsh-status.sh --with-rules`.
 
-**Checkpoint commits in run history**: checkpoint commits appear in `datalad log` and
-`git log` alongside `datalad run` provenance records. They are identifiable by the
-`[datalad] checkpoint` prefix in their message. To list only run records:
+**OpenCode.** `bin/install.sh --harness opencode` generates `plugins/dsh-datalad-cli.js` in the
+target, which runs the same three scripts from OpenCode's plugin events. It also adds the
+installed `rules/datalad.md` to `opencode.json` `instructions`. See the main README's Install
+section for the event mapping.
+
+**Checkpoint commits in run history.** Commits made with `DATALAD_AUTOSAVE=1` start with
+`Auto-checkpoint`. To list only run records:
 ```bash
-git log --oneline --grep="\[datalad run\]"
+git log --oneline --grep="\[DATALAD RUNCMD\]"
 ```
 
 ## Structure
@@ -96,7 +117,11 @@ datalad-cli/
 ├── hooks/
 │   ├── hooks.json
 │   └── scripts/
-│       └── datalad-checkpoint.sh
+│       ├── dsh-status.sh              ← SessionStart
+│       ├── dsh-guard.sh               ← PreToolUse (Bash)
+│       └── datalad-checkpoint.sh      ← Stop
+├── rules/
+│   └── datalad.md                     ← always loaded
 ├── references/                        ← shared across all skills
 │   ├── yoda-layout.md
 │   ├── subdataset-patterns.md
