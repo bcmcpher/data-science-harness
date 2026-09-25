@@ -1,18 +1,8 @@
----
-name: datalad-update
-description: >
-  Auto-invoke when the user wants to fetch changes from a sibling, sync a dataset from
-  a remote, pull the latest version of a dataset, or update from a collaborator's push.
-  Trigger on "pull updates", "sync from remote", "get latest version", "update from
-  sibling", "someone pushed new data", "fetch upstream changes", or /datalad-update.
-  Do NOT trigger for plain git fetch/pull in repos without DataLad context.
-argument-hint: -s <sibling> [--how {fetch|merge|ff-only}] [--follow parentds] [-r]
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad update
 
-# Skill: datalad-update
+**When.** Use when the user wants to fetch changes from a sibling, sync a dataset from a remote, pull the latest version of a dataset, or update from a collaborator's push. Trigger on "pull updates", "sync from remote", "get latest version", "update from sibling", "someone pushed new data", "fetch upstream changes". Do NOT trigger for plain git fetch/pull in repos without DataLad context.
+
+**Arguments.** `/datalad update -s <sibling> [--how {fetch|merge|ff-only}] [--follow parentds] [-r]`
 
 Fetch changes from a sibling and optionally integrate them into the current branch.
 Handles recursive updates across nested subdataset trees.
@@ -26,7 +16,7 @@ Handles recursive updates across nested subdataset trees.
    ```
    If no dataset is found, inform the user and stop.
 
-2. **Identify source sibling** — read from `$ARGUMENTS`. If not specified, list available
+2. **Identify source sibling** — read from `the arguments after the verb`. If not specified, list available
    siblings and ask:
    ```bash
    datalad siblings
@@ -70,11 +60,11 @@ Handles recursive updates across nested subdataset trees.
 
 ## Reference
 
-Load `${CLAUDE_PLUGIN_ROOT}/../references/siblings-and-remotes.md` for `--follow`
-semantics and `${CLAUDE_PLUGIN_ROOT}/../references/subdataset-patterns.md` for recursive
+Load `${CLAUDE_PLUGIN_ROOT}/references/siblings-and-remotes.md` for `--follow`
+semantics and `${CLAUDE_PLUGIN_ROOT}/references/subdataset-patterns.md` for recursive
 update behavior and subdataset pinning.
 
-Load `${CLAUDE_PLUGIN_ROOT}/../references/global-options.md` when the user asks about
+Load `${CLAUDE_PLUGIN_ROOT}/references/global-options.md` when the user asks about
 `--on-failure` for recursive updates, wants structured output, or needs to debug a
 failed update (`-l debug`).
 

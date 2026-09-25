@@ -1,17 +1,8 @@
----
-name: datalad-diff
-description: >
-  Auto-invoke inside a DataLad dataset (.datalad/ present) when the user wants to compare
-  file states between revisions, commits, or branches. Trigger on "what changed between
-  commits", "show diff", "compare revisions", "what was different", "changes since HEAD",
-  or /datalad-diff. Read-only — never modifies any files.
-argument-hint: '[revision-range] [paths...]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad diff
 
-# Skill: datalad-diff
+**When.** Use inside a DataLad dataset (.datalad/ present) when the user wants to compare file states between revisions, commits, or branches. Trigger on "what changed between commits", "show diff", "compare revisions", "what was different", "changes since HEAD". Read-only — never modifies any files.
+
+**Arguments.** `/datalad diff [revision-range] [paths...]`
 
 Compare file-level state between two points in a DataLad dataset's history. `datalad diff`
 reports which files changed and their annex state transitions — it does not show line-level
@@ -27,7 +18,7 @@ content diffs.
    - **Dataset found**: continue.
    - **No dataset found**: inform the user; suggest plain `git diff` for non-DataLad repos.
 
-2. **Determine the comparison scope** — read `$ARGUMENTS` and conversation context to
+2. **Determine the comparison scope** — read `the arguments after the verb` and conversation context to
    identify what the user wants to compare. Map to one of these forms:
 
    | User intent | Command form |

@@ -1,21 +1,8 @@
----
-name: datalad-siblings
-description: >
-  Auto-invoke when the user wants to inspect, add, configure, or remove dataset remotes;
-  set up a GitHub, GitLab, RIA store, GIN, WebDAV, OSF, S3, or other storage sibling;
-  check what remotes exist; or configure where to push annexed data. Trigger on "list
-  remotes", "add a remote", "configure sibling", "set up GitHub", "create GitHub sibling",
-  "publish to GitHub", "create GitLab sibling", "set up RIA store", "add GIN sibling",
-  "create WebDAV sibling", "add OSF storage", "what siblings exist", "where is this data
-  stored", or /datalad-siblings. Do NOT trigger for plain git remote operations outside
-  a DataLad dataset.
-argument-hint: '[create-github|create-gitlab|create-ria|create-gin|query|add|configure|remove|enable] [-s name] [--url url]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad siblings
 
-# Skill: datalad-siblings
+**When.** Use when the user wants to inspect, add, configure, or remove dataset remotes; set up a GitHub, GitLab, RIA store, GIN, WebDAV, OSF, S3, or other storage sibling; check what remotes exist; or configure where to push annexed data. Trigger on "list remotes", "add a remote", "configure sibling", "set up GitHub", "create GitHub sibling", "publish to GitHub", "create GitLab sibling", "set up RIA store", "add GIN sibling", "create WebDAV sibling", "add OSF storage", "what siblings exist", "where is this data stored". Do NOT trigger for plain git remote operations outside a DataLad dataset.
+
+**Arguments.** `/datalad siblings [create-github|create-gitlab|create-ria|create-gin|query|add|configure|remove|enable] [-s name] [--url url]`
 
 Inspect and configure sibling remotes — named locations where dataset history and/or
 annexed file content can be pushed and pulled.
@@ -29,7 +16,7 @@ annexed file content can be pushed and pulled.
    ```
    If no dataset is found, inform the user and stop.
 
-2. **Determine action** — read from `$ARGUMENTS` or conversation context:
+2. **Determine action** — read from `the arguments after the verb` or conversation context:
    - **query** (default, no subcommand): list all configured siblings
    - **add**: register a new sibling
    - **configure**: change a property of an existing sibling
@@ -90,7 +77,7 @@ annexed file content can be pushed and pulled.
    ### create-sibling-github / create-sibling-gitlab / create-sibling-ria / create-sibling-gin
    When the user wants to create a new remote repository and register it as a sibling in
    one step, use the appropriate `create-sibling-*` command. Load
-   `${CLAUDE_PLUGIN_ROOT}/../references/siblings-and-remotes.md` for platform-specific
+   `${CLAUDE_PLUGIN_ROOT}/references/siblings-and-remotes.md` for platform-specific
    flags, then:
 
    a. Identify the target platform (GitHub, GitLab, RIA, GIN, WebDAV, or generic SSH).
@@ -168,7 +155,7 @@ annexed file content can be pushed and pulled.
 
 ## Reference
 
-Always load `${CLAUDE_PLUGIN_ROOT}/../references/siblings-and-remotes.md` for URL
+Always load `${CLAUDE_PLUGIN_ROOT}/references/siblings-and-remotes.md` for URL
 formats, special remote types, platform flags, publish-depends patterns, and
 annex-wanted expressions.
 

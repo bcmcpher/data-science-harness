@@ -1,18 +1,8 @@
----
-name: datalad-save
-description: >
-  Auto-invoke inside a DataLad dataset (.datalad/ present) when about to use git add,
-  git commit, or when saving code changes, scripts, or configs. Trigger on "save my
-  changes", "commit this", "record these edits", "checkpoint my work", or /datalad-save.
-  Replaces git add + git commit inside DataLad datasets. Do NOT trigger in plain git
-  repos without .datalad/ — use normal git there.
-argument-hint: '[message] [paths...]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad save
 
-# Skill: datalad-save
+**When.** Use inside a DataLad dataset (.datalad/ present) when about to use git add, git commit, or when saving code changes, scripts, or configs. Trigger on "save my changes", "commit this", "record these edits", "checkpoint my work". Replaces git add + git commit inside DataLad datasets. Do NOT trigger in plain git repos without .datalad/ — use normal git there.
+
+**Arguments.** `/datalad save [message] [paths...]`
 
 Record code changes, configuration edits, and non-run file modifications in a DataLad
 dataset. `datalad save` is the correct replacement for `git add` + `git commit` inside
@@ -37,12 +27,12 @@ a DataLad dataset — it handles both git-tracked and annexed files correctly.
    Present the output. If nothing is modified or untracked, stop:
    > "Nothing to save — working tree is clean."
 
-3. **Determine save scope** — based on `$ARGUMENTS` and conversation context:
+3. **Determine save scope** — based on `the arguments after the verb` and conversation context:
    - If specific paths are given (e.g., `code/analysis.py configs/`), save only those paths
    - If no paths given, save all changes (`datalad save` without path arguments saves everything)
    - Show the user which scope will be used and confirm if ambiguous
 
-4. **Get or confirm the commit message** — read from `$ARGUMENTS` or ask:
+4. **Get or confirm the commit message** — read from `the arguments after the verb` or ask:
    > "What should the commit message be? (describe what changed and why)"
    Wait for the user's message. Never proceed with an empty or placeholder message.
 

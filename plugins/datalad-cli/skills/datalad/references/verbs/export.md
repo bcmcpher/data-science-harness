@@ -1,19 +1,8 @@
----
-name: datalad-export
-description: >
-  Auto-invoke when the user wants to export a DataLad dataset as an archive file (TAR,
-  ZIP) for sharing or backup, or publish a dataset directly to Figshare. Trigger on
-  "export dataset", "create archive", "zip the dataset", "tar the dataset", "publish
-  to Figshare", "export to Figshare", "make a shareable archive", or /datalad-export.
-  Do NOT trigger for pushing to a sibling (use datalad-push) or creating a new remote
-  (use datalad-siblings).
-argument-hint: '[archive|figshare] [--filename path.tar.gz]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad export
 
-# Skill: datalad-export
+**When.** Use when the user wants to export a DataLad dataset as an archive file (TAR, ZIP) for sharing or backup, or publish a dataset directly to Figshare. Trigger on "export dataset", "create archive", "zip the dataset", "tar the dataset", "publish to Figshare", "export to Figshare", "make a shareable archive". Do NOT trigger for pushing to a sibling (use `push.md`) or creating a new remote (use `siblings.md`).
+
+**Arguments.** `/datalad export [archive|figshare] [--filename path.tar.gz]`
 
 Export a DataLad dataset for archiving or open publishing. Two workflows are supported:
 local archive creation (TAR/ZIP) and direct Figshare publication.
@@ -26,7 +15,7 @@ local archive creation (TAR/ZIP) and direct Figshare publication.
    ```
    If no dataset is found, inform the user and stop.
 
-2. **Determine export target** — from `$ARGUMENTS` or conversation context:
+2. **Determine export target** — from `the arguments after the verb` or conversation context:
    - **archive**: produce a local TAR or ZIP file
    - **figshare**: publish to Figshare (requires `datalad-deprecated` or
      `datalad-mihextras` extension; check availability first)

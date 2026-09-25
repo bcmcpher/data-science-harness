@@ -12,9 +12,9 @@
 
 ## 3. Consolidate the toolbox
 
-- [ ] 3.1 Create `plugins/datalad-cli/skills/datalad/SKILL.md` (verb router, `<verb> [args]`, git-replacement trigger)
-- [ ] 3.2 Move each per-verb skill body to `references/verbs/<verb>.md`, keeping constraints verbatim; delete the per-verb skill dirs; update `plugin.json`
-- [ ] 3.3 Update `plugins/datalad-cli/README.md` with the old slash command → `/datalad <verb>` mapping
+- [x] 3.1 Create `plugins/datalad-cli/skills/datalad/SKILL.md` (verb router, `<verb> [args]`, git-replacement trigger)
+- [x] 3.2 Move each per-verb skill body to `references/verbs/<verb>.md`, keeping constraints verbatim; delete the per-verb skill dirs; update `plugin.json`
+- [x] 3.3 Update `plugins/datalad-cli/README.md` with the old slash command → `/datalad <verb>` mapping
 
 ## 4. Retire the doer
 

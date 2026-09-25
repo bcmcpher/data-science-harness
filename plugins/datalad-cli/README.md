@@ -1,31 +1,57 @@
 # datalad-cli
 
-DataLad toolbox (capability plane): one skill per `datalad` subcommand, read by the `datalad` doer
-as reference material. Routes data processing and file changes through DataLad for provenance
-tracking, following YODA principles for reproducible local analysis projects.
+DataLad toolbox (capability plane). DataLad is the harness's provenance substrate, and the main
+thread uses it natively, the way it uses git. There is no DataLad doer. Planners run `datalad
+save`, `datalad run` and `datalad push` in their own steps. This plugin supplies what makes that
+safe: always-loaded rules, three hooks, one `datalad` skill with per-verb references, and
+`dsh-log` for reading harness activity back out of the commit history. Follows YODA principles
+for reproducible local analysis projects.
 
-## Skills
+## The `datalad` skill
 
-| Skill | Slash command | Trigger |
-|---|---|---|
-| `datalad-init` | `/datalad-init` | Explicit: creating a new dataset or YODA layout |
-| `datalad-run` | `/datalad-run` | Auto: executing scripts/pipelines that produce output files |
-| `datalad-save` | `/datalad-save` | Auto: saving code changes inside a DataLad dataset |
-| `datalad-container-run` | `/datalad-container-run` | Auto: running commands inside Singularity/Apptainer/Docker containers |
-| `datalad-status` | `/datalad-status` | Auto: checking dataset state |
-| `datalad-diff` | `/datalad-diff` | Auto: comparing dataset versions |
-| `datalad-clone` | `/datalad-clone` | Auto: obtaining a copy of a dataset |
-| `datalad-get` | `/datalad-get` | Auto: retrieving annexed file content |
-| `datalad-push` | `/datalad-push` | Auto: pushing dataset to a sibling |
-| `datalad-update` | `/datalad-update` | Auto: updating from a sibling |
-| `datalad-siblings` | `/datalad-siblings` | Auto: configuring remote siblings |
-| `datalad-subdatasets` | `/datalad-subdatasets` | Auto: managing nested subdatasets |
-| `datalad-untrack` | `/datalad-untrack` | Auto: dropping content or removing files |
-| `datalad-addurls` | `/datalad-addurls` | Auto: bulk-adding files from URLs |
-| `datalad-configuration` | `/datalad-configuration` | Explicit: dataset configuration |
-| `datalad-export` | `/datalad-export` | Explicit: exporting to archive or Figshare |
-| `datalad-log` | `/datalad-log` | Auto: browsing run history and provenance |
-| `datalad-credentials` | `/datalad-credentials` | Auto: setting up authentication credentials |
+`skills/datalad/SKILL.md` is a single skill that takes `<verb> [args]`. It routes to
+`skills/datalad/references/verbs/<verb>.md`, which holds that verb's steps and constraints. These
+were one skill per verb until the toolbox was consolidated, so a single trigger decision now
+covers the whole toolbox. The old slash commands map as follows:
+
+| Old command | Now | Reference | Trigger |
+|---|---|---|---|
+| `/datalad-init` | `/datalad init` | `verbs/init.md` | Explicit: creating a new dataset or YODA layout |
+| `/datalad-run` | `/datalad run` | `verbs/run.md` | Auto: executing scripts/pipelines that produce output files |
+| `/datalad-save` | `/datalad save` | `verbs/save.md` | Auto: saving code changes inside a DataLad dataset |
+| `/datalad-container-run` | `/datalad container-run` | `verbs/container-run.md` | Auto: running commands inside Singularity/Apptainer/Docker containers |
+| `/datalad-status` | `/datalad status` | `verbs/status.md` | Auto: checking dataset state |
+| `/datalad-diff` | `/datalad diff` | `verbs/diff.md` | Auto: comparing dataset versions |
+| `/datalad-clone` | `/datalad clone` | `verbs/clone.md` | Auto: obtaining a copy of a dataset |
+| `/datalad-get` | `/datalad get` | `verbs/get.md` | Auto: retrieving annexed file content |
+| `/datalad-push` | `/datalad push` | `verbs/push.md` | Auto: pushing dataset to a sibling |
+| `/datalad-update` | `/datalad update` | `verbs/update.md` | Auto: updating from a sibling |
+| `/datalad-siblings` | `/datalad siblings` | `verbs/siblings.md` | Auto: configuring remote siblings |
+| `/datalad-subdatasets` | `/datalad subdatasets` | `verbs/subdatasets.md` | Auto: managing nested subdatasets |
+| `/datalad-untrack` | `/datalad untrack` | `verbs/untrack.md` | Auto: dropping content or removing files |
+| `/datalad-addurls` | `/datalad addurls` | `verbs/addurls.md` | Auto: bulk-adding files from URLs |
+| `/datalad-configuration` | `/datalad configuration` | `verbs/configuration.md` | Explicit: dataset configuration |
+| `/datalad-export` | `/datalad export` | `verbs/export.md` | Explicit: exporting to archive or Figshare |
+| `/datalad-log` | `/datalad log` | `verbs/log.md` | Auto: browsing run history and provenance |
+| `/datalad-credentials` | `/datalad credentials` | `verbs/credentials.md` | Auto: setting up authentication credentials |
+| `/datalad-fsck` | `/datalad fsck` | `verbs/fsck.md` | Explicit: checking annex integrity |
+
+## Activity history: `dsh-log`
+
+Harness skills record what they did in `DSH-*` lines in the body of the commit that makes the
+change. `DSH-Op: <skill>` is required, and `DSH-Stage`, `DSH-Product`, `DSH-Obligation` and
+`DSH-Binding` are optional. The lines are not written to the `project.yaml` `log`.
+`scripts/dsh-log.sh` reads them back as JSON lines, oldest first:
+
+```bash
+plugins/datalad-cli/scripts/dsh-log.sh              # every harness commit
+plugins/datalad-cli/scripts/dsh-log.sh -n 20        # extra args go to git log
+plugins/datalad-cli/scripts/dsh-log.sh --legacy     # also the old project.yaml log entries
+```
+
+It reads commit bodies itself, stopping at DataLad's run-record marker. `git log
+--format='%(trailers)'` cannot see these lines on `datalad run` commits, because DataLad appends
+its JSON record after the message. The script needs only git, a POSIX shell and awk.
 
 ## Install
 
@@ -41,16 +67,16 @@ claude plugin install ./plugins/datalad-cli
 
 ```bash
 # 1. Create a YODA dataset
-/datalad-init my-analysis
+/datalad init my-analysis
 
 # 2. Add code, link inputs as subdatasets
 # (put scripts in code/, link data via datalad clone)
 
 # 3. Run analysis with provenance
-/datalad-run python code/analysis.py
+/datalad run python code/analysis.py
 
 # 4. Save code changes
-/datalad-save "add preprocessing step to analysis script"
+/datalad save "add preprocessing step to analysis script"
 ```
 
 ## YODA principles enforced
@@ -93,7 +119,7 @@ DATALAD_AUTOSAVE=0 claude      # no reminder and no save
 ```
 
 **Rules.** `rules/datalad.md` (300 words at most, enforced by the lint) states the working rules:
-save rather than commit, run with provenance, keep the tree clean before a run, push rather than
+save rather than commit, record the step with `DSH-*` lines, run with provenance, keep the tree clean before a run, push rather than
 `git push`, get before reading, keep output quiet, and ask before publishing. Claude Code gets it
 from `dsh-status.sh --with-rules`.
 
@@ -122,22 +148,20 @@ datalad-cli/
 │       └── datalad-checkpoint.sh      ← Stop
 ├── rules/
 │   └── datalad.md                     ← always loaded
-├── references/                        ← shared across all skills
-│   ├── yoda-layout.md
-│   ├── subdataset-patterns.md
-│   ├── siblings-and-remotes.md
+├── references/                        ← shared background
 │   ├── annex-content-states.md
-│   └── troubleshooting.md
+│   ├── global-options.md
+│   ├── siblings-and-remotes.md
+│   ├── subdataset-patterns.md
+│   ├── troubleshooting.md
+│   └── yoda-layout.md
+├── scripts/
+│   └── dsh-log.sh                     ← activity history from DSH-* commit lines
 └── skills/
-    ├── datalad-init/SKILL.md
-    ├── datalad-run/
-    │   ├── SKILL.md
-    │   └── references/run-command.md
-    ├── datalad-save/SKILL.md
-    ├── datalad-container-run/
-    │   ├── SKILL.md
-    │   └── references/container-run.md
-    ├── datalad-log/SKILL.md
-    ├── datalad-credentials/SKILL.md
-    └── [... 12 more skill directories]
+    └── datalad/
+        ├── SKILL.md                   ← verb router: /datalad <verb> [args]
+        └── references/
+            ├── run-command.md
+            ├── container-run.md
+            └── verbs/                 ← one file per verb (19)
 ```

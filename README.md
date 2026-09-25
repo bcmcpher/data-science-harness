@@ -222,7 +222,7 @@ A capability plugin is either a **doer** (a subagent owning tool mechanics) or a
 | Plugin | Kind | Wraps | Contents | STAMPED |
 |--------|------|-------|----------|---------|
 | `datalad` | doer | DataLad / git-annex | `datalad-doer` | T, S, M |
-| `datalad-cli` | toolbox | DataLad CLI | 19 skills, one per command | T, S, M |
+| `datalad-cli` | toolbox | DataLad CLI | 1 skill (`datalad`, 19 verb references), rules, hooks, `dsh-log` | T, S, M |
 | `nipoppy` | doer | Nipoppy | `nipoppy-doer` | S, T, M, A |
 | `nipoppy-cli` | toolbox | Nipoppy CLI | 4 skills, one per command class | S, T, M, A |
 | `bids` | doer | bids-validator | `bids-doer` | S, M |

@@ -1,24 +1,12 @@
----
-name: datalad-untrack
-description: >
-  Auto-invoke inside a DataLad dataset (.datalad/ present) when the user wants to free
-  disk space by dropping annexed content, remove a file from the dataset entirely, stop
-  tracking a file, or unlock an annexed file for in-place editing. Trigger on "drop file
-  content", "free disk space", "untrack file", "remove from dataset", "stop tracking",
-  "delete this file from the dataset", "unlock this file", "I need to edit an annexed
-  file", "make this file writable", or /datalad-untrack. Do NOT trigger for plain file
-  deletion outside a DataLad dataset.
-argument-hint: '[paths...]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad untrack
 
-# Skill: datalad-untrack
+**When.** Use inside a DataLad dataset (.datalad/ present) when the user wants to free disk space by dropping annexed content, remove a file from the dataset entirely, stop tracking a file, or unlock an annexed file for in-place editing. Trigger on "drop file content", "free disk space", "untrack file", "remove from dataset", "stop tracking", "delete this file from the dataset", "unlock this file", "I need to edit an annexed file", "make this file writable". Do NOT trigger for plain file deletion outside a DataLad dataset.
+
+**Arguments.** `/datalad untrack [paths...]`
 
 Remove annexed content from local storage or remove a file from the dataset entirely.
 These are two distinct operations with very different consequences. Load
-`${CLAUDE_PLUGIN_ROOT}/../references/annex-content-states.md` to reason about annex state
+`${CLAUDE_PLUGIN_ROOT}/references/annex-content-states.md` to reason about annex state
 before choosing the operation.
 
 ## Steps
@@ -36,7 +24,7 @@ before choosing the operation.
    - **Dataset found**: continue.
    - **No dataset found**: inform the user. For plain git repos, use `git rm` instead.
 
-2. **Identify the target files** — read paths from `$ARGUMENTS` or conversation context.
+2. **Identify the target files** — read paths from `the arguments after the verb` or conversation context.
    If no paths are specified, ask the user to name the files before continuing.
 
 3. **Check annex state for each target** — run:
@@ -130,5 +118,5 @@ When the user wants to **edit** an annexed file in place (not drop or remove it)
   file cannot be unlocked until `datalad get` retrieves the content.
 - After `unlock`, always remind the user to `datalad save` when done — unlocked files
   are not re-annexed until saved.
-- Load `${CLAUDE_PLUGIN_ROOT}/../references/annex-content-states.md` when reasoning about
+- Load `${CLAUDE_PLUGIN_ROOT}/references/annex-content-states.md` when reasoning about
   what content states mean or when the user asks about annex concepts.

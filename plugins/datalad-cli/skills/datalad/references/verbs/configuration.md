@@ -1,19 +1,8 @@
----
-name: datalad-configuration
-description: >
-  Auto-invoke when the user wants to read or change DataLad or git-annex configuration
-  within a dataset — e.g., setting annex backend, configuring credential helpers,
-  adjusting dataset-level variables, or inspecting current config values. Trigger on
-  "configure the dataset", "set annex backend", "check dataset config", "set datalad
-  config", "change git config in this dataset", "configure credential", or
-  /datalad-configuration. Do NOT trigger for global git config unrelated to DataLad.
-argument-hint: '[get|set|unset] [section.key] [value] [--scope dataset|local|global]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad configuration
 
-# Skill: datalad-configuration
+**When.** Use when the user wants to read or change DataLad or git-annex configuration within a dataset — e.g., setting annex backend, configuring credential helpers, adjusting dataset-level variables, or inspecting current config values. Trigger on "configure the dataset", "set annex backend", "check dataset config", "set datalad config", "change git config in this dataset", "configure credential". Do NOT trigger for global git config unrelated to DataLad.
+
+**Arguments.** `/datalad configuration [get|set|unset] [section.key] [value] [--scope dataset|local|global]`
 
 Read and write dataset-scoped, clone-local, or global DataLad/git configuration using
 `datalad configuration`. This is the DataLad-aware wrapper around `git config` that
@@ -39,7 +28,7 @@ backend choice). Use `local` for clone-specific overrides (e.g., credential path
    Configuration can still be inspected/set globally even outside a dataset, but warn
    the user if no dataset is found.
 
-2. **Determine action** — from `$ARGUMENTS` or conversation context:
+2. **Determine action** — from `the arguments after the verb` or conversation context:
    - **get**: read the current value of a config key
    - **set**: write a new value
    - **unset**: remove a key

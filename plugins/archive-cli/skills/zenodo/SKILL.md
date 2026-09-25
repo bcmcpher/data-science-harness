@@ -5,7 +5,7 @@ description: >
   Zenodo DOI, publish or edit a Zenodo record, add related identifiers to a Zenodo record, or check
   whether Zenodo is usable. Trigger on "deposit to Zenodo", "mint a Zenodo DOI", "publish on
   Zenodo", "upload to the Zenodo sandbox", "link this Zenodo record", or /zenodo. Do NOT trigger for
-  a DOI minted by another archive, or for pushing to a DataLad sibling (use datalad-push).
+  a DOI minted by another archive, or for pushing to a DataLad sibling (use /datalad push).
 argument-hint: '[check|deposit|relate|lookup] [--version <tag>] [--sandbox]'
 user-invocable: true
 disable-model-invocation: false
@@ -56,7 +56,7 @@ equivalents are listed under **Reference** so a migration changes this skill and
    If the tag is missing, or HEAD is not at it, stop and ask. Never create or move a tag.
 
 5. **Package the tagged state** — export it with `datalad export-archive`, which includes annexed
-   content that is locally present (see `plugins/datalad-cli/skills/datalad-export/SKILL.md`). Run
+   content that is locally present (see `plugins/datalad-cli/skills/datalad/references/verbs/export.md`). Run
    `datalad get` first for any annexed file the deposit must contain.
 
 6. **Create the deposition and upload** — create an empty deposition, then upload through its bucket

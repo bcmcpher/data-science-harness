@@ -1,19 +1,8 @@
----
-name: datalad-get
-description: >
-  Auto-invoke when a user cannot open a file because content is missing or shows as a
-  broken symlink, wants to download annexed file content, fetch data from a sibling, or
-  initialize an absent subdataset. Trigger on "get this file", "download content",
-  "fetch data", "retrieve", "I can't open this file", "content missing", "file is empty",
-  "broken symlink", or /datalad-get. Do NOT trigger for plain file copies or downloads
-  unrelated to DataLad datasets.
-argument-hint: <path-or-glob> [-r] [-n]
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad get
 
-# Skill: datalad-get
+**When.** Use when a user cannot open a file because content is missing or shows as a broken symlink, wants to download annexed file content, fetch data from a sibling, or initialize an absent subdataset. Trigger on "get this file", "download content", "fetch data", "retrieve", "I can't open this file", "content missing", "file is empty", "broken symlink". Do NOT trigger for plain file copies or downloads unrelated to DataLad datasets.
+
+**Arguments.** `/datalad get <path-or-glob> [-r] [-n]`
 
 Retrieve annexed file content or initialize absent subdatasets. `datalad get` fetches
 content from configured siblings (remotes) and makes files accessible locally.
@@ -28,7 +17,7 @@ content from configured siblings (remotes) and makes files accessible locally.
    If no dataset is found, inform the user and stop — `datalad get` only works inside
    a DataLad dataset.
 
-2. **Identify targets** — read paths, globs, or subdataset handles from `$ARGUMENTS`.
+2. **Identify targets** — read paths, globs, or subdataset handles from `the arguments after the verb`.
    If not specified, ask the user what they want to retrieve. For large datasets with many
    files, mention `--jobs N` (e.g., `--jobs 4`) to retrieve content in parallel.
 
@@ -66,10 +55,10 @@ content from configured siblings (remotes) and makes files accessible locally.
 
 ## Reference
 
-Load `${CLAUDE_PLUGIN_ROOT}/../references/subdataset-patterns.md` for the absent/present
+Load `${CLAUDE_PLUGIN_ROOT}/references/subdataset-patterns.md` for the absent/present
 subdataset model, the `-n` handle-only pattern, and the neuroimaging nested layout.
 
-Load `${CLAUDE_PLUGIN_ROOT}/../references/global-options.md` when the user asks about
+Load `${CLAUDE_PLUGIN_ROOT}/references/global-options.md` when the user asks about
 `--on-failure` behavior during recursive gets, wants JSON output, needs to override a
 config value, or asks why a get is failing (suggest `-l debug`).
 

@@ -1,28 +1,18 @@
----
-name: datalad-clone
-description: >
-  Auto-invoke when the user wants to obtain a copy of a dataset from a URL or path,
-  install a dataset, add a nested subdataset, or link external data as input to a project.
-  Trigger on "clone a dataset", "get a copy of", "install dataset", "add subdataset",
-  "link this data as input", or /datalad-clone. Use instead of `git clone` when working
-  with DataLad datasets. Do NOT trigger for plain git repos without DataLad context.
-argument-hint: <source-url-or-path> [dest-path]
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad clone
 
-# Skill: datalad-clone
+**When.** Use when the user wants to obtain a copy of a dataset from a URL or path, install a dataset, add a nested subdataset, or link external data as input to a project. Trigger on "clone a dataset", "get a copy of", "install dataset", "add subdataset", "link this data as input". Use instead of `git clone` when working with DataLad datasets. Do NOT trigger for plain git repos without DataLad context.
+
+**Arguments.** `/datalad clone <source-url-or-path> [dest-path]`
 
 Obtain a copy of a DataLad dataset from a URL or local path. Optionally register it as
 a subdataset inside an existing DataLad dataset (YODA-style nested layout).
 
 ## Steps
 
-1. **Identify source** — read the source URL or path from `$ARGUMENTS`. If not provided,
+1. **Identify source** — read the source URL or path from `the arguments after the verb`. If not provided,
    ask the user for the source before continuing. If the URL begins with `ria+`, this is
    a RIA store. Accepted formats: `ria+ssh://user@host/path`, `ria+http://host/path`,
-   `ria+file:///local/path`. Load `${CLAUDE_PLUGIN_ROOT}/../references/siblings-and-remotes.md`
+   `ria+file:///local/path`. Load `${CLAUDE_PLUGIN_ROOT}/references/siblings-and-remotes.md`
    for RIA store URL details.
 
 2. **Determine mode** — decide whether this clone should be:
@@ -40,7 +30,7 @@ a subdataset inside an existing DataLad dataset (YODA-style nested layout).
      > "Should this be registered as a subdataset of the current dataset, or cloned
      > as a standalone dataset?"
 
-3. **Determine destination path** — read from `$ARGUMENTS` or derive from the source
+3. **Determine destination path** — read from `the arguments after the verb` or derive from the source
    name (last path/URL component, minus `.git`). Show the planned destination and confirm
    if it differs from what the user expects.
 
@@ -74,10 +64,10 @@ a subdataset inside an existing DataLad dataset (YODA-style nested layout).
 
 ## Reference
 
-Load `${CLAUDE_PLUGIN_ROOT}/../references/subdataset-patterns.md` when the user asks
+Load `${CLAUDE_PLUGIN_ROOT}/references/subdataset-patterns.md` when the user asks
 about nested layouts, why `-d .` is needed, or the YODA neuroimaging project structure.
 
-Load `${CLAUDE_PLUGIN_ROOT}/../references/yoda-layout.md` when the user asks about the
+Load `${CLAUDE_PLUGIN_ROOT}/references/yoda-layout.md` when the user asks about the
 YODA directory layout, `.gitattributes` rules, or how `inputs/` and `outputs/` are
 structured.
 

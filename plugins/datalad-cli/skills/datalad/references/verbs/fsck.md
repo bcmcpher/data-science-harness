@@ -1,18 +1,8 @@
----
-name: datalad-fsck
-description: >
-  Auto-invoke when the user wants to check annex integrity, verify dataset content,
-  check for missing or corrupt files, or recover from suspected data corruption.
-  Trigger on "check annex integrity", "verify dataset content", "annex fsck",
-  "are my files corrupt", "check for missing content", "fsck", "data integrity check",
-  or /datalad-fsck. Do NOT trigger for general DataLad status checks or `datalad status`.
-argument-hint: '[--fast] [path]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad fsck
 
-# Skill: datalad-fsck
+**When.** Use when the user wants to check annex integrity, verify dataset content, check for missing or corrupt files, or recover from suspected data corruption. Trigger on "check annex integrity", "verify dataset content", "annex fsck", "are my files corrupt", "check for missing content", "fsck", "data integrity check". Do NOT trigger for general DataLad status checks or `datalad status`.
+
+**Arguments.** `/datalad fsck [--fast] [path]`
 
 Check the integrity of annexed file content in a DataLad dataset using `git annex fsck`.
 Identifies missing, corrupt, or unreachable content and guides recovery.
@@ -65,5 +55,5 @@ Identifies missing, corrupt, or unreachable content and guides recovery.
   datasets before starting.
 - Never attempt to auto-repair corrupt files without confirming recovery steps with the
   user first.
-- Load `${CLAUDE_PLUGIN_ROOT}/../references/troubleshooting.md` when the user needs
+- Load `${CLAUDE_PLUGIN_ROOT}/references/troubleshooting.md` when the user needs
   guidance on recovering from corrupt or missing content beyond simple `datalad get`.

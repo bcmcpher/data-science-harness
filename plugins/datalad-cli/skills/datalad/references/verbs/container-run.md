@@ -1,31 +1,19 @@
----
-name: datalad-container-run
-description: >
-  Auto-invoke when about to execute a command inside a container (Singularity .sif file,
-  Apptainer image, Docker image) that produces output files inside a DataLad dataset.
-  Trigger on "run in container", "run with Singularity", "run with Apptainer",
-  "run with Docker", "containerized analysis", "remove a container", "unregister container",
-  or /datalad-container-run. Records both the command and the container image in dataset
-  provenance. Do NOT trigger for bare datalad run commands without a container — use
-  datalad-run for those.
-argument-hint: '[container-name command]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad container-run
 
-# Skill: datalad-container-run
+**When.** Use when about to execute a command inside a container (Singularity .sif file, Apptainer image, Docker image) that produces output files inside a DataLad dataset. Trigger on "run in container", "run with Singularity", "run with Apptainer", "run with Docker", "containerized analysis", "remove a container", "unregister container". Records both the command and the container image in dataset provenance. Do NOT trigger for bare datalad run commands without a container — use `run.md` for those.
+
+**Arguments.** `/datalad container-run [container-name command]`
 
 Wrap a command in `datalad containers-run` to record the container image, the command,
 inputs, and outputs in the dataset history. The container image content hash is annexed,
 so the full computational environment is reproducible via `datalad rerun`.
 
-Always load `${CLAUDE_PLUGIN_ROOT}/references/container-run.md` before any container
+Always load `${CLAUDE_PLUGIN_ROOT}/skills/datalad/references/container-run.md` before any container
 registration or container-run step.
 
 ## Steps
 
-1. **Identify command and container** — read `$ARGUMENTS` or extract from conversation
+1. **Identify command and container** — read `the arguments after the verb` or extract from conversation
    context. Determine:
    - The container image (`.sif` path, Docker image name, Singularity/Apptainer URL)
    - The command to run inside the container
@@ -38,12 +26,12 @@ registration or container-run step.
    - **Dataset found**: continue.
    - **No dataset found**: ask the user:
      > "No DataLad dataset detected. Would you like to:
-     > 1. Initialize one here with `/datalad-init`
+     > 1. Initialize one here with `/datalad init`
      > 2. Run the container command bare (no provenance tracking)"
      Wait for their choice.
 
 3. **Check for unsaved changes** — run `datalad status`. If the output shows modified
-   or untracked files, prompt the user to save first with `/datalad-save` or confirm
+   or untracked files, prompt the user to save first with `/datalad save` or confirm
    they want to proceed anyway.
 
 4. **Container registration check** — run `datalad containers-list` to see registered
@@ -52,7 +40,7 @@ registration or container-run step.
    - **Not registered**: guide the user through `datalad containers-add`:
      a. Ask for a short name (identifier) for the container.
      b. Confirm the image URL or local `.sif` path (`--url`).
-     c. Ask which runtime to use; load `${CLAUDE_PLUGIN_ROOT}/references/container-run.md`
+     c. Ask which runtime to use; load `${CLAUDE_PLUGIN_ROOT}/skills/datalad/references/container-run.md`
         and show the call-format options table (Singularity, Apptainer, Docker).
      d. Construct and display the `datalad containers-add` command:
         ```
@@ -111,7 +99,7 @@ When the user wants to deregister a container:
 
 ## Constraints
 
-- Always load `${CLAUDE_PLUGIN_ROOT}/references/container-run.md` before any container
+- Always load `${CLAUDE_PLUGIN_ROOT}/skills/datalad/references/container-run.md` before any container
   registration or container-run step.
 - Never call `datalad containers-run` with an unregistered container name — always verify
   with `datalad containers-list` first.

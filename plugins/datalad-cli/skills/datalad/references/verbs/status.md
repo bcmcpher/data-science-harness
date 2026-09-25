@@ -1,17 +1,8 @@
----
-name: datalad-status
-description: >
-  Auto-invoke inside a DataLad dataset (.datalad/ present) when the user asks what has
-  changed, what is modified, what files are untracked, or what the current dataset state
-  is. Trigger on "what changed", "check state", "show modified", "what's untracked",
-  "dataset status", or /datalad-status. Read-only — never modifies any files.
-argument-hint: '[paths...]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad status
 
-# Skill: datalad-status
+**When.** Use inside a DataLad dataset (.datalad/ present) when the user asks what has changed, what is modified, what files are untracked, or what the current dataset state is. Trigger on "what changed", "check state", "show modified", "what's untracked", "dataset status". Read-only — never modifies any files.
+
+**Arguments.** `/datalad status [paths...]`
 
 Inspect the current state of a DataLad dataset — what files are modified, untracked,
 added, or deleted — without making any changes.
@@ -24,9 +15,9 @@ added, or deleted — without making any changes.
    ls .datalad/ 2>/dev/null || git rev-parse --show-toplevel
    ```
    - **Dataset found**: continue.
-   - **No dataset found**: inform the user and suggest `/datalad-init` or plain `git status`.
+   - **No dataset found**: inform the user and suggest `/datalad init` or plain `git status`.
 
-2. **Run `datalad status`** — optionally scoped to paths from `$ARGUMENTS`:
+2. **Run `datalad status`** — optionally scoped to paths from `the arguments after the verb`:
    ```bash
    datalad status [paths...]
    ```
@@ -51,9 +42,9 @@ added, or deleted — without making any changes.
    - **content missing**: file pointer exists but content was dropped (pointer only)
 
 4. **Suggest next actions** — based on what was found:
-   - Modified or untracked files → suggest `/datalad-save`
+   - Modified or untracked files → suggest `/datalad save`
    - Missing annex content → suggest `datalad get <path>` to retrieve it
-   - Output files that should have been produced by a command → suggest `/datalad-run`
+   - Output files that should have been produced by a command → suggest `/datalad run`
    - Clean working tree → confirm no action needed
 
 ## Constraints

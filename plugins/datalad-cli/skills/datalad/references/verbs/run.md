@@ -1,20 +1,8 @@
----
-name: datalad-run
-description: >
-  Auto-invoke when about to execute a script, pipeline, or transformation that reads
-  input data files and writes output files — e.g., `python analysis.py`, `bash process.sh`,
-  neuroimaging tools (fMRIPrep, MRIQC, FSL, FreeSurfer), or any shell command that
-  produces result files in a DataLad dataset. Also trigger on "run with provenance",
-  "track this command", "record this analysis", "replay this run", "rerun a recorded
-  command", "download this file with provenance", "record download", or /datalad-run.
-  Do NOT trigger for commands that produce no output files (git log, ls, exploratory queries).
-argument-hint: '[command-to-run]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad run
 
-# Skill: datalad-run
+**When.** Use when about to execute a script, pipeline, or transformation that reads input data files and writes output files — e.g., `python analysis.py`, `bash process.sh`, neuroimaging tools (fMRIPrep, MRIQC, FSL, FreeSurfer), or any shell command that produces result files in a DataLad dataset. Also trigger on "run with provenance", "track this command", "record this analysis", "replay this run", "rerun a recorded command", "download this file with provenance", "record download". Do NOT trigger for commands that produce no output files (git log, ls, exploratory queries).
+
+**Arguments.** `/datalad run [command-to-run]`
 
 Wrap a command in `datalad run` to record it in the dataset history with full provenance:
 inputs consumed, outputs produced, and the exact command used. On success, DataLad
@@ -22,7 +10,7 @@ automatically stages and commits the outputs. On failure, nothing is committed.
 
 ## Steps
 
-1. **Identify the command** — read `$ARGUMENTS` or extract from conversation context.
+1. **Identify the command** — read `the arguments after the verb` or extract from conversation context.
    If the command is ambiguous or missing, ask the user to specify the full command
    string before continuing.
 
@@ -34,7 +22,7 @@ automatically stages and commits the outputs. On failure, nothing is committed.
    - **Dataset found**: continue.
    - **No dataset found**: ask the user:
      > "No DataLad dataset detected in the current directory. Would you like to:
-     > 1. Initialize one here with `/datalad-init`
+     > 1. Initialize one here with `/datalad init`
      > 2. Run the command bare (no provenance tracking)"
      Wait for their choice. If bare, run the command directly and stop.
 
@@ -96,17 +84,17 @@ automatically stages and commits the outputs. On failure, nothing is committed.
 - Never skip the unsaved-changes check — a dirty working tree can produce misleading
   provenance records.
 - For pipeline commands (pipes, multi-step shell), always wrap as `"bash -c 'cmd1 | cmd2'"`.
-- Load `${CLAUDE_PLUGIN_ROOT}/references/run-command.md` when the user asks about
+- Load `${CLAUDE_PLUGIN_ROOT}/skills/datalad/references/run-command.md` when the user asks about
   advanced flags (`--explicit`, `--expand`, `--dry-run`), replaying runs (`datalad rerun`),
   or recording download provenance (`datalad download-url`).
-- Load `${CLAUDE_PLUGIN_ROOT}/../references/yoda-layout.md` when the user asks about
+- Load `${CLAUDE_PLUGIN_ROOT}/references/yoda-layout.md` when the user asks about
   YODA directory conventions, where outputs should go, or why inputs are subdatasets.
-- Load `${CLAUDE_PLUGIN_ROOT}/../references/troubleshooting.md` when a run fails, the
+- Load `${CLAUDE_PLUGIN_ROOT}/references/troubleshooting.md` when a run fails, the
   user has unlocked output files left over, or asks how to recover from a partial run.
 - If the run fails with a "locked" or "permission denied" error on output files, the fix
   is: `datalad unlock <output-path>`, then re-run. Load
-  `${CLAUDE_PLUGIN_ROOT}/../references/troubleshooting.md` for the full recovery pattern.
-- Load `${CLAUDE_PLUGIN_ROOT}/../references/global-options.md` when the user asks about
+  `${CLAUDE_PLUGIN_ROOT}/references/troubleshooting.md` for the full recovery pattern.
+- Load `${CLAUDE_PLUGIN_ROOT}/references/global-options.md` when the user asks about
   debugging a failed run (`-l debug`), suppressing result output in CI (`-f disabled`),
   overriding annex config for a single run (`-c`), or running against a different working
   directory (`-C`).
@@ -132,7 +120,7 @@ When the user wants to replay a previously recorded run:
 4. **Report outcome** — on success, note the new commit SHA and that this replay is
    also recorded in dataset history (provenance chain). On failure, show the error.
 
-Load `${CLAUDE_PLUGIN_ROOT}/references/run-command.md` for the full flag reference.
+Load `${CLAUDE_PLUGIN_ROOT}/skills/datalad/references/run-command.md` for the full flag reference.
 
 ## Recording download provenance (`datalad download-url`)
 

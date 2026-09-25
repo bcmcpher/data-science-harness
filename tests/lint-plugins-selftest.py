@@ -109,18 +109,18 @@ WARN_CASES = [
     (
         "argument-hint parses as a list, not a string",
         lambda r: sub(
-            f"{r}/plugins/datalad-cli/skills/datalad-status/SKILL.md",
-            "argument-hint: '[paths...]'",
-            "argument-hint: [paths...]",
+            f"{r}/plugins/datalad-cli/skills/datalad/SKILL.md",
+            "argument-hint: '<verb> [args]'",
+            "argument-hint: [verb, args]",
         ),
         "argument-hint",
     ),
     (
         "frontmatter is not strict YAML",
         lambda r: sub(
-            f"{r}/plugins/datalad-cli/skills/datalad-save/SKILL.md",
-            "argument-hint: '[message] [paths...]'",
-            "argument-hint: [message] [paths...]",
+            f"{r}/plugins/datalad-cli/skills/datalad/SKILL.md",
+            "argument-hint: '<verb> [args]'",
+            "argument-hint: [verb] [args]",
         ),
         "not strict YAML",
     ),

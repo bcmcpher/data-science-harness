@@ -1,17 +1,8 @@
----
-name: datalad-init
-description: >
-  Create a new DataLad dataset with YODA layout, or initialize provenance tracking in
-  an existing directory. Trigger on "create a new DataLad dataset", "set up YODA dataset",
-  "initialize data provenance tracking", "start a datalad project", or /datalad-init.
-  Does NOT trigger for saving changes (use datalad-save) or running commands (use datalad-run).
-argument-hint: '[target-path]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad init
 
-# Skill: datalad-init
+**When.** Create a new DataLad dataset with YODA layout, or initialize provenance tracking in an existing directory. Trigger on "create a new DataLad dataset", "set up YODA dataset", "initialize data provenance tracking", "start a datalad project". Does NOT trigger for saving changes (use `save.md`) or running commands (use `run.md`).
+
+**Arguments.** `/datalad init [target-path]`
 
 Create a new DataLad dataset following YODA principles for reproducible, provenance-tracked
 local analysis projects. The `-c yoda` configuration is always applied — it sets up the
@@ -19,7 +10,7 @@ correct directory layout and `.gitattributes` rules.
 
 ## Steps
 
-1. **Determine target path** — read `$ARGUMENTS`. If a path is given, use it. If empty,
+1. **Determine target path** — read `the arguments after the verb`. If a path is given, use it. If empty,
    use the current working directory. Show the resolved absolute path and ask the user to
    confirm before proceeding.
 
@@ -63,7 +54,7 @@ correct directory layout and `.gitattributes` rules.
    ├── inputs/        ← input data, ideally linked as subdatasets (annexed: everything)
    └── README.md      ← dataset description
    ```
-   Explain each directory's role briefly (see `${CLAUDE_PLUGIN_ROOT}/../references/yoda-layout.md`
+   Explain each directory's role briefly (see `${CLAUDE_PLUGIN_ROOT}/references/yoda-layout.md`
    for full detail).
 
 5. **Explain YODA principles** — briefly state the three principles:
@@ -84,5 +75,5 @@ correct directory layout and `.gitattributes` rules.
 - Always use `-c yoda` — never create a bare dataset without the YODA configuration.
 - Always warn when the target path is inside a plain git repo, and require explicit
   confirmation before proceeding.
-- Load `${CLAUDE_PLUGIN_ROOT}/../references/yoda-layout.md` if the user asks for more detail
+- Load `${CLAUDE_PLUGIN_ROOT}/references/yoda-layout.md` if the user asks for more detail
   about YODA conventions, `.gitattributes` behavior, or subdataset patterns.

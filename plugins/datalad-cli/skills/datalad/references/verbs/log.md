@@ -1,19 +1,8 @@
----
-name: datalad-log
-description: >
-  Auto-invoke when the user wants to browse dataset history, find what command produced
-  a specific output, inspect recorded run provenance, or audit past analyses. Trigger on
-  "show run history", "what command produced this", "browse dataset history", "find the
-  run that made this file", "show provenance", "list recorded runs", "what was the last
-  run", or /datalad-log. Do NOT trigger for running new commands (use datalad-run) or
-  replaying existing runs (use datalad-run's rerun section).
-argument-hint: '[path-or-commit]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad log
 
-# Skill: datalad-log
+**When.** Use when the user wants to browse dataset history, find what command produced a specific output, inspect recorded run provenance, or audit past analyses. Trigger on "show run history", "what command produced this", "browse dataset history", "find the run that made this file", "show provenance", "list recorded runs", "what was the last run". Do NOT trigger for running new commands (use `run.md`) or replaying existing runs (use the rerun section of `run.md`).
+
+**Arguments.** `/datalad log [path-or-commit]`
 
 Browse the recorded history of a DataLad dataset: list run commits, inspect what a
 specific run recorded, and trace which command produced a given output file.
@@ -93,4 +82,4 @@ correctly exclude checkpoints — use the single `--grep="\[datalad run\]"` form
   commits or checkpoint commits in your report.
 - If `datalad log` is not available (older DataLad), fall back to
   `git log --oneline --grep="datalad run"` and explain the fallback.
-- For file-level differences between two commits, direct the user to `/datalad-diff`.
+- For file-level differences between two commits, direct the user to `/datalad diff`.

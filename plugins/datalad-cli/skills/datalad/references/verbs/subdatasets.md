@@ -1,20 +1,8 @@
----
-name: datalad-subdatasets
-description: >
-  Auto-invoke when the user wants to list nested datasets, inspect the subdataset tree,
-  check which subdatasets are absent or present, set a property on a subdataset
-  registration, or run a command across all subdatasets. Trigger on "list subdatasets",
-  "show nested datasets", "check subdataset status", "what subdatasets exist", "subdataset
-  is absent", "set subdataset property", "run on all subdatasets", "foreach dataset",
-  "iterate over subdatasets", or /datalad-subdatasets. Do NOT trigger for plain git
-  submodule commands outside a DataLad dataset.
-argument-hint: '[--state absent|present] [-r] [--set-property name value path] [foreach-dataset]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad subdatasets
 
-# Skill: datalad-subdatasets
+**When.** Use when the user wants to list nested datasets, inspect the subdataset tree, check which subdatasets are absent or present, set a property on a subdataset registration, or run a command across all subdatasets. Trigger on "list subdatasets", "show nested datasets", "check subdataset status", "what subdatasets exist", "subdataset is absent", "set subdataset property", "run on all subdatasets", "foreach dataset", "iterate over subdatasets". Do NOT trigger for plain git submodule commands outside a DataLad dataset.
+
+**Arguments.** `/datalad subdatasets [--state absent|present] [-r] [--set-property name value path] [foreach-dataset]`
 
 Inspect the subdataset tree and manage subdataset properties. Lists all registered
 subdatasets, their state (present/absent), and the commit SHA they are pinned to.
@@ -28,7 +16,7 @@ subdatasets, their state (present/absent), and the commit SHA they are pinned to
    ```
    If no dataset is found, inform the user and stop.
 
-2. **Determine action** — read from `$ARGUMENTS` or conversation context:
+2. **Determine action** — read from `the arguments after the verb` or conversation context:
    - **inspect** (default): list all subdatasets
    - **recursive listing**: list the full tree
    - **filter absent**: show only uninitialized subdatasets
@@ -102,7 +90,7 @@ subdatasets, their state (present/absent), and the commit SHA they are pinned to
 
 ## Reference
 
-Load `${CLAUDE_PLUGIN_ROOT}/../references/subdataset-patterns.md` for the absent/present
+Load `${CLAUDE_PLUGIN_ROOT}/references/subdataset-patterns.md` for the absent/present
 model, neuroimaging layout examples, recursive get patterns, and `.gitmodules` structure.
 
 ## Constraints

@@ -1,18 +1,8 @@
----
-name: datalad-push
-description: >
-  Auto-invoke when the user wants to transfer saved dataset state to a remote, publish
-  a dataset, upload annexed content to a sibling, share changes with collaborators, or
-  push to GitHub, OSF, or other storage. Trigger on "push to remote", "publish dataset",
-  "upload to sibling", "share changes", "push to GitHub", "send to storage", or
-  /datalad-push. Do NOT trigger for plain git push in repos without DataLad context.
-argument-hint: --to <sibling> [--data {nothing|anything|auto-if-wanted}] [-r]
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad push
 
-# Skill: datalad-push
+**When.** Use when the user wants to transfer saved dataset state to a remote, publish a dataset, upload annexed content to a sibling, share changes with collaborators, or push to GitHub, OSF, or other storage. Trigger on "push to remote", "publish dataset", "upload to sibling", "share changes", "push to GitHub", "send to storage". Do NOT trigger for plain git push in repos without DataLad context.
+
+**Arguments.** `/datalad push --to <sibling> [--data {nothing|anything|auto-if-wanted}] [-r]`
 
 Transfer saved dataset state — git history and/or annexed file content — to a configured
 sibling (remote). Respects publish-depends ordering so annexed data reaches storage
@@ -36,7 +26,7 @@ before git history reaches the git host.
    > first with `datalad save -m '...'`?"
    Wait for the user to save or confirm they want to push the current committed state.
 
-3. **Identify target sibling** — read from `$ARGUMENTS`. If not provided, list available
+3. **Identify target sibling** — read from `the arguments after the verb`. If not provided, list available
    siblings and ask which one to push to:
    ```bash
    datalad siblings
@@ -70,11 +60,11 @@ before git history reaches the git host.
 
 ## Reference
 
-Load `${CLAUDE_PLUGIN_ROOT}/../references/siblings-and-remotes.md` for publish-depends
+Load `${CLAUDE_PLUGIN_ROOT}/references/siblings-and-remotes.md` for publish-depends
 ordering, `--data` mode details, and why annexed content must reach storage before git
 history reaches the git host.
 
-Load `${CLAUDE_PLUGIN_ROOT}/../references/global-options.md` when the user asks about
+Load `${CLAUDE_PLUGIN_ROOT}/references/global-options.md` when the user asks about
 `--on-failure` for recursive pushes, wants JSON output from push results, or needs to
 debug a failed push (`-l debug`).
 

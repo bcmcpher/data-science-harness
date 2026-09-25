@@ -1,19 +1,8 @@
----
-name: datalad-addurls
-description: >
-  Auto-invoke when the user wants to populate a DataLad dataset from a list of URLs —
-  e.g., bulk-importing files from a manifest (CSV, TSV, or JSON), ingesting data from
-  a remote catalog, or creating a dataset from a URL spreadsheet. Trigger on "add files
-  from URLs", "bulk import from manifest", "create dataset from URL list", "ingest data
-  from CSV", "addurls", "populate dataset from spreadsheet", or /datalad-addurls.
-  Do NOT trigger for downloading a single file (use datalad-run with download-url instead).
-argument-hint: '[manifest-file] [url-column] [filename-column]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad addurls
 
-# Skill: datalad-addurls
+**When.** Use when the user wants to populate a DataLad dataset from a list of URLs — e.g., bulk-importing files from a manifest (CSV, TSV, or JSON), ingesting data from a remote catalog, or creating a dataset from a URL spreadsheet. Trigger on "add files from URLs", "bulk import from manifest", "create dataset from URL list", "ingest data from CSV", "addurls", "populate dataset from spreadsheet". Do NOT trigger for downloading a single file (use `run.md` with download-url instead).
+
+**Arguments.** `/datalad addurls [manifest-file] [url-column] [filename-column]`
 
 Bulk-populate a DataLad dataset by reading a URL manifest and adding each file as an
 annexed entry with its download URL registered as the annex remote. DataLad will fetch
@@ -26,9 +15,9 @@ content on demand with `datalad get`.
    ```bash
    ls .datalad/ 2>/dev/null
    ```
-   If no dataset is found, ask the user whether to initialize one first with `/datalad-init`.
+   If no dataset is found, ask the user whether to initialize one first with `/datalad init`.
 
-2. **Identify the manifest file** — read from `$ARGUMENTS` or conversation context.
+2. **Identify the manifest file** — read from `the arguments after the verb` or conversation context.
    The manifest is a file with one row per file to ingest. Supported formats:
    - **CSV / TSV**: columns delimited by comma or tab
    - **JSON / JSON-Lines**: array of objects or one object per line

@@ -1,19 +1,8 @@
----
-name: datalad-credentials
-description: >
-  Auto-invoke when the user needs to set up credentials for a DataLad remote, gets an
-  authentication error pushing to GitHub/OSF/S3/Figshare, or asks how to store tokens
-  for DataLad siblings. Trigger on "set up credentials", "configure token", "authentication
-  error", "credential error", "how do I authenticate", "store my GitHub token for DataLad",
-  "OSF token", "S3 credentials", or /datalad-credentials. Do NOT trigger for general
-  SSH key setup or non-DataLad credential management.
-argument-hint: '[credential-name]'
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Bash, Glob
----
+# datalad credentials
 
-# Skill: datalad-credentials
+**When.** Use when the user needs to set up credentials for a DataLad remote, gets an authentication error pushing to GitHub/OSF/S3/Figshare, or asks how to store tokens for DataLad siblings. Trigger on "set up credentials", "configure token", "authentication error", "credential error", "how do I authenticate", "store my GitHub token for DataLad", "OSF token", "S3 credentials". Do NOT trigger for general SSH key setup or non-DataLad credential management.
+
+**Arguments.** `/datalad credentials [credential-name]`
 
 Configure credentials that DataLad needs to authenticate with remote storage (GitHub,
 OSF, S3, WebDAV, HTTP). Credentials are stored in the system keyring and retrieved
