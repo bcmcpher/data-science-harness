@@ -8,7 +8,6 @@ description: >
   (the containers doer) or to install anything — this reports, it never installs.
 plane: workflow
 stamped: [P, E]
-delegates_to: [datalad]
 ---
 
 # Skill: env-check
@@ -33,8 +32,8 @@ install something when the actual fix is to commit a manifest line.
 - Before starting work on a new machine, or after a skill reported a backend `unavailable`.
 - When a workflow step failed for a reason that might be environmental.
 - Do NOT use to install anything, to build or register a container (the `containers` capability
-  builds the image; the **datalad** doer registers and runs it), or to edit a manifest — report and
-  let the user decide.
+  builds the image; registering and running it is a direct `datalad containers-add`/`containers-run`
+  step), or to edit a manifest — report and let the user decide.
 
 ## Steps
 
@@ -89,10 +88,12 @@ install something when the actual fix is to commit a manifest line.
    notes:       <gate scripts whose usage errors indicate a tool with no skill behind it>
    ```
 
-6. **Log it only if the user asks.** An environment check is a property of a machine, not of the
-   project, and a `log:` entry that records one developer's laptop state is noise in a shared
-   record. If the finding is a real defect — an undeclared dependency — that is worth logging:
-   `{ ts, op: env-check, stage: initialize, note: "...", branch }`, then delegate the save.
+6. **Save only if there is something to save.** This skill never edits a manifest itself, so most
+   runs commit nothing. If the user fixes a reported defect by editing a manifest and asks it
+   recorded, save that edit:
+   ```bash
+   datalad save -m "$(printf 'env-check: <manifest> — declare <tool>\n\nDSH-Op: env-check\nDSH-Stage: initialize')" <paths>
+   ```
 
 ## Constraints
 
@@ -101,7 +102,8 @@ install something when the actual fix is to commit a manifest line.
 - **Never install anything**, never run a package manager, and never add a line to a manifest. Report
   the route and let the user run it. Installing a tool to make a check pass destroys the finding.
 - Do not build or register a container to satisfy a check. That work belongs to the `containers`
-  capability and the **datalad** doer, and it is a change to the project rather than a report on it.
+  capability and a direct `datalad containers-add`/`containers-run` step, and it is a change to the
+  project rather than a report on it.
 - **Never claim the environment is correct or complete.** Report what is declared, what is present,
   and what disagrees. Whether that is sufficient depends on what the project is about to do.
 - **Never re-implement a toolbox's gate check.** Run the script. A second implementation of
@@ -114,4 +116,5 @@ install something when the actual fix is to commit a manifest line.
 - Do not check tools by importing them into the current Python session, and do not add a harness tool
   to a project manifest — `~/.claude-*-tools` environments are not project dependencies, and putting
   one in `pyproject.toml` makes the lockfile lie.
-- Do not commit. The datalad doer owns `datalad save`.
+- Record activity in the commit's `DSH-*` lines, never in `project.yaml` `log`; save with `datalad
+  save` yourself, and only when there is a file change to commit.

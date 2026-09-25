@@ -10,7 +10,7 @@ description: >
 # OPTIONAL, advisory only — safe for any harness to ignore:
 # plane: workflow            # workflow (planner) | capability (doer/tool)
 # stamped: [T, A]            # STAMPED letters this skill advances (see docs/stamped.md)
-# delegates_to: [datalad]    # doer subagent(s) this planner invokes
+# delegates_to: [nipoppy]    # doer subagent(s) this planner invokes (never datalad — it is native)
 # model: haiku               # AGENTS only: haiku | sonnet | opus | fable; omit = harness default.
 #                            # Read-only agents only; the installer translates it per harness.
 ---
@@ -20,11 +20,13 @@ description: >
 <!--
 AUTHORING CONVENTION — planner vs doer
 --------------------------------------
-- A PLANNER skill (plane: workflow) holds research-process logic. It does NOT call CLIs
-  directly. When it needs a tool operation, it DELEGATES to a doer subagent (see step
-  pattern below). This keeps the "what/why" separate from the "how".
-- A DOER is a subagent (e.g. plugins/datalad/agents/datalad-doer.md) that owns the tool
-  mechanics and knows the underlying CLI skills. Doers are the only things that run tools.
+- A PLANNER skill (plane: workflow) holds research-process logic. DataLad, git and git-annex
+  are native: the planner runs `datalad save` / `datalad run` itself, the way code runs git.
+  For any other tool it DELEGATES to a doer subagent (see step pattern below). This keeps the
+  "what/why" separate from the "how".
+- A DOER is a subagent (e.g. plugins/nipoppy/agents/nipoppy-doer.md) that owns a peripheral
+  tool's mechanics and knows its CLI skills. It returns a command (`run_via: planner`) or the
+  files it wrote (`save_via: planner`) plus a `binding`; it never commits.
 - Delegation is expressed in plain prose so it ports across harnesses. On harnesses with
   subagents (Claude Code, OpenCode) the model spawns the named doer subagent; on harnesses
   without them, the same prose still guides the model to run the equivalent tool skill.
@@ -39,16 +41,21 @@ One-line statement of what invoking this skill accomplishes.
 ## Steps
 1. **Understand the request** — read arguments / conversation context; ask for anything missing.
 2. **Do the planning work** — the research-process judgment this skill owns (choose, record,
-   organize). Read/append `project.yaml` (the append-only project log) as needed.
-3. **Delegate tool work to the doer** — when a tool operation is required, hand off to the
-   relevant doer subagent, e.g.:
-   > Delegate to the **datalad** doer subagent: "run `<script>` on branch `<branch>` with
-   > inputs `<...>` and outputs `<...>`, message `<...>`."
-   Wait for the doer's result before continuing.
-4. **Record the outcome** — append a log entry to `project.yaml`
-   (`{ts, op, stage, note, branch?}`) describing what happened, and report back to the user.
+   organize). Update `project.yaml` state (products, obligations, contributors) as needed.
+3. **Delegate peripheral tool work to a doer** — when a non-DataLad tool is needed, hand off to
+   the relevant doer subagent, e.g.:
+   > Delegate to the **nipoppy** doer subagent: "construct the `<pipeline>` process command with
+   > its inputs and outputs."
+   Wait for the doer's result, then run what it returned, e.g. under `datalad run -m "<message>"
+   -i <inputs> -o <outputs> "<command>"`.
+4. **Save and record in one step** — the commit is the record; nothing is appended to a log:
+   ```bash
+   datalad save -m "$(printf '<what> — <why>\n\nDSH-Op: skill-name\nDSH-Stage: <stage>')" <paths>
+   ```
+   Add `DSH-Product: <id>`, `DSH-Obligation: <id> opened|resolved`, or `DSH-Binding:` (copied from
+   a doer's `binding`) lines when they apply. Use exactly one `-m`. Report back to the user.
 
 ## Constraints
-- Planner skills never call a CLI directly — always delegate tool operations to a doer.
-- Keep `project.yaml` append-only; do not rewrite or reorder prior entries.
-- State assumptions and confirm irreversible actions before delegating them.
+- Run DataLad directly; delegate every other tool to its doer rather than calling its CLI.
+- Record activity in the commit's `DSH-*` lines; never append to `project.yaml` `log`.
+- State assumptions and confirm irreversible actions (push, sibling creation, drop) first.

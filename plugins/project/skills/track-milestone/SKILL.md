@@ -8,7 +8,6 @@ description: >
   govern/ethics-track) or to resolve an obligation (govern/obligations).
 plane: workflow
 stamped: [T]
-delegates_to: [datalad]
 ---
 
 # Skill: track-milestone
@@ -38,17 +37,22 @@ than two.
    funder's usual cycle, or a typical review period.
 3. **Add or update**:
    - **Add** — append `{ id, kind: milestone, description, due, status: pending }` with a unique id.
-   - **Move a date** — update `due` on the existing entry and **log what changed and why**. The new
-     date replaces the old one in the field; the log is where the slip is visible.
+   - **Move a date** — update `due` on the existing entry. The commit message records what changed
+     and why; that is where the slip is visible.
    - **Resolve** — do not. `govern/obligations` closes obligations, and the schema requires
      `resolved_by` naming the action that met it.
-4. **Log it** — `{ ts, op: track-milestone, stage: govern, note: "...", branch }`. For a moved date,
-   the note carries the old date, the new one, and the reason.
-5. **Validate and save.**
+4. **Validate.**
    ```bash
    python3 schemas/validate-ledger.py project.yaml
    ```
-   Then delegate: "save: `datalad save -m 'track-milestone: <action> <id>'`."
+5. **Save and record in one step.** For a new milestone:
+   ```bash
+   datalad save -m "$(printf 'track-milestone: add <id>\n\nDSH-Op: track-milestone\nDSH-Stage: govern\nDSH-Obligation: <id> opened')" project.yaml
+   ```
+   For a moved date, the message body carries the old date, the new one, and the reason:
+   ```bash
+   datalad save -m "$(printf 'track-milestone: move <id> due <old> -> <new> — <reason>\n\nDSH-Op: track-milestone\nDSH-Stage: govern')" project.yaml
+   ```
 6. **Report** the milestone as recorded, and what is due next across **all** obligation kinds, not
    only milestones — the point of using one registry is one answer.
 
@@ -57,14 +61,15 @@ than two.
 - **Never invent a date.** Not from a conference's usual deadline, not from a funder's typical
   reporting cycle, not from "about three months". Ask. A confidently wrong deadline in a tracking
   system is worse than an absent one, because it will be trusted.
-- **Never silently move a date.** A slipped deadline is information: update `due` and log the old
-  value, the new value and the reason. Overwriting a date without recording the slip erases the only
-  evidence that the project's timeline changed.
+- **Never silently move a date.** A slipped deadline is information: update `due` and record the old
+  value, the new value and the reason in the commit message. Overwriting a date without recording
+  the slip erases the only evidence that the project's timeline changed.
 - **Never delete a milestone.** It is resolved forward like any obligation — `met` or `waived`, with
-  the reason in the log — and resolution belongs to `govern/obligations`.
+  the reason in the commit that resolves it — and resolution belongs to `govern/obligations`.
 - **Never duplicate a commitment another `kind` already records.** If the deadline is a
   pre-registration, an ethics expiry or a DMP deliverable, point at the owning skill instead of
   adding a second entry.
 - Do not mark a milestone `met` here; the schema requires `resolved_by`, and the action that met it
   is recorded by whichever skill performed it.
-- Keep `log:` append-only and the ledger schema-valid; delegate the save to the datalad doer.
+- Keep the ledger schema-valid. Record activity in the commit's `DSH-*` lines, never in
+  `project.yaml` `log`; save with `datalad save` yourself.

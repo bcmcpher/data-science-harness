@@ -8,7 +8,6 @@ description: >
   columns (curate/gen-data-dict) or to remove identifiers (curate/deidentify).
 plane: workflow
 stamped: [S, T]
-delegates_to: [datalad]
 ---
 
 # Skill: merge-data
@@ -59,22 +58,17 @@ counts, and why the join key is supplied rather than inferred.
 5. **Check for colliding column names.** Two sources with the same non-key column will either
    overwrite or produce suffixed duplicates. Name the collisions and ask how to resolve them.
 
-6. **Run the merge through the datalad doer**, so it is a recorded transformation:
-   > "run `<the merge command>` on `<sources>` producing `<output>`, and record it with
-   > `datalad run`."
-
+6. **Run the merge yourself, with provenance**, so it is a recorded transformation:
+   ```bash
+   datalad run -m "$(printf 'merge-data: <sources> -> <output> — <join type> on <key>\n\nDSH-Op: merge-data\nDSH-Stage: curate')" -i <sources> -o <output> "<the merge command>"
+   ```
    Never edit a table in place to add columns. The merge is a derivation and its inputs must stay
-   readable.
+   readable. The run's commit is the save — there is no separate save step.
 
 7. **Report the arithmetic, and check it.** Rows in, rows out, keys matched, keys dropped from each
    side, columns in, columns out. A row count that changed in a way the join type does not explain is
-   a failure even if the file looks right.
-
-8. **Log and save** — `{ ts, op: merge-data, stage: curate, note: "...", branch }` with the
-   arithmetic in the note, then delegate the save.
-
-9. **Report**, and point at `curate/gen-data-dict` for the new columns: a merged table whose
-   provenance is clean and whose columns are undescribed is only half-curated.
+   a failure even if the file looks right. Point at `curate/gen-data-dict` for the new columns: a
+   merged table whose provenance is clean and whose columns are undescribed is only half-curated.
 
 ## Constraints
 
@@ -93,4 +87,4 @@ counts, and why the join key is supplied rather than inferred.
   told the source uses. An imputed cell is indistinguishable from a measured one once written.
 - **Never edit a source table in place.** The merge produces a new file through `datalad run`; the
   inputs stay as they are so the derivation is checkable.
-- Do not commit. The datalad doer owns `datalad save` and `datalad run`.
+- Record activity in the commit's `DSH-*` lines; never append to `project.yaml` `log`.

@@ -8,7 +8,6 @@ description: >
   (govern/ethics-track) or to score a dataset against STAMPED (govern/stamped-assess).
 plane: workflow
 stamped: [M, T]
-delegates_to: [datalad]
 ---
 
 # Skill: dmp
@@ -55,16 +54,15 @@ is a visible gap; an invented one is not.
    plan states one, and `ref` pointing at the plan section or the funder's award. This is the step
    that makes the DMP operative rather than archival.
 
-6. **Log it** — `{ ts, op: dmp, stage: govern, note: "...", branch }` naming what was written or
-   updated and how many obligations were recorded.
-
-7. **Validate and save.**
+6. **Validate, then save and record in one step** — the commit names what was written or updated
+   and how many obligations were recorded; nothing is appended to a log.
    ```bash
    python3 schemas/validate-ledger.py project.yaml
+   datalad save -m "$(printf 'dmp: <action> — <why>\n\nDSH-Op: dmp\nDSH-Stage: govern\nDSH-Obligation: <id> opened')" docs/dmp.md project.yaml
    ```
-   Then delegate: "save: `datalad save -m 'dmp: <action>'`."
+   Repeat the `DSH-Obligation: <id> opened` line once per obligation recorded. Use exactly one `-m`.
 
-8. **Report** the plan path, the obligations created with their ids and due dates, and — separately
+7. **Report** the plan path, the obligations created with their ids and due dates, and — separately
    and explicitly — **the list of sections the user still has to fill.** That list is the useful
    output; a DMP that looks finished and is not is the failure mode here.
 
@@ -84,4 +82,5 @@ is a visible gap; an invented one is not.
   than the schema's silence.
 - Do not resolve a `kind: dmp` obligation here. `govern/obligations` resolves it, and the schema
   requires `resolved_by` naming the action that met it.
-- Keep `log:` append-only and the ledger schema-valid; delegate the save to the datalad doer.
+- Record activity in the commit's `DSH-*` lines; never append to `project.yaml` `log`. Save with
+  `datalad save` yourself.

@@ -8,15 +8,14 @@ description: >
   artifact for the product.
 plane: workflow
 stamped: [M]
-delegates_to: [datalad]
 ---
 
 # Skill: reporting-checklist
 
 Attach the correct reporting guideline to a manuscript and work through it item by item, so the
 paper meets the standard its study type requires and the checklist ships with submission. This is
-completeness **Metadata** — a machine-and-reviewer-checkable record of what the paper reports. You
-delegate the save to the **datalad doer**.
+completeness **Metadata** — a machine-and-reviewer-checkable record of what the paper reports. The
+save runs directly, in the main thread.
 
 Load `plugins/disseminate/references/equator-guidelines.md` to pick the right guideline before
 starting. Its table also says which guidelines are **bundled** — whose item text is on disk — and
@@ -49,10 +48,11 @@ that is what decides whether this skill can produce a checklist at all.
    guideline's; only the status column is yours. Pre-fill items the harness can evidence from the
    manuscript and ledger — the bundled file's closing section names which ones those are — and leave
    the rest `TODO` for the author.
-4. **Register + log** — add the checklist path to the product's `outputs[]`; append
-   `{ ts, op: reporting-checklist, stage: disseminate, note: "<guideline> checklist for <id>", branch: <branch> }`.
-5. **Save** — delegate to the datalad doer: "save: `datalad save -m 'reporting-checklist: <guideline> for <id>'`."
-6. **Report** — the guideline chosen **and its version**, how many items are `reported`,
+4. **Register + save** — add the checklist path to the product's `outputs[]`; save:
+   ```bash
+   datalad save -m "$(printf 'reporting-checklist: <guideline> checklist for <id>\n\nDSH-Op: reporting-checklist\nDSH-Stage: disseminate\nDSH-Product: <id>')"
+   ```
+5. **Report** — the guideline chosen **and its version**, how many items are `reported`,
    `not-applicable` and `TODO`, and the gaps the author must close before submission (e.g. a missing
    pre-registration → `govern/preregister`). A checklist whose items are mostly `TODO` is a
    successful outcome of this skill and an unfinished paper; say both.
@@ -74,5 +74,5 @@ that is what decides whether this skill can produce a checklist at all.
 - **Never state that the paper is compliant, ready, or meets the guideline.** This skill produces a
   record of where things are reported. Whether that reporting is adequate is the author's and the
   reviewer's judgement.
-- Record the checklist under the product's `outputs[]`; keep `log:` append-only and the ledger
-  schema-valid. Delegate the save to the datalad doer.
+- Record the checklist under the product's `outputs[]`; keep the ledger schema-valid. Run the save
+  yourself.

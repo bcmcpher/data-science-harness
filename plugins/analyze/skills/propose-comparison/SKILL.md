@@ -7,7 +7,6 @@ description: >
   be introduced at any point — the story is built from comparisons, not a rigid pipeline.
 plane: workflow
 stamped: [A, T, M]
-delegates_to: [datalad]
 ---
 
 # Skill: propose-comparison
@@ -34,17 +33,22 @@ object of STAMPED §3.12.1.
 2. **Choose a clear branch name** — `cmp/<short-slug>` (e.g. `cmp/group-diff-y`). The user owns
    naming conventions; suggest one and confirm. Clear, stable names are how comparisons stay
    navigable (the harness does not track branches for you beyond the log).
-3. **Create the branch** — delegate to the **datalad doer**:
-   > "Create and switch to git branch `cmp/<slug>` in this dataset (leave the working tree clean)."
-4. **Log it** — append one entry to `project.yaml`:
-   `{ ts, op: propose-comparison, stage: analyze, note: "cmp: <what> (<rigor>)", branch: cmp/<slug> }`.
+3. **Create the branch** — run it yourself, DataLad is native like git:
+   ```bash
+   git checkout -b cmp/<slug>
+   ```
+4. **Write and save the record** — write the `what`/`why`/`inputs`/`outputs`/rigor to
+   `code/cmp-<slug>.md`, then save it in one step:
+   ```bash
+   datalad save -m "$(printf 'propose cmp/<slug> — <what> (<rigor>)\n\nDSH-Op: propose-comparison\nDSH-Stage: analyze')" code/cmp-<slug>.md
+   ```
 5. **Report** — the branch name and that the next step is writing the analysis script, then
    `analyze/run-comparison` to execute it with provenance.
 
 ## Constraints
 - One comparison = one branch. Do not stack unrelated comparisons on the same branch.
-- Keep `project.yaml` append-only.
+- Record activity in the commit's `DSH-*` lines; never append to `project.yaml` `log`.
 - Do NOT choose the analysis, model, or figures for the user — the harness scaffolds the edges of
-  the work (branch, provenance, log), not the scientific question itself. Writing the analysis
+  the work (branch, provenance, record), not the scientific question itself. Writing the analysis
   script is the user's job; `run-comparison` wraps whatever they wrote.
-- Delegate the branch operation to the datalad doer; never call git/datalad directly.
+- Run the branch operation and the save yourself; DataLad and git are native, not a doer.

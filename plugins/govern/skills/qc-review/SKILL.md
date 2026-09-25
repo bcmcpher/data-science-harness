@@ -8,7 +8,7 @@ description: >
   recommends the skill that closes each; it does not change the dataset.
 plane: workflow
 stamped: [S]
-delegates_to: [bids, datalad]
+delegates_to: [bids]
 ---
 
 # Skill: qc-review
@@ -16,7 +16,8 @@ delegates_to: [bids, datalad]
 Assess whether the dataset is in good shape to build on and release: is it **BIDS-valid**
 (Self-containment), and how does the project score across STAMPED? This is a read-only review that
 turns the current state into a short report with concrete next actions. You delegate validation to
-the **bids doer** and state inspection to the **datalad doer**; you do not modify anything.
+the **bids doer** and inspect DataLad state yourself with read-only commands; you do not modify
+anything.
 
 ## When to use
 - Before grouping/releasing a product, at the end of curation, or whenever the user wants a quality
@@ -30,8 +31,10 @@ the **bids doer** and state inspection to the **datalad doer**; you do not modif
    > warning counts, and any dataset_description/participants/sidecar gaps."
    Relay the summary. If the validator is absent, report `unverified` with the install hint — never
    claim validity that was not checked.
-2. **State inspection (datalad doer)** — delegate a read-only check:
-   > "status + log: is the working tree clean, what is the current branch, is a sibling configured?"
+2. **State inspection** — read the state directly with read-only DataLad commands (no delegation,
+   nothing written): `datalad status` for a clean tree, `git rev-parse --abbrev-ref HEAD` for the
+   branch, `datalad siblings` for whether one is configured, and
+   `bash plugins/datalad-cli/scripts/dsh-log.sh --legacy | tail -n 12` for recent activity.
 3. **STAMPED self-assessment** — from the bids result, the datalad state, and the ledger
    (`project.yaml`), score each letter and name the gap-closing skill:
    - **S** self-contained → BIDS valid + `dataset_description.json`/`README` present (`curate/*`)
@@ -53,14 +56,14 @@ the **bids doer** and state inspection to the **datalad doer**; you do not modif
    COBIDAS check was skipped and why. Do not substitute recalled items for the bundled ones, and do
    not extend this to the acquisition, preprocessing or modeling tables: those describe a study, not
    a dataset, and they belong to `disseminate/reporting-checklist` at submission time.
-5. **Log it** — append `{ ts, op: qc-review, stage: qc, note: "bids <result>; STAMPED gaps: <letters>", branch: <branch> }`, then delegate the save to the datalad doer.
-6. **Report** — a compact scorecard: BIDS result (errors/warnings), the STAMPED letters that are
+5. **Report** — a compact scorecard: BIDS result (errors/warnings), the STAMPED letters that are
    satisfied vs. the gaps, the COBIDAS sharing/reproducibility items evidenced or skipped, and for each
    gap the single skill that closes it. Recommend the highest priority next action.
 
 ## Constraints
-- Read-only: never modify, rename, or "fix" dataset files here — diagnose and route to the fixing
-  skill. Validation and state inspection go through the bids and datalad doers respectively.
+- Read-only: never modify, rename, or "fix" dataset files here, and never run `datalad save` — this
+  skill commits nothing. Validation goes through the bids doer; state inspection uses read-only
+  DataLad commands run directly.
 - Never assert BIDS validity the bids doer did not verify (an absent validator is `unverified`, not
   a pass).
 - **Never state that a project is COBIDAS-compliant.** This step reads two of seven tables, and
@@ -69,4 +72,4 @@ the **bids doer** and state inspection to the **datalad doer**; you do not modif
 - **Never recall a COBIDAS item.** If the bundled reference is not installed, the check is skipped
   with that reason. A recalled neuroimaging checklist is exactly what COBIDAS was written to replace.
 - The STAMPED assessment is a snapshot, not a gate — report it plainly with gaps; do not block other
-  work. Keep `log:` append-only and the ledger schema-valid.
+  work.

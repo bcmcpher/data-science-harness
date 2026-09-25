@@ -8,7 +8,6 @@ description: >
   install harness plugins (bin/install.sh) or to write research documentation.
 plane: workflow
 stamped: [M, P]
-delegates_to: [datalad]
 ---
 
 # Skill: claude-config
@@ -53,9 +52,11 @@ you cannot source is a question for the user rather than a plausible default.
 5. **MCP stubs, only for servers the project actually uses**, and with no secrets in them. A stub
    with a placeholder token is fine; a stub with a real one is a credential committed to a dataset
    that may be published.
-6. **Log it** — `{ ts, op: claude-config, stage: initialize, note: "...", branch }`.
-7. **Save** — delegate: "save: `datalad save -m 'claude-config: <action>'`."
-8. **Report** what was written, and separately **what you left out because you could not verify it**,
+6. **Save and record in one step**:
+   ```bash
+   datalad save -m "$(printf 'claude-config: <action> — <why>\n\nDSH-Op: claude-config\nDSH-Stage: initialize')" <paths>
+   ```
+7. **Report** what was written, and separately **what you left out because you could not verify it**,
    with the question the user would need to answer for each.
 
 ## Constraints
@@ -74,4 +75,5 @@ you cannot source is a question for the user rather than a plausible default.
 - **Never claim the configuration is complete.** Report what you left out and why.
 - Do not invent a test or lint command. If none exists, say so — that is a finding, not a gap to fill
   with a guess.
-- Do not commit. The datalad doer owns `datalad save`.
+- Record activity in the commit's `DSH-*` lines, never in `project.yaml` `log`; save with `datalad
+  save` yourself.

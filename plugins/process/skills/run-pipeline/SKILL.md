@@ -7,7 +7,7 @@ description: >
   provenance". This is the Stage-8 (Process) entry point — nipoppy commands invoked *with* datalad.
 plane: workflow
 stamped: [A, T, P, E]
-delegates_to: [nipoppy, datalad]
+delegates_to: [nipoppy]
 ---
 
 # Skill: run-pipeline
@@ -15,8 +15,8 @@ delegates_to: [nipoppy, datalad]
 Execute a nipoppy processing pipeline so the computation is **provenanced**: nipoppy provides the
 containerized pipeline invocation (Boutiques + Apptainer → Portability/Ephemerality), and DataLad
 wraps it (`datalad run`) so inputs, command, and outputs are recorded (Actionability + Tracking).
-You never run tools yourself — you orchestrate two doers: the **nipoppy doer** constructs and
-validates the command; the **datalad doer** runs it with provenance.
+The **nipoppy** doer constructs and validates the command; you run it yourself under `datalad run`,
+the way you would run git.
 
 > Design note: nipoppy alone does not record provenance and datalad does not know pipeline
 > mechanics — so this planner joins them. The nipoppy command is always executed *through*
@@ -39,33 +39,41 @@ validates the command; the **datalad doer** runs it with provenance.
    > matches a pulled image) and construct the `nipoppy process --pipeline <X> --pipeline-version
    > <V> [...]` command; run it once with `--simulate` to preview, and return the exact command
    > plus the inputs it reads and outputs it writes."
-   Expect a structured result with `command`, `inputs`, `outputs`, `run_via: datalad-run`. If it
-   returns `result: failed` (state/platform gap), relay the fix and stop.
-3. **Ensure a clean tree (datalad doer)** — `datalad run` requires a clean tree:
-   > "status: report modified/untracked files and the current branch."
+   Expect a structured result with `command`, `inputs`, `outputs`, `run_via: datalad-run`, and a
+   `binding` (e.g. `nipoppy/<pipeline>@<version>`). If it returns `result: failed` (state/platform
+   gap), relay the fix and stop.
+3. **Ensure a clean tree** — `datalad run` requires a clean tree:
+   ```bash
+   datalad status
+   ```
    If dirty, route to `analyze/checkpoint` first (or have the user confirm), then continue.
-4. **Run with provenance (datalad doer)** — delegate the execution:
-   > "run: `datalad run -m '<pipeline> <version> on <scope>'` with inputs `<-i from step 2>` and
-   > outputs `<-o from step 2, e.g. derivatives/<pipeline>, proc/logs/<pipeline>>`, command
-   > `'<the nipoppy process command>'`."
-   Wait for the doer's structured result (commit sha, recorded outputs, pass/fail). On failure,
-   relay the doer's error and the nipoppy log path; nothing was committed. Stop.
-5. **Record completion (nipoppy doer → datalad doer)** — after a successful run:
+4. **Run with provenance** — run the constructed command yourself:
+   ```bash
+   datalad run -m "$(printf '<pipeline> <version> on <scope>\n\nDSH-Op: run-pipeline\nDSH-Stage: process\nDSH-Binding: <binding from step 2>')" \
+     -i <inputs from step 2> \
+     -o <outputs from step 2, e.g. derivatives/<pipeline>, proc/logs/<pipeline>> \
+     "<the nipoppy process command>"
+   ```
+   Use exactly one `-m`. On failure, relay the error and the nipoppy log path; nothing was
+   committed. Stop.
+5. **Record completion (nipoppy doer, then save yourself)** — after a successful run:
    > nipoppy doer: "track-processing for `<pipeline>` to update `tabular/bagel.tsv`."
-   > then datalad doer: "save: `datalad save -m 'track-processing: <pipeline> <version>'`."
-6. **Log it** — append to `project.yaml`:
-   `{ ts, op: run-pipeline, stage: process, note: "datalad run nipoppy process <pipeline> <version>
-   on <scope>; commit <sha>; outputs <paths>", branch: <branch> }`.
-7. **Report** — the pipeline/version/scope, the provenance commit, output derivatives, updated
-   bagel status, and that the run is replayable via the datalad doer (`datalad rerun`). Suggest the
-   next step (`nipoppy extract` for IDPs, or `analyze/propose-comparison`).
+   Then save what it wrote:
+   ```bash
+   datalad save -m "$(printf 'track-processing: <pipeline> <version>\n\nDSH-Op: run-pipeline\nDSH-Stage: process\nDSH-Binding: <binding>')" tabular/bagel.tsv
+   ```
+6. **Report** — the pipeline/version/scope, the provenance commit, output derivatives, updated
+   bagel status, and that the run is replayable with `datalad rerun`. Suggest the next step
+   (`nipoppy extract` for IDPs, or `analyze/propose-comparison`).
 
 ## Constraints
-- Always execute the nipoppy command through the datalad doer's `datalad run` — never let a
-  dataset-mutating `nipoppy process`/`bidsify`/`extract` run bare. Provenance is the whole point.
-- Require a meaningful `-m` message that names the pipeline, version, and scope; never a placeholder.
+- Always execute the nipoppy command through `datalad run` yourself — never let a dataset-mutating
+  `nipoppy process`/`bidsify`/`extract` run bare. Provenance is the whole point.
+- Require a meaningful `-m` message that names the pipeline, version, and scope; never a placeholder,
+  and never more than one `-m` (DataLad keeps only the last).
 - Declare inputs/outputs from the nipoppy doer's report — do not invent paths. Prefer the pipeline's
   own `derivatives/<pipeline>` and `proc/logs/<pipeline>` as `-o`; leave `scratch/` untracked.
 - Do not diagnose or "fix" the pipeline's science — if a container errors on its own logic, surface
   the nipoppy log to the user; the harness owns provenance, not the pipeline internals.
-- Keep `project.yaml` append-only; log both successful and (as a note) failed runs if useful.
+- Record activity in the commit's `DSH-*` lines, never in `project.yaml` `log`. Note a failed run to
+  the user; do not commit as if it had succeeded.

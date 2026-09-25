@@ -7,16 +7,16 @@ description: >
   "make the figures reproducible". Produces an article-kind living product.
 plane: workflow
 stamped: [A, P, E]
-delegates_to: [compendium, datalad]
+delegates_to: [compendium]
 ---
 
 # Skill: executable-article
 
 Turn a product into a **re-executable article** — figures regenerate from the provenanced outputs in
 the project's pinned container, rather than being pasted in. That makes the paper Actionable
-(re-runs) and Portable/Ephemeral (rebuilt from spec). You delegate history/ledger reads and the save
-to the **datalad doer**, and the scaffold, figure-provenance wiring and build to the **compendium
-doer**.
+(re-runs) and Portable/Ephemeral (rebuilt from spec). History/ledger reads and the save run
+directly, in the main thread; you delegate the scaffold, figure-provenance wiring and build to the
+**compendium doer**.
 
 Load `plugins/disseminate/references/neurolibre-structure.md` for the scaffold and how each piece
 maps to the harness before generating.
@@ -52,10 +52,12 @@ maps to the harness before generating.
    compendium doer resolves each figure's output path to its producing run commit and reports any it
    cannot. **Carry an `unprovenanced:` list into your own report; do not drop it** — a figure with no
    producing run is the one thing that makes the article's central claim untrue.
-4. **Register + log** — add the article path to the product's `outputs[]`; append
-   `{ ts, op: executable-article, stage: disseminate, note: "NeuroLibre article for <id>", branch: <branch> }`.
-5. **Save** — delegate to the datalad doer: "save: `datalad save -m 'executable-article: scaffold <id>'`."
-6. **Report** — the article path, the compendium doer's build result (`built` / `partial` /
+4. **Register + save** — add the article path to the product's `outputs[]`; save:
+   ```bash
+   datalad save -m "$(printf 'executable-article: scaffold NeuroLibre article for <id>\n\nDSH-Op: executable-article\nDSH-Stage: disseminate\nDSH-Product: <id>')"
+   ```
+   Add a `DSH-Binding:` line copied from the compendium doer's report.
+5. **Report** — the article path, the compendium doer's build result (`built` / `partial` /
    `failed` / `unavailable`) and whether it was **pinned**, any `unprovenanced:` figures, what still
    needs wiring (e.g. the dataset DOI once released, the `repo2data` fetch), and the next step:
    `link-outputs` to relate the article to the dataset (`Documents`) and paper (`IsSupplementTo`).
@@ -73,5 +75,5 @@ maps to the harness before generating.
 - The `binder/` environment derives from the project's container recipe/digest — keep it consistent
   with what analyses actually ran in; do not invent dependencies.
 - repo2data points at the *published* dataset (DOI or sibling) — never a local absolute path.
-- Record the article under the product's `outputs[]`; keep `log:` append-only and the ledger
-  schema-valid. Delegate reads/saves to the datalad doer.
+- Record the article under the product's `outputs[]`; keep the ledger schema-valid. Run DataLad
+  yourself; delegate the scaffold and build to the compendium doer.

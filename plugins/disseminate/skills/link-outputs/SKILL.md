@@ -8,7 +8,7 @@ description: >
   single linked research object — the endgame of publishing multiple products.
 plane: workflow
 stamped: [M, D]
-delegates_to: [datalad, archive]
+delegates_to: [archive]
 ---
 
 # Skill: link-outputs
@@ -17,9 +17,9 @@ Record how the project's **products relate to each other** (and to external iden
 dataset, paper, executable article, and agent bundle form **one linked compendium** rather than
 scattered artifacts. The links are DataCite `RelatedIdentifier` relations, stored in each product's
 `relations[]` in the ledger (Metadata) and making the multi-product set resolvable as a coherent
-whole (Distributability). The ledger is the canonical record. You own which links are meaningful;
-you delegate the ledger save to the **datalad doer**, and every identifier lookup and every write
-onto an archive record to the **archive doer**.
+whole (Distributability). The ledger is the canonical record. You own which links are meaningful and
+save yourself, in the main thread; you delegate every identifier lookup and every write onto an
+archive record to the **archive doer**.
 
 Load `plugins/disseminate/references/datacite-relations.md` for the valid `relationType` terms and
 their inverses before recording any relation.
@@ -63,9 +63,14 @@ their inverses before recording any relation.
    written after release.
 5. **(Optional) mirror external links** into `dataset_description.json` for the dataset product
    (e.g. a DOI the dataset `References`), keeping the ledger as the canonical record.
-6. **Log it** — append `{ ts, op: link-outputs, stage: disseminate, note: "<src> <relation> <target> (+inverse); remote: <ok|ledger-only|failed>[; target unresolved]", branch: <branch> }`.
-7. **Save** — delegate to the **datalad doer**: "save: `datalad save -m 'link-outputs: <src> <relation> <target>'`."
-8. **Report** — the relation graph (source → relation → target for each link), which relations are
+6. **Save** — record the relation(s) and save:
+   ```bash
+   datalad save -m "$(printf 'link-outputs: <src> <relation> <target> (+inverse)\n\nDSH-Op: link-outputs\nDSH-Stage: disseminate\nDSH-Product: <src>\nDSH-Product: <target, if internal>')"
+   ```
+   Note the remote write result (`ok` / `ledger-only` / `failed`) and any unresolved target in the
+   message body. Add a `DSH-Binding` line copied from the archive doer's report when its result was
+   `ok`.
+7. **Report** — the relation graph (source → relation → target for each link), which relations are
    on archive records and which are ledger-only, any unresolved external targets, any targets still
    needing a DOI, and whether the compendium is now fully linked. When every product is released
    and linked, the multi-product research object is complete.
@@ -75,8 +80,8 @@ their inverses before recording any relation.
   product-to-product links.
 - Never fabricate a DOI — link by product `id` (internal) or a real resolvable identifier only.
 - `relations[]` is upserted per the ledger conventions (no duplicate `{relation,target}` pairs);
-  keep `log:` append-only and the ledger schema-valid (`schemas/project.schema.json`).
+  keep the ledger schema-valid (`schemas/project.schema.json`).
 - Relations describe existing products — this skill never creates, versions, or moves a product.
-- Delegate every DataLad save to the datalad doer.
+- Run the DataLad save yourself.
 - Never call an archive or DOI API yourself — lookups, resolution, and writes onto archive records
   go through the archive doer.

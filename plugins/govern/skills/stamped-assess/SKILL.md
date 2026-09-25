@@ -9,7 +9,7 @@ description: >
   conformance alone (that is the bids doer).
 plane: workflow
 stamped: [M, T]
-delegates_to: [bids, datalad]
+delegates_to: [bids]
 ---
 
 # Skill: stamped-assess
@@ -45,8 +45,9 @@ scoring, and score against those ids rather than against the principle names.
 2. **Gather evidence per dimension, from tools and files rather than impression.** Delegate:
    - **S** — `dataset_description.json`, licence files, subdataset registration; BIDS conformance
      via the **bids** doer (S.1, S.2).
-   - **T** — `datalad` history via the **datalad doer**: are outputs reachable through `datalad run`
-     commits, are component versions recorded (T.1–T.4)?
+   - **T** — DataLad history read directly (`datalad status`,
+     `bash plugins/datalad-cli/scripts/dsh-log.sh --legacy`): are outputs reachable through
+     `datalad run` commits, are component versions recorded (T.1–T.4)?
    - **A** — a README with reproduction instructions, and whether they are executable specifications
      rather than prose (A.1, A.2).
    - **M** — directory structure, subdatasets, per-module licences (M.1–M.3).
@@ -75,11 +76,9 @@ scoring, and score against those ids rather than against the principle names.
    gaps:       <per dimension: the requirement id unmet, and the skill that owns closing it>
    ```
 
-6. **Log it** — `{ ts, op: stamped-assess, stage: govern, note: "...", branch }`. The note carries
-   the per-dimension summary. Do not write scores into `products[]` or `obligations[]`: the ledger
-   has no field for a score, and an assessment is an observation at a moment, not a commitment.
-
-7. **Save** — delegate: "save: `datalad save -m 'stamped-assess: <target>'`."
+6. **Report, and nothing else.** Do not write scores into `products[]` or `obligations[]`, and do
+   not run `datalad save`: the ledger has no field for a score, an assessment is an observation at a
+   moment rather than a commitment, and there is nothing else on disk this skill changes.
 
 ## Constraints
 
@@ -92,11 +91,11 @@ scoring, and score against those ids rather than against the principle names.
   comes from the question being asked, not from what you found.
 - **Never score a dimension from a plausible inference.** "There is a Dockerfile, so P is satisfied"
   is not evidence that runs used it — P.1 is about undocumented host state and only the run records
-  answer it. Ask the datalad doer.
+  answer it. Check the DataLad history.
 - **Never infer PHI exposure or its absence.** You can report that de-identification has no recorded
   action (`curate/deidentify` owns that record); you cannot report that a dataset contains no
   identifiers. Absence of a record is not absence of risk.
 - **Never write a score into the ledger's structured fields.** There is no schema field for it, and
-  inventing one in prose that reads structured is worse than the `log:` entry.
+  inventing one in prose that reads structured is worse than a fabricated record.
 - Do not fix what you find, and do not edit dataset files. Each gap names the owning skill.
-- Keep `log:` append-only and the ledger schema-valid; delegate the save to the datalad doer.
+- Read-only: never write to `project.yaml`, never run `datalad save`. This skill commits nothing.

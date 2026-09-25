@@ -24,10 +24,10 @@
 
 ## 5. Planners (all 37)
 
-- [ ] 5.1 Replace every datalad-doer delegation with the direct command; collapse "save" + "log it" into one step with `DSH-*` lines; drop `datalad` from `delegates_to`
-- [ ] 5.2 `log-decision` → `docs/decisions/<date>-<slug>.md` + save
-- [ ] 5.3 `status-report` → read-only; optionally write `reports/status-<date>.md`
-- [ ] 5.4 `templates/skill/SKILL.md`: step pattern uses a direct `datalad save` with `DSH-*` lines
+- [x] 5.1 Replace every datalad-doer delegation with the direct command; collapse "save" + "log it" into one step with `DSH-*` lines; drop `datalad` from `delegates_to`
+- [x] 5.2 `log-decision` → `docs/decisions/<date>-<slug>.md` + save
+- [x] 5.3 `status-report` → read-only; optionally write `reports/status-<date>.md`
+- [x] 5.4 `templates/skill/SKILL.md`: step pattern uses a direct `datalad save` with `DSH-*` lines
 
 ## 6. Lint and tests
 

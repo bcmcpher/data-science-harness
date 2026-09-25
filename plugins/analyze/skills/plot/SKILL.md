@@ -9,7 +9,6 @@ description: >
   assemble the manuscript (disseminate/draft-manuscript).
 plane: workflow
 stamped: [A, M]
-delegates_to: [datalad]
 ---
 
 # Skill: plot
@@ -46,11 +45,11 @@ to the output it was drawn from.
    stay consistent across comparisons.
 5. **Run it under provenance** — route to `analyze/run-comparison` with the result files as `-i` and
    the figure directory as `-o`, so the figure carries the same record as the analysis.
-6. **Log it** — append one entry to `project.yaml`:
-   `{ ts, op: plot, stage: analyze, note: "figures <paths> from <output files>", branch: cmp/<slug> }`.
-7. **Save** — delegate to the **datalad doer**:
-   > "save: `datalad save -m 'plot: figures for cmp/<slug>'`."
-8. **Report** — each figure, the output file it was drawn from, and what it does and does not show.
+6. **Save** — run it yourself:
+   ```bash
+   datalad save -m "$(printf 'plot: figures for cmp/<slug>\n\nDSH-Op: plot\nDSH-Stage: analyze')" code/fig-<slug>.<ext>
+   ```
+7. **Report** — each figure, the output file it was drawn from, and what it does and does not show.
 
 ## Constraints
 
@@ -65,5 +64,5 @@ to the output it was drawn from.
 - **Do not interpret.** The figure caption describes what is plotted and where it came from; whether
   it supports a conclusion is the researcher's call.
 - Do not silently drop points, clip outliers, transform an axis, or exclude a group. If any of those
-  is wanted, it is a choice to be stated in the caption and the log.
-- Keep `log:` append-only and the ledger schema-valid; delegate the save to the datalad doer.
+  is wanted, it is a choice to be stated in the caption and the commit message.
+- Run the save yourself; never append to `project.yaml` `log`.

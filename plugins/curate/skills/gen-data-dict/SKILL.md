@@ -8,7 +8,7 @@ description: >
   (curate/merge-data) or for the full metadata pass including sidecars (curate/annotate).
 plane: workflow
 stamped: [M, A]
-delegates_to: [annotate, datalad]
+delegates_to: [annotate]
 ---
 
 # Skill: gen-data-dict
@@ -66,11 +66,11 @@ a data dictionary is worse than a blank, because downstream analysis will trust 
 
    An unavailable backend is not zero matches. Keep the free-text `Description` and report the gap.
 
-7. **Validate the JSON**, then delegate the save:
+7. **Validate the JSON, then save and record in one step:**
    ```bash
    python3 -c "import json,sys;json.load(open('participants.json'));print('valid JSON')"
+   datalad save -m "$(printf 'gen-data-dict: describe <n> columns in <table>\n\nDSH-Op: gen-data-dict\nDSH-Stage: curate')" participants.json
    ```
-   > "save: `datalad save -m 'gen-data-dict: describe <n> columns in <table>'`."
 
 8. **Report** the columns described, the columns **left undescribed and why**, and any `Levels`
    mapping the user supplied that does not cover every value found in the data — a code present in
@@ -95,4 +95,4 @@ a data dictionary is worse than a blank, because downstream analysis will trust 
 - **Never silently drop a level found in the data.** If the user's mapping misses a value that
   occurs, report it rather than omitting it from `Levels`.
 - Do not edit the table itself — this describes columns, it does not change them.
-- Do not commit. The datalad doer owns `datalad save`.
+- Record activity in the commit's `DSH-*` lines; never append to `project.yaml` `log`.

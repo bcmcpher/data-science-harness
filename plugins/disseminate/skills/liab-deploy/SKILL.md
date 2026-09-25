@@ -8,7 +8,7 @@ description: >
   alongside the cloud-hosted outputs.
 plane: workflow
 stamped: [D]
-delegates_to: [liab, datalad]
+delegates_to: [liab]
 ---
 
 # Skill: liab-deploy
@@ -16,8 +16,8 @@ delegates_to: [liab, datalad]
 Give the project a **data-sovereign** distribution channel: self-hosted infrastructure that serves
 the DataLad dataset over git-annex remotes, so the lab controls where its data lives while keeping
 the same Distributability a cloud sibling provides. The infra is declarative (pyinfra), so the
-deployment itself is reproducible. You delegate sibling registration and the save to the **datalad
-doer**, and planning, applying and verifying the deployment to the **liab doer**.
+deployment itself is reproducible. You register the sibling, verify retrieval, and save yourself, in
+the main thread; you delegate planning and applying the deployment to the **liab doer**.
 
 Load `plugins/disseminate/references/liab-deployments.md` for the deployment layout and mapping
 before generating.
@@ -58,22 +58,29 @@ before generating.
    Report the plan to the user. An apply is a separate, later instruction that names the target host;
    do not request one on the user's behalf, and do not treat their approval of the plan as approval
    to apply.
-4. **Create the repository, then register the sibling (datalad doer)** — once the instance is up,
-   the liab doer creates the repository through its `forgejo` skill. It will ask whether the
+4. **Create the repository (liab doer), then register the sibling yourself.** Once the instance is
+   up, the liab doer creates the repository through its `forgejo` skill. It will ask whether the
    repository is private, and so should you: a dataset repository created public when it should have
-   been private is a disclosure, and there is no safe default to assume. Then delegate:
-   > "siblings: register the self-hosted Forgejo/git-annex store as a sibling (`create-sibling` /
-   > the annex special remote), with a storage `--publish-depends` so annexed content is served."
-   Then the user pushes with `disseminate/publish`.
-5. **Register + log** — record the deployment path (and, once live, the sibling name) under a product
-   (kind `other`) `outputs[]`; append
-   `{ ts, op: liab-deploy, stage: disseminate, note: "Lab-in-a-Box deploy scaffold; sibling <name>", branch: <branch> }`.
-6. **Save** — delegate to the datalad doer: "save: `datalad save -m 'liab-deploy: scaffold self-hosted serving'`."
-7. **Report** — the deployment path, the liab doer's plan result, whether anything was applied and
-   whether a `datalad get` has confirmed retrieval (`applied` and `working` are different answers),
-   the registered sibling (once live), and the next
-   step: `disseminate/publish` to push to the self-hosted store, then `link-outputs` to relate the
-   mirror to the dataset (`IsVariantFormOf`).
+   been private is a disclosure, and there is no safe default to assume. Then register the sibling
+   directly:
+   ```bash
+   datalad siblings add -s <sibling-name> --publish-depends <storage-remote> --url <url>
+   ```
+   so annexed content is actually served, not just history.
+5. **Verify retrieval yourself.** Clone the dataset to a scratch dir and `datalad get` an annexed
+   file from the sibling; confirm the content arrived, then discard the clone. Only a successful get
+   earns `working` — a clean sibling registration alone is `applied`.
+6. **Register + save** — record the deployment path (and, once live, the sibling name) under a
+   product (kind `other`) `outputs[]`; save:
+   ```bash
+   datalad save -m "$(printf 'liab-deploy: sibling <name> <applied|working>\n\nDSH-Op: liab-deploy\nDSH-Stage: disseminate\nDSH-Product: <id>\nDSH-Binding: liab/pyinfra@<version>')"
+   ```
+   Copy the version into `DSH-Binding` from the liab doer's report.
+7. **Report** — the deployment path, the liab doer's plan/apply result, whether the sibling was
+   registered and whether your own `datalad get` confirmed retrieval (`applied` and `working` are
+   different answers), the registered sibling name, and the next step: `disseminate/publish` to push
+   to the self-hosted store, then `link-outputs` to relate the mirror to the dataset
+   (`IsVariantFormOf`).
 
 ## Constraints
 - **Scaffold and plan; do not deploy.** Never run `pyinfra` yourself and never provision a remote
@@ -86,13 +93,13 @@ before generating.
   are governance judgments made against the obligations in the ledger, by a person. Self-hosting is
   not by itself a compliance outcome, and a record that reads as though it were is worse than no
   record.
-- **Never report a deployment as working because a plan or an apply succeeded.** Pass on the doer's
-  distinction: `planned`, `applied`, `working` (a `datalad get` retrieved annexed content from the
-  self-hosted remote), `partial` (named host and operation), `failed`. Collapsing these is how a
-  half-configured box becomes the place the data gets pushed.
+- **Never report a deployment as working because a plan or an apply succeeded.** Only your own
+  `datalad get` retrieving annexed content from the self-hosted remote earns `working`. Report
+  `planned`, `applied`, `working`, `partial` (named host and operation), or `failed`. Collapsing
+  these is how a half-configured box becomes the place the data gets pushed.
 - The self-hosted store is a *destination* — it reuses the standard sibling/publish/provenance flow
-  (register via the datalad doer, push via `publish`), it does not bypass it.
+  (register and verify yourself, push via `publish`), it does not bypass it.
 - Ensure annexed content is actually served (a storage `--publish-depends`) so a clone can
   `datalad get` from the self-hosted store — otherwise it distributes history without data.
-- Record under a product's `outputs[]`; keep `log:` append-only and the ledger schema-valid.
-  Delegate sibling/save operations to the datalad doer.
+- Record under a product's `outputs[]`; keep the ledger schema-valid. Run the sibling registration
+  and retrieval check yourself; delegate deployment planning and applying to the liab doer.
