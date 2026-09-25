@@ -826,7 +826,7 @@ Each rule is tagged with the STAMPED letter(s) it serves.
 5. **Capability vs workflow separation** — tool mechanics live in **capability** plugins; research-process logic in **workflow** plugins. A workflow skill writes DataLad, git and git-annex commands directly, since they are native, and runs the harness's own scripts; for every other tool it asks the doer in words and never quotes that tool's command line. The lint errors on a quoted peripheral command in a workflow skill. **[M, A]**
 6. **Community contribution = write Markdown** — contributors don't touch Python code. **[A]**
 7. **References stay in `references/`** — large domain knowledge lives in `references/` dirs, not in SKILL.md bodies. **[S]**
-8. **DataLad is the default run path** — the `datalad` capability's skills auto-trigger on analysis commands so the provenance chain is never accidentally broken. **[T, A]**
+8. **DataLad is the default run path** — the always-loaded DataLad rules, the guard hook that blocks `git commit`/`git push` in a dataset, and the single `datalad` skill keep the provenance chain from being accidentally broken. **[T, A]**
 9. **Environments are pinned and containerized** — the `containers` capability produces portable, disposable environments rebuilt from spec. **[P, E]**
 10. **Research products first** — the default project export is a versioned, citable dataset, not a software package. **[D]**
 11. **Provenance for administration too** — administrative metadata lives in a versioned `project.yaml` ledger and is `datalad save`-d; every ethics amendment, DMP revision, and DOI is a tracked commit. **[T]**
