@@ -109,7 +109,7 @@ The design uses **two orthogonal axes**. Understand them separately.
 | Plane | What lives here | Rule |
 |-------|-----------------|------|
 | **Capability** (technical) | Thin, tool-scoped wrappers over one external tool each (Nipoppy, BIDS, containers, publishing, annotation), plus the DataLad toolbox the main thread reads natively. Mechanical, reusable STAMPED primitives. | A capability skill wraps a tool; it holds no research-process logic. A doer returns a command or the files it wrote; it never commits. |
-| **Workflow** (conceptual) | Tool-agnostic research process, written in research vocabulary (govern, initialize, curate, analyze, disseminate). | A workflow skill runs **DataLad itself**, as code runs git: `datalad save` / `datalad run`, with `DSH-*` lines recording the step. Every **other** tool goes through its doer. |
+| **Workflow** (conceptual) | Tool-agnostic research process, written in research vocabulary (govern, initialize, curate, analyze, disseminate). | A workflow skill runs **DataLad itself**, as code runs git: `datalad save` / `datalad run`, with `DSH-*` lines recording the step. Every **other** tool goes through its doer, asked in words (what, with which parameters, what to return), never as that tool's command line; the lint enforces this. |
 
 This split *is* STAMPED **Modularity** (separation of concerns) + **Actionability** (the workflow is the executable spec that invokes actionable tool primitives). It is what the user's "keep the technical tools separate from the conceptual workflows" requirement buys: capabilities recombine under different workflows, and a workflow can swap one capability for another (e.g. Zenodo for OSF) without rewriting the process.
 
@@ -823,7 +823,7 @@ Each rule is tagged with the STAMPED letter(s) it serves.
 2. **Installer is optional** — `bin/install.sh` and per-harness docs let users install without the CLI. **[A, D]**
 3. **Claude Code-native but not Claude-only** — Claude Code plugin format is the reference; adapters translate outward. **[P]**
 4. **One SKILL.md per skill** — no duplication per harness; adapters generate harness-specific output at install time. **[M, P]**
-5. **Capability vs workflow separation** — tool mechanics live in **capability** plugins; research-process logic in **workflow** plugins. A workflow skill never calls a CLI directly — it invokes capability skills. **[M, A]**
+5. **Capability vs workflow separation** — tool mechanics live in **capability** plugins; research-process logic in **workflow** plugins. A workflow skill writes DataLad, git and git-annex commands directly, since they are native, and runs the harness's own scripts; for every other tool it asks the doer in words and never quotes that tool's command line. The lint errors on a quoted peripheral command in a workflow skill. **[M, A]**
 6. **Community contribution = write Markdown** — contributors don't touch Python code. **[A]**
 7. **References stay in `references/`** — large domain knowledge lives in `references/` dirs, not in SKILL.md bodies. **[S]**
 8. **DataLad is the default run path** — the `datalad` capability's skills auto-trigger on analysis commands so the provenance chain is never accidentally broken. **[T, A]**
@@ -966,7 +966,7 @@ is the repository holding itself to the principle it publishes.
 
 Contributions are Markdown-first. To add a new skill:
 
-1. Decide the **plane**: is this **tool mechanics** (→ a `capability` plugin) or **research process** (→ a `workflow` plugin)? Tool mechanics wrap a single CLI and declare a `stamped:` tag; process logic orchestrates capability skills and must not call a CLI directly.
+1. Decide the **plane**: is this **tool mechanics** (→ a `capability` plugin) or **research process** (→ a `workflow` plugin)? Tool mechanics wrap a single CLI and declare a `stamped:` tag; process logic runs DataLad itself and asks doers for everything else in words, without quoting another tool's command line. A new toolbox adds its tool's binary to `PERIPHERAL_BINARIES` in `tests/lint-plugins.py`, so the lint catches planners that quote it.
 2. Pick the right plugin (or propose a new one in an issue)
 3. Copy `templates/skill/SKILL.md`, fill in the universal frontmatter (including `plane`) and instruction body
 4. Add the path to the plugin's `.claude-plugin/plugin.json` (`skills[]` or `agents[]`) — the lint errors if you skip this, because an unregistered skill silently never loads

@@ -23,7 +23,7 @@ maps to the harness before generating.
 
 > Scope note: you decide *that* an article should exist, for which product, and what it must contain.
 > The compendium doer owns the mechanics — MyST invocation, wiring each figure to the run that
-> produced it, and building inside the pinned container. Delegate rather than running `myst`
+> produced it, and building inside the pinned container. Delegate rather than running MyST
 > yourself. That doer reports a figure it could not trace to a run as **unprovenanced** rather than
 > embedding it, and a partial build as **partial** rather than as a product. Both of those are
 > answers you must pass on rather than smooth over: an article whose figures are pasted-in images
@@ -43,7 +43,7 @@ maps to the harness before generating.
 2. **Scaffold the article via the compendium doer** (per the reference) at `article/` (or the
    author's path): `myst.yml`, `paper.md`, `content/` figure notebooks, and `binder/` with an
    environment derived from `containers/` plus a `data_requirement.json` (repo2data) resolving the
-   published dataset. `repo2data` has no skill yet, so the doer will report that part as not built —
+   published dataset. repo2data has no skill yet, so the doer will report that part as not built —
    declare the requirement and note it as pending rather than writing a fetch script.
    > "scaffold a MyST article for product `<id>` at `article/`, wire its figures to the runs that
    > produced `derivatives/cmp-<slug>/`, and build it in the project's container."
@@ -59,17 +59,17 @@ maps to the harness before generating.
    Add a `DSH-Binding:` line copied from the compendium doer's report.
 5. **Report** — the article path, the compendium doer's build result (`built` / `partial` /
    `failed` / `unavailable`) and whether it was **pinned**, any `unprovenanced:` figures, what still
-   needs wiring (e.g. the dataset DOI once released, the `repo2data` fetch), and the next step:
+   needs wiring (e.g. the dataset DOI once released, the repo2data fetch), and the next step:
    `link-outputs` to relate the article to the dataset (`Documents`) and paper (`IsSupplementTo`).
    An unpinned build and a pinned one are different results; report which you got.
 
 ## Constraints
 - Figures must regenerate from provenanced outputs + the pinned environment — do not embed static
   images as the source of truth; the article's value is re-executability.
-- **Do not run `myst` yourself.** Delegate to the compendium doer, which checks the tool, wires
+- **Do not run MyST yourself.** Delegate to the compendium doer, which checks the tool, wires
   provenance and builds in the container. A planner that invokes the build directly skips both
   checks and can report a green build for an article that reproduces nothing.
-- **Never report an article as reproducible, or as built, on the strength of a successful `myst`
+- **Never report an article as reproducible, or as built, on the strength of a successful MyST
   exit.** MyST exits 0 with unresolved references and missing figures. Pass on the doer's warning
   count and its `unprovenanced:` list verbatim.
 - The `binder/` environment derives from the project's container recipe/digest — keep it consistent

@@ -20,7 +20,7 @@ delegate to the **nipoppy** doer, which constructs/validates the `bidsify` comma
 with provenance. You never construct the converter command yourself.
 
 > Design note: like `process/run-pipeline`, the nipoppy command is executed *through* `datalad run`
-> — a bare `nipoppy bidsify` is never the final step. The converter container is pinned by nipoppy's
+> — a bare nipoppy bidsify run is never the final step. The converter container is pinned by nipoppy's
 > `config.json` + Boutiques, so datalad's own `container-run` image-capture is not needed here.
 
 ## When to use
@@ -30,14 +30,18 @@ with provenance. You never construct the converter command yourself.
   an already-BIDS dataset (`curate/annotate`), or to initialize a project (`project/new-project`).
 
 ## Steps
-1. **Confirm readiness** — determine the converter (`--pipeline` name/version as configured) and
-   any `--participant-id` / `--session-id` scope from the user. Raw data must be staged where
+1. **Confirm readiness** — determine the converter (its pipeline name and version, as configured)
+   and any participant and session scope from the user. Raw data must be staged where
    nipoppy expects it (post-reorg); if it is not, direct the user to nipoppy `reorg` first.
 2. **Validate + construct (nipoppy doer)** — delegate:
    > "Validate this nipoppy dataset (config.json, manifest.tsv, Linux+Apptainer, converter version
-   > matches a pulled image) and construct the `nipoppy bidsify [--pipeline ... scope ...]` command;
-   > run it once with `--simulate` to preview, and return the exact command plus the inputs it reads
-   > (sourcedata/post-reorg) and outputs it writes (`bids/`)."
+   > matches a pulled image). Construct the bidsify command for converter <X> at version <V>,
+   > scoped to participants <P> and sessions <S> if given. Preview it with a simulated run, and
+   > return the exact command plus the inputs it reads (sourcedata/post-reorg) and outputs it
+   > writes (`bids/`)."
+
+   Always name the converter and its version. Never ask for a live run; the preview is the doer's
+   only execution.
    If it returns `result: failed` (state/platform gap), relay the fix and stop.
 3. **Ensure a clean tree** — `datalad run` requires a clean tree; check `datalad status`. If
    dirty, route to `analyze/checkpoint` first.
@@ -48,7 +52,7 @@ with provenance. You never construct the converter command yourself.
    Copy `binding` from the nipoppy doer's step-2 result into `DSH-Binding`. On failure, relay the
    error and the nipoppy log path; nothing was committed. Stop.
 5. **Update curation status and record it, in one step** — after success, delegate the update:
-   > nipoppy doer: "track-curation to update `tabular/curation_status.tsv` after bidsify."
+   > nipoppy doer: "Update the curation status in `tabular/curation_status.tsv` after bidsify."
 
    Then save it yourself, naming the converter and scope:
    ```bash
@@ -60,7 +64,7 @@ with provenance. You never construct the converter command yourself.
 
 ## Constraints
 - Always execute the converter under `datalad run` yourself — never let a dataset-mutating
-  `nipoppy bidsify` run bare. Provenance is the point.
+  nipoppy bidsify run bare. Provenance is the point.
 - Require a meaningful `-m` message naming the converter and scope; never a placeholder.
 - Declare inputs/outputs from the nipoppy doer's report — do not invent paths.
 - Do not hand-edit `manifest.tsv` or restructure the raw data yourself — nipoppy owns the layout.

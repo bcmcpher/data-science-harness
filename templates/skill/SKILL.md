@@ -22,8 +22,11 @@ AUTHORING CONVENTION — planner vs doer
 --------------------------------------
 - A PLANNER skill (plane: workflow) holds research-process logic. DataLad, git and git-annex
   are native: the planner runs `datalad save` / `datalad run` itself, the way code runs git.
-  For any other tool it DELEGATES to a doer subagent (see step pattern below). This keeps the
-  "what/why" separate from the "how".
+  For any other tool it DELEGATES to a doer subagent (see step pattern below), stating the
+  intent, the parameters and the outputs it needs back in words. It never quotes that tool's
+  command line: the doer owns how a decision becomes a command. A safeguard a flag would carry
+  (a preview, an explicit version) is written as a rule instead. The lint errors on a code span
+  starting with a peripheral tool binary (PERIPHERAL_BINARIES in tests/lint-plugins.py).
 - A DOER is a subagent (e.g. plugins/nipoppy/agents/nipoppy-doer.md) that owns a peripheral
   tool's mechanics and knows its CLI skills. It returns a command (`run_via: planner`) or the
   files it wrote (`save_via: planner`) plus a `binding`; it never commits.
@@ -44,8 +47,9 @@ One-line statement of what invoking this skill accomplishes.
    organize). Update `project.yaml` state (products, obligations, contributors) as needed.
 3. **Delegate peripheral tool work to a doer** — when a non-DataLad tool is needed, hand off to
    the relevant doer subagent, e.g.:
-   > Delegate to the **nipoppy** doer subagent: "construct the `<pipeline>` process command with
-   > its inputs and outputs."
+   > Delegate to the **nipoppy** doer subagent: "Construct the process command for pipeline
+   > <X> at version <V>, scoped to participants <P>. Preview it with a simulated run and return
+   > the command plus the inputs it reads and the outputs it writes."
    Wait for the doer's result, then run what it returned, e.g. under `datalad run -m "<message>"
    -i <inputs> -o <outputs> "<command>"`.
 4. **Save and record in one step** — the commit is the record; nothing is appended to a log:
@@ -56,6 +60,6 @@ One-line statement of what invoking this skill accomplishes.
    a doer's `binding`) lines when they apply. Use exactly one `-m`. Report back to the user.
 
 ## Constraints
-- Run DataLad directly; delegate every other tool to its doer rather than calling its CLI.
+- Run DataLad directly; delegate every other tool to its doer in words, never quoting its CLI.
 - Record activity in the commit's `DSH-*` lines; never append to `project.yaml` `log`.
 - State assumptions and confirm irreversible actions (push, sibling creation, drop) first.

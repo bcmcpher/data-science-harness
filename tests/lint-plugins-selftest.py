@@ -232,8 +232,37 @@ CASES = [
         ),
     ),
     (
+        "a planner quotes a peripheral tool's command line",
+        lambda r: sub(
+            f"{r}/plugins/analyze/skills/checkpoint/SKILL.md",
+            "## Steps\n",
+            "## Steps\n\nRun `nipoppy process --pipeline x` first.\n",
+        ),
+    ),
+    (
         "marketplace omits a capability doer from its enumerated list",
         lambda r: drop_doer_from_marketplace_prose(r, "liab"),
+    ),
+]
+
+
+# Mutations the lint must accept: each guards a check against over-reach.
+CLEAN_CASES = [
+    (
+        "a planner writes a DataLad command directly",
+        lambda r: sub(
+            f"{r}/plugins/analyze/skills/checkpoint/SKILL.md",
+            "## Steps\n",
+            "## Steps\n\nRun `datalad save -m \"x\" code/` first.\n",
+        ),
+    ),
+    (
+        "a planner runs a harness gate script",
+        lambda r: sub(
+            f"{r}/plugins/analyze/skills/checkpoint/SKILL.md",
+            "## Steps\n",
+            "## Steps\n\n```bash\nbash plugins/bids-cli/scripts/check-validator.sh\n```\n",
+        ),
     ),
 ]
 
@@ -287,6 +316,11 @@ def main():
         record(ok, label, detail)
         strict_code, _, _ = in_sandbox(mutate, "--strict")
         record(strict_code == 1, f"{label} (--strict)", f"exit={strict_code}")
+
+    print("\nCLEAN cases (must not raise an error):")
+    for label, mutate in CLEAN_CASES:
+        code, errs, _ = in_sandbox(mutate)
+        record(code == 0 and not errs, label, errs[0] if errs else f"exit={code}")
 
     print("\nControl:")
     code, errs, warns = run_lint(REPO)

@@ -23,8 +23,8 @@ researcher runs the tool; the harness makes sure the run is provenanced and the 
 That division is deliberate — a defacing algorithm's output needs human inspection, and a skill that
 quietly ran one would be claiming a judgment it cannot make.
 
-> 🔧 **Do-it-yourself:** choosing and running the actual tools — defacing (`pydeface`, `mri_deface`,
-> `mideface`), DICOM header scrubbing, PHI column detection, date-shifting — and **inspecting the
+> 🔧 **Do-it-yourself:** choosing and running the actual tools — defacing (pydeface, mri_deface,
+> mideface), DICOM header scrubbing, PHI column detection, date-shifting — and **inspecting the
 > output**. No de-identification tooling ships with this harness. These are capability-plane work
 > and belong in a later change; what exists today is the record.
 
