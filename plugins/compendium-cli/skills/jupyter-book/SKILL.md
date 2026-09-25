@@ -92,4 +92,4 @@ must report *whether execution happened at all* so that check has something to w
   reproducible is someone else's claim to make.
 - **Never install a missing package to make a notebook run.** A build that needed an undeclared
   dependency has found a real gap in the project's environment declaration; report it.
-- Do not commit. The datalad doer owns `datalad save`.
+- Do not commit. The planner owns `datalad save`.

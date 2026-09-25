@@ -2,7 +2,7 @@
 
 A community-driven, harness-agnostic collection of AI assistant configurations for academic data science work — skills, agents, commands, hooks, MCP configs, and planning templates. The content is harness-neutral Markdown; `bin/install.sh` installs to **Claude Code and OpenCode today**, and Cursor, GitHub Copilot, Windsurf and Gemini CLI are the harnesses the format is designed to reach next (see [Install](#install)).
 
-> **Status:** both planes are built — 37 planner skills over 22 plugins / 77 skills / 9 agents, specified by 22 specs in [`openspec/specs/`](openspec/specs). **Every capability now has a toolbox.** What that does not mean: **most paths have never been run against their real tool** — deposits, document builds, fetches and bundle emission are each gated, the gates are tested, and what sits behind them is not. Read that narrowly: it is a claim about deposits, document builds, fetches and bundle emission. `datalad` is a hard precondition of the e2e suite and is exercised against the real tool unconditionally, and six other capabilities have real-tool paths behind gates. What is distinctive about `containers` is that its whole Docker → OCI → `.sif` path was run end to end here — and, ironically, that it is the one real path CI cannot run, because apptainer is deliberately not installed there. The [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
+> **Status:** both planes are built — 37 planner skills over 21 plugins / 59 skills / 8 agents, specified by 22 specs in [`openspec/specs/`](openspec/specs). **Every capability now has a toolbox.** What that does not mean: **most paths have never been run against their real tool** — deposits, document builds, fetches and bundle emission are each gated, the gates are tested, and what sits behind them is not. Read that narrowly: it is a claim about deposits, document builds, fetches and bundle emission. `datalad` is a hard precondition of the e2e suite and is exercised against the real tool unconditionally, and six other capabilities have real-tool paths behind gates. What is distinctive about `containers` is that its whole Docker → OCI → `.sif` path was run end to end here — and, ironically, that it is the one real path CI cannot run, because apptainer is deliberately not installed there. The [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
 
 ---
 
@@ -26,7 +26,7 @@ This project generalizes the best patterns from software development tooling for
 3. **Research products are living** — the default export re-executes (NeuroLibre), is agent-callable (Paper2Agent / MCP), and is self-hostable (Lab-in-a-Box), not a one-off artifact
 4. **Administration is first-class** — funding, ethics, data-management plans, deadlines, people, and credit are tracked alongside the science, with the same provenance discipline. This is what the by-product commitment above delivers: administration stops being the part reconstructed after the fact
 
-**Two planes of configuration.** The content separates cleanly into a **capability plane** (thin wrappers over the technical tools — DataLad, Nipoppy, BIDS, containers, publishing, annotation) and a **workflow plane** (tool-agnostic research process that *orchestrates* those capabilities). This separation is STAMPED **Modularity** applied to the harness itself — and it is what makes the pieces recombine cleanly (see [Architecture](#architecture)).
+**Two planes of configuration.** The content separates cleanly into a **capability plane** (thin wrappers over the technical tools — DataLad, Nipoppy, BIDS, containers, publishing, annotation) and a **workflow plane** (tool-agnostic research process that *orchestrates* those capabilities). DataLad is the exception that proves the rule: it is the provenance substrate, so the workflow plane uses it natively, the way code uses git, and records what each step did in its commit. This separation is STAMPED **Modularity** applied to the harness itself — and it is what makes the pieces recombine cleanly (see [Architecture](#architecture)).
 
 **Target harnesses**: Claude Code and OpenCode (installable today via `bin/install.sh`); Cursor, GitHub Copilot, Windsurf and Gemini CLI (designed for, not yet exercised — the content layer is harness-neutral, so a manual copy works anywhere)
 
@@ -108,8 +108,8 @@ The design uses **two orthogonal axes**. Understand them separately.
 
 | Plane | What lives here | Rule |
 |-------|-----------------|------|
-| **Capability** (technical) | Thin, tool-scoped wrappers over one external tool each (DataLad, Nipoppy, BIDS, containers, publishing, annotation). Mechanical, reusable STAMPED primitives. | A capability skill wraps a tool; it holds no research-process logic. |
-| **Workflow** (conceptual) | Tool-agnostic research process, written in research vocabulary (govern, initialize, curate, analyze, disseminate). | A workflow skill **never calls a CLI directly** — it invokes capability skills. |
+| **Capability** (technical) | Thin, tool-scoped wrappers over one external tool each (Nipoppy, BIDS, containers, publishing, annotation), plus the DataLad toolbox the main thread reads natively. Mechanical, reusable STAMPED primitives. | A capability skill wraps a tool; it holds no research-process logic. A doer returns a command or the files it wrote; it never commits. |
+| **Workflow** (conceptual) | Tool-agnostic research process, written in research vocabulary (govern, initialize, curate, analyze, disseminate). | A workflow skill runs **DataLad itself**, as code runs git: `datalad save` / `datalad run`, with `DSH-*` lines recording the step. Every **other** tool goes through its doer. |
 
 This split *is* STAMPED **Modularity** (separation of concerns) + **Actionability** (the workflow is the executable spec that invokes actionable tool primitives). It is what the user's "keep the technical tools separate from the conceptual workflows" requirement buys: capabilities recombine under different workflows, and a workflow can swap one capability for another (e.g. Zenodo for OSF) without rewriting the process.
 
@@ -202,7 +202,7 @@ agent's model rather than failing to load.
 
 ## Plugins
 
-**22 plugins**, split across the two planes: 16 **capability** plugins wrap the technical tools, and
+**21 plugins**, split across the two planes: 15 **capability** plugins wrap the technical tools, and
 6 **workflow** plugins encode the research process and call down into them.
 
 Tables below separate what is **built** from what is **planned**. Planned entries are kept because
@@ -214,14 +214,14 @@ marked *(planned)*.
 ### Capability plugins (technical plane)
 
 A capability plugin is either a **doer** (a subagent owning tool mechanics) or a **toolbox** (a
-`*-cli` plugin of one skill per command, which the doer reads as reference material). The
-`datalad` pair is the reference shape the others are growing toward.
+`*-cli` plugin of skills per command, which the doer reads as reference material). DataLad is the
+exception: it has a toolbox and no doer, because it is native to the main thread. Planners run
+`datalad` directly, as they would git, and record each step in `DSH-*` commit lines.
 
 **Built:**
 
 | Plugin | Kind | Wraps | Contents | STAMPED |
 |--------|------|-------|----------|---------|
-| `datalad` | doer | DataLad / git-annex | `datalad-doer` | T, S, M |
 | `datalad-cli` | toolbox | DataLad CLI | 1 skill (`datalad`, 19 verb references), rules, hooks, `dsh-log` | T, S, M |
 | `nipoppy` | doer | Nipoppy | `nipoppy-doer` | S, T, M, A |
 | `nipoppy-cli` | toolbox | Nipoppy CLI | 4 skills, one per command class | S, T, M, A |
@@ -286,9 +286,9 @@ nothing about *why* or *when* you run them.
 - References: `references/stamped.md`
 
 **`project`** — Scaffold a new research project **and** run the ongoing Manage & Comply lane.
-- `new-project` — YODA-structured DataLad dataset (via `datalad`), BIDS layout (via `bids`), a basic scientific-Python container (via `containers`), a declared list of expected preprocessing pipelines wired into the Nipoppy config, CLAUDE.md, the project ledger — **and, optionally, self-hosted Lab-in-a-Box infrastructure** (Forgejo git host, HedgeDoc notes, dumpthings metadata) so the project lives on data-sovereign infra from day one
-- `log-decision` — append to a decision / lab-notebook log, then `datalad save`
-- `status-report` — generate a progress / funder-RPPR-style summary from the ledger + `datalad log` + git history
+- `new-project` — YODA-structured DataLad dataset (run directly), BIDS layout (via `bids`), a basic scientific-Python container (via `containers`), a declared list of expected preprocessing pipelines wired into the Nipoppy config, CLAUDE.md, the project ledger — **and, optionally, self-hosted Lab-in-a-Box infrastructure** (Forgejo git host, HedgeDoc notes, dumpthings metadata) so the project lives on data-sovereign infra from day one
+- `log-decision` — write a decision record to `docs/decisions/<date>-<slug>.md` (decision, rationale, alternatives, scope), then `datalad save` it
+- `status-report` — generate a progress / funder-RPPR-style summary from the ledger state + the `dsh-log` commit history; read-only unless asked to keep a copy
 - `people` — manage collaborators / ORCID / CRediT contributor roles in the ledger
 - `env-check` — report the project's tool dependencies as two separate findings: **declared but absent** (a setup step) and **present but undeclared** (a Portability defect, `P.1`). Runs each capability's own gate script rather than re-implementing it; never installs anything
 - `claude-config` — generate CLAUDE.md, settings and MCP stubs from facts verified in the project. Writes no instruction it could not source, and never puts a credential in a committed stub
@@ -303,11 +303,11 @@ nothing about *why* or *when* you run them.
 - `gen-data-dict` — generate a `participants.json` data dictionary: the skeleton from the data, the meanings from the user or a codebook. An undescribed column gets no entry and appears in the report rather than a guessed `Description`
 
 **`process`** — Run established preprocessing pipelines under provenance.
-- `run-pipeline` — execute a preprocessing pipeline (fMRIPrep, QSIPrep, …) through the `nipoppy` and `datalad` doers, so the run is containerized and recorded
+- `run-pipeline` — execute a preprocessing pipeline (fMRIPrep, QSIPrep, …) through the `nipoppy` doer and run its command under `datalad run`, so the run is containerized and recorded
 
 **`analyze`** — The comparison/product engine (calls `datalad`, `containers`).
 - `propose-comparison` — create a comparison record; pick the rigor mode (quick query vs pre-registered)
-- `run-comparison` — execute a comparison via the `datalad` doer on its own branch; check confirmatory results against the registered spec
+- `run-comparison` — execute a comparison under `datalad run` or `datalad containers-run` on its own branch; check confirmatory results against the registered spec
 - `checkpoint` — take a described, clean snapshot of the dataset state
 - `manage-product` — group kept comparisons into a product
 - `plan-analysis` — recommend a statistical approach from the design and the data's shape, and list the assumptions it rests on as **unchecked**; reports no p-value, effect size or power figure, because a number that arrives before the analysis will be quoted as if it came from one
@@ -385,14 +385,9 @@ contributors:
     affiliation_ror: https://ror.org/00xxxxx
     roles: [Conceptualization, Formal analysis, Writing – original draft]
 
-log:
-  # Append-only. Each entry: { ts, op, stage, note, branch? }.
-  # Never rewrite or reorder prior entries — corrections are new entries.
-  - { ts: 2026-07-10T14:30:00Z, op: new-project, stage: initialize,
-      note: "scaffolded YODA+BIDS dataset + container recipe", branch: main }
-
-  - { ts: 2026-07-10T15:05:00Z, op: propose-comparison, stage: analyze,
-      note: "cmp: group difference in outcome Y (exploratory quick query)", branch: cmp/group-diff-y }
+# There is no activity log here. What happened, when and why is recorded in the commit that did
+# it, as DSH-* lines:  DSH-Op: propose-comparison / DSH-Stage: analyze / DSH-Product: main-paper
+# Read it back with plugins/datalad-cli/scripts/dsh-log.sh (--legacy adds an older ledger's log:).
 
   - { ts: 2026-07-10T15:40:00Z, op: run-comparison, stage: analyze,
       note: "container-run stats.py; recorded commit a1b2c3d; outputs derivatives/cmp-group-diff-y/",
@@ -508,7 +503,7 @@ data-science-harness/
 | Standard / Tool | What it does | Plane · Plugin | Install requirement |
 |-----------------|-------------|----------------|---------------------|
 | **STAMPED** | Operating principle framework — the properties every research object is built toward | workflow · `govern` | reference-only (`docs/stamped.md`) |
-| **DataLad** | Tracking backbone — records all analysis commands, inputs, outputs | capability · `datalad` | `pip install datalad` |
+| **DataLad** | Tracking backbone — records all analysis commands, inputs, outputs | native · `datalad-cli` | `pip install datalad` |
 | **BIDS** | Brain Imaging Data Structure — canonical neuroimaging dataset format | capability · `bids` | `npm install -g bids-validator` |
 | **Nipoppy** | Standardized dataset organization + pipeline running & tracking; spans curate → analyze → QC | capability · `nipoppy` | `pip install nipoppy` |
 | **Apptainer / Docker** | Portable, ephemeral computational environments | capability · `containers` | container runtime |
@@ -595,13 +590,13 @@ A capability plugin providing a doer:
 
 ```json
 {
-  "name": "datalad",
-  "description": "DataLad doer (capability plane): the tool subagent that executes all DataLad / git-annex operations with provenance — create datasets, run/container-run commands, save, inspect status/log, push to siblings. Workflow-plane planner skills delegate here instead of calling the CLI directly.",
+  "name": "nipoppy",
+  "description": "Nipoppy doer (capability plane): the tool subagent that constructs and validates nipoppy commands and hands dataset-mutating ones back to the planner to run under `datalad run`.",
   "version": "0.1.0",
   "author": { "name": "bcmcpher" },
   "license": "MIT",
-  "keywords": ["datalad", "git-annex", "provenance", "reproducibility", "doer", "capability"],
-  "agents": ["./agents/datalad-doer.md"]
+  "keywords": ["nipoppy", "neuroimaging", "pipelines", "doer", "capability"],
+  "agents": ["./agents/nipoppy-doer.md"]
 }
 ```
 
@@ -634,7 +629,7 @@ description: >
   inside the project container. Trigger on "run the comparison", …
 plane: workflow
 stamped: [A, T, P, E]
-delegates_to: [containers, datalad]
+delegates_to: [containers]
 ---
 ```
 
@@ -688,13 +683,22 @@ bin/install.sh --harness opencode --scope global
 Install selected plugins only:
 
 ```bash
-bin/install.sh --harness opencode --scope project project analyze datalad datalad-cli
+bin/install.sh --harness opencode --scope project project analyze datalad-cli
 ```
 
 Preview an install:
 
 ```bash
 bin/install.sh --harness opencode --scope project --dry-run
+```
+
+Remove what an older install left behind — skills, agents and bundles whose plugin is gone from the
+source (the retired `datalad-doer`, the per-verb `datalad-*` skills). Only what the installer put
+there is touched; add `--dry-run` to list it first:
+
+```bash
+bin/install.sh --harness opencode --scope project --prune --dry-run
+bin/install.sh --harness opencode --scope project --prune
 ```
 
 For OpenCode, the installer writes:
@@ -917,11 +921,11 @@ openspec validate --all --strict
 calls a spec folder a "capability", which is *not* this repository's "capability plane".
 
 **Where the harness stands.** Both planes are built. The workflow plane is 37 planner skills across
-six plugins, each naming concrete ledger fields, log-entry shapes, and delegations; the capability
-plane is eight doers, each paired 1:1 with a `*-cli` toolbox. Depth across those toolboxes is still
-uneven by design rather than by omission — `datalad` has 19 skills because a provenance chain has
-that many distinct operations, while `bids` has 1 because validation is one operation — and every
-planner's `delegates_to:` has grown beyond `[datalad]` wherever a capability exists to grow into.
+six plugins, each naming concrete ledger fields, `DSH-*` commit lines, and delegations; the
+capability plane is seven doers, each paired 1:1 with a `*-cli` toolbox, plus the `datalad-cli`
+toolbox the main thread uses natively. Depth across those toolboxes is still uneven by design rather
+than by omission — `datalad` has 19 verb references because a provenance chain has that many
+distinct operations, while `bids` has 1 skill because validation is one operation.
 
 What is *not* closed is execution. `openspec/changes/` is empty because the structure is finished,
 not because the work is: most capability paths are gated, the gates are tested, and the tools behind

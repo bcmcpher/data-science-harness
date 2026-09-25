@@ -46,7 +46,7 @@ and the change has to be saved or it will be swept into an unrelated commit.
    `track-processing` without an explicit pipeline and version may fan out across every configured
    pipeline. Name both.
 
-5. **Report the files that changed and hand the save back.** The datalad doer owns `datalad save`.
+5. **Report the files that changed and hand the save back.** The planner owns `datalad save`.
    This is a checkpoint, not a run record: the status file is derived from data that is already
    tracked, so it does not need `datalad run` — it needs a commit that says what it is.
    ```bash
@@ -61,7 +61,7 @@ and the change has to be saved or it will be swept into an unrelated commit.
    result:   ok | failed
    changed:  <files written — an empty list is a claim, state it>
    counts:   <as the command reported them>
-   next:     save through the datalad doer (checkpoint, not a run)
+   next:     the planner saves with `datalad save` (checkpoint, not a run)
    ```
 
 ## Constraints
@@ -78,4 +78,4 @@ and the change has to be saved or it will be swept into an unrelated commit.
   registry the dataset is checked against, not a knob.
 - **Never run these under `datalad run`.** They derive state from tracked data and would record a
   run whose inputs are the whole dataset, which buries the runs that matter.
-- Do not commit. The datalad doer owns `datalad save`.
+- Do not commit. The planner owns `datalad save`.

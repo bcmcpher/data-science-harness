@@ -1,6 +1,6 @@
 {
   "name": "disseminate",
-  "description": "Dissemination planner (workflow plane): turn provenanced work into published, linked products. publish pushes to a sibling; dataset-release cuts a citable versioned release (DOI via the archive doer); link-outputs cross-links products (DataCite); draft-manuscript + reporting-checklist produce the paper; executable-article (NeuroLibre), agent-bundle (Paper2Agent), and liab-deploy (Lab-in-a-Box) produce the living compendium. Delegates DataLad mechanics to the datalad doer.",
+  "description": "Dissemination planner (workflow plane): turn provenanced work into published, linked products. publish pushes to a sibling; dataset-release cuts a citable versioned release (DOI via the archive doer); link-outputs cross-links products (DataCite); draft-manuscript + reporting-checklist produce the paper; executable-article (NeuroLibre), agent-bundle (Paper2Agent), and liab-deploy (Lab-in-a-Box) produce the living compendium. Runs DataLad directly and records each step in DSH-* commit lines.",
   "version": "0.2.0",
   "author": {
     "name": "bcmcpher"

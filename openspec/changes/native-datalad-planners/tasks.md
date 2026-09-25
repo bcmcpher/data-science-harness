@@ -31,10 +31,10 @@
 
 ## 6. Lint and tests
 
-- [ ] 6.1 Lint: retired-term check (`plugins/`, `templates/`, `docs/` minus `docs/talk/`); selftest case
-- [ ] 6.2 Fix counts the doc-claims check will flag (README 22 → 21 plugins, doer lists, marketplace prose, `paper/` "8 doers")
-- [ ] 6.3 `tests/e2e-smoke.sh`: assert `DSH-Op`/`DSH-Stage` via `dsh-log` wherever it asserted `log` entries; run it in the conda `datalad` env
-- [ ] 6.4 Lint, selftest, and e2e all pass
+- [x] 6.1 Lint: retired-term check (`plugins/`, `templates/`, `docs/` minus `docs/talk/`); selftest case
+- [x] 6.2 Fix counts the doc-claims check will flag (README 22 → 21 plugins, doer lists, marketplace prose, `paper/` "8 doers")
+- [x] 6.3 `tests/e2e-smoke.sh`: assert `DSH-Op`/`DSH-Stage` via `dsh-log` wherever it asserted `log` entries; run it in the conda `datalad` env
+- [x] 6.4 Lint, selftest, and e2e all pass
 
 ## 7. Docs and install
 

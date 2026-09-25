@@ -99,7 +99,7 @@ case "$tool" in
       found="repo2data (importable, no console script)"
     else
       missing+=("repo2data")
-      enable+=("pip install repo2data. It fetches declared data; it does not record having done so, so the fetch still has to run under the datalad doer to be provenanced")
+      enable+=("pip install repo2data. It fetches declared data; it does not record having done so, so the fetch still has to run under `datalad run` to be provenanced")
     fi
     ;;
   mcp-scaffold)

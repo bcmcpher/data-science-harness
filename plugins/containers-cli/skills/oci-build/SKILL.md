@@ -6,7 +6,7 @@ description: >
   container", "docker build", "podman build", "build the image", "why can't I build containers here",
   "do I need sudo to build", or /oci-build. Do NOT trigger to write a Dockerfile (use dockerfile), to
   convert an image to .sif (use apptainer), or to run an analysis inside a container — that is the
-  datalad doer's container-run.
+  planner's `datalad containers-run`.
 argument-hint: '[check|build] [--file <Dockerfile>] [--tag <name>] [--context <dir>] [--runtime docker|podman]'
 user-invocable: true
 disable-model-invocation: false
@@ -99,4 +99,4 @@ report because it changes what the next person needs.
   `apptainer`'s job and has not happened yet.
 - Do not pull a base image the Dockerfile does not name, and do not substitute `:latest` for a digest
   that failed to resolve.
-- Do not commit. The datalad doer owns `datalad save`.
+- Do not commit. The planner owns `datalad save`.

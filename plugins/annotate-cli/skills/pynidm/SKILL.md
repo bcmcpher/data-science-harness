@@ -120,7 +120,7 @@ against is specific: these identifiers are short, structured, and completely unv
   identifiers between them, and do not add NIDM keys to `participants.json`.
 - Never hand-write the turtle or JSON-LD a converter would emit. If the tool is unavailable, the
   answer is that the NIDM document was not produced.
-- Do not commit. Write the outputs and let the caller delegate the save to the datalad doer.
+- Do not commit. Write the outputs and let the calling planner save them with `datalad save`.
 - Do not edit `participants.tsv` or the BIDS tree — no renamed columns, no recoded values. This
   skill describes existing data.
 - Report a conversion or validation failure as a failure, with the tool's own error text.

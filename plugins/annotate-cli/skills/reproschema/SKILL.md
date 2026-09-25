@@ -115,5 +115,5 @@ REDCap dictionary the user supplied — never from recall.
 - Do not write into `participants.json` or any BIDS sidecar. This skill produces schema files; the
   data dictionary belongs to `bagel-cli` and the doer.
 - Do not edit `participants.tsv` — no renamed columns, no recoded values.
-- Do not commit. Write the outputs and let the caller delegate the save to the datalad doer.
+- Do not commit. Write the outputs and let the calling planner save them with `datalad save`.
 - Do not fetch the ReproSchema library without telling the user you are doing it and from where.

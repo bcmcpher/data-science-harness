@@ -105,5 +105,5 @@ checks. The compendium doer owns those checks; this skill owns the invocation.
 - Do not install `mystmd` globally to work around an absent project dependency without saying so;
   the gate script's `enable:` hint names both routes and the project's own manifest is the one that
   travels with the project.
-- Do not commit. The datalad doer owns `datalad save`.
+- Do not commit. The planner owns `datalad save`.
 - Do not edit the article's prose. Building the document and writing it are different jobs.

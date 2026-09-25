@@ -1,7 +1,7 @@
 # datalad-cli
 
 DataLad toolbox (capability plane). DataLad is the harness's provenance substrate, and the main
-thread uses it natively, the way it uses git. There is no DataLad doer. Planners run `datalad
+thread uses it natively, the way it uses git. DataLad has no doer subagent. Planners run `datalad
 save`, `datalad run` and `datalad push` in their own steps. This plugin supplies what makes that
 safe: always-loaded rules, three hooks, one `datalad` skill with per-verb references, and
 `dsh-log` for reading harness activity back out of the commit history. Follows YODA principles

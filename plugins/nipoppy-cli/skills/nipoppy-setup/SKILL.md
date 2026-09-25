@@ -52,7 +52,7 @@ is separated from the computations rather than folded in with them.
    is what `/nipoppy-compute` will refuse to proceed without.
 
 5. **Hand the save back.** These files belong in the dataset's history as a checkpoint, with a
-   message naming what was set up. The datalad doer owns `datalad save`.
+   message naming what was set up. The planner owns `datalad save`.
 
 6. **Report.**
    ```
@@ -62,7 +62,7 @@ is separated from the computations rather than folded in with them.
    pipeline:  <name/version, where installed, container image it expects>
    result:    ok | exists | failed
    todo:      <what the user must supply — manifest rows, container pull>
-   next:      save through the datalad doer
+   next:      the planner saves with `datalad save`
    ```
 
 ## Constraints
@@ -81,4 +81,4 @@ is separated from the computations rather than folded in with them.
   satisfy a validator describes a pipeline that was not tested.
 - **Never report a dataset as ready to process** after `init`. It has a tree and no participants;
   what is ready is `/nipoppy-query` to confirm the state.
-- Do not commit. The datalad doer owns `datalad save`.
+- Do not commit. The planner owns `datalad save`.

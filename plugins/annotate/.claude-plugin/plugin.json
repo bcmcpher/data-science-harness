@@ -1,6 +1,6 @@
 {
   "name": "annotate",
-  "description": "Annotate doer (capability plane): the tool subagent that builds and validates a dataset's machine-readable metadata — participants.json data dictionaries, BIDS sidecars, and controlled-term coverage against Neurobagel/SNOMED, ReproSchema and NIDM. It never recalls a term identifier — a term no tool returned is reported 'unannotated', and an uninstalled backend is reported unavailable rather than as zero matches. It writes but never commits; curate/annotate delegates the save to the datalad doer.",
+  "description": "Annotate doer (capability plane): the tool subagent that builds and validates a dataset's machine-readable metadata — participants.json data dictionaries, BIDS sidecars, and controlled-term coverage against Neurobagel/SNOMED, ReproSchema and NIDM. It never recalls a term identifier — a term no tool returned is reported 'unannotated', and an uninstalled backend is reported unavailable rather than as zero matches. It writes but never commits; curate/annotate saves them with datalad save.",
   "version": "0.1.0",
   "author": { "name": "bcmcpher" },
   "license": "MIT",

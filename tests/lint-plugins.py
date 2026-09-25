@@ -678,6 +678,38 @@ def check_change_links(root: str) -> None:
                     error(where, f"links to `openspec/changes/{name}`, which does not exist")
 
 
+# The datalad doer was retired when DataLad became native to the main thread. Its name surviving in
+# an instruction would send a planner to delegate into nothing, so the term itself is an error.
+_RETIRED_DOER = re.compile(r"datalad[ -]doer", re.I)
+RETIRED_SCAN = ("plugins", "templates", "docs")
+RETIRED_SKIP = (os.path.join("docs", "talk"),)
+
+
+def check_retired_terms(root: str) -> None:
+    """Flag "datalad doer" / `datalad-doer` (case-insensitive, emphasis ignored) in any text file
+    under plugins/, templates/ and docs/, except docs/talk/ (not versioned). Archived OpenSpec
+    changes are history and are never scanned."""
+    for top in RETIRED_SCAN:
+        for dirpath, dirnames, filenames in os.walk(os.path.join(root, top)):
+            if any(rel(root, dirpath).startswith(skip) for skip in RETIRED_SKIP):
+                dirnames[:] = []
+                continue
+            for f in sorted(filenames):
+                path = os.path.join(dirpath, f)
+                try:
+                    with open(path, encoding="utf-8") as fh:
+                        lines = fh.read().splitlines()
+                except (UnicodeDecodeError, OSError):
+                    continue
+                for lineno, line in enumerate(lines, start=1):
+                    if _RETIRED_DOER.search(line.replace("*", "").replace("`", "")):
+                        error(
+                            f"{rel(root, path)}:{lineno}",
+                            "names the retired datalad doer; DataLad runs in the main thread — "
+                            "run the `datalad` command directly",
+                        )
+
+
 def main() -> None:
     argv = [a for a in sys.argv[1:] if not a.startswith("-")]
     flags = {a for a in sys.argv[1:] if a.startswith("-")}
@@ -715,6 +747,7 @@ def main() -> None:
     check_doc_claims(root, plugin_dirs)
     check_marketplace_claims(root, plugin_dirs)
     check_change_links(root)
+    check_retired_terms(root)
 
     errors = [f for f in findings if f[0] == "ERROR"]
     warnings = [f for f in findings if f[0] == "WARN"]

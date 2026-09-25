@@ -1,6 +1,6 @@
 {
   "name": "curate",
-  "description": "Curation planner (workflow plane): make raw data standardized, self-describing and safe to move. raw-to-bids converts DICOMs to a BIDS layout via nipoppy with DataLad provenance; merge-data combines tabular sources as a provenanced run and reports the row/column arithmetic so a silent join failure cannot pass as success; gen-data-dict describes columns from the data and the user, never from a guessed meaning; annotate enriches metadata and controlled terms; deidentify makes identifier removal a provenanced run with a required residual-risk statement. All mutations are provenanced via the datalad doer.",
+  "description": "Curation planner (workflow plane): make raw data standardized, self-describing and safe to move. raw-to-bids converts DICOMs to a BIDS layout via nipoppy with DataLad provenance; merge-data combines tabular sources as a provenanced run and reports the row/column arithmetic so a silent join failure cannot pass as success; gen-data-dict describes columns from the data and the user, never from a guessed meaning; annotate enriches metadata and controlled terms; deidentify makes identifier removal a provenanced run with a required residual-risk statement. The planner runs every mutation under DataLad itself (datalad run / save), recording each step in DSH-* commit lines.",
   "version": "0.3.0",
   "author": {
     "name": "bcmcpher"

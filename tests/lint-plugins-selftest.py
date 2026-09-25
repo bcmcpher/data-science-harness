@@ -148,7 +148,7 @@ CASES = [
     ),
     (
         "delegates_to names a nonexistent doer",
-        lambda r: sub(f"{r}/plugins/analyze/skills/checkpoint/SKILL.md", "delegates_to: [datalad]", "delegates_to: [ghost]"),
+        lambda r: sub(f"{r}/plugins/analyze/skills/checkpoint/SKILL.md", "stamped: [T]", "stamped: [T]\ndelegates_to: [ghost]"),
     ),
     ("skill on disk, absent from plugin.json", add_orphan_skill),
     (
@@ -163,8 +163,8 @@ CASES = [
         "body delegates to an undeclared doer",
         lambda r: sub(
             f"{r}/plugins/analyze/skills/run-comparison/SKILL.md",
-            "delegates_to: [containers, datalad]",
-            "delegates_to: [datalad]",
+            "delegates_to: [containers]",
+            "delegates_to: [nipoppy]",
         ),
     ),
     ("plugin missing from marketplace", lambda r: drop_marketplace_entry(r, "bids")),
@@ -217,12 +217,20 @@ CASES = [
         ),
     ),
     ("agent declares a model outside the allowed set", lambda r: set_agent_model(r, "bids", "bids-doer", "haikoo")),
-    ("mutating doer declares a model", lambda r: set_agent_model(r, "datalad", "datalad-doer", "haiku")),
+    ("mutating doer declares a model", lambda r: set_agent_model(r, "nipoppy", "nipoppy-doer", "haiku")),
     (
         "README's per-plugin skill count disagrees with disk",
         lambda r: readme_row(r, "| `bids-cli` | toolbox | validator | 7 skills, one per command | S, M |"),
     ),
     ("a doc links to a change that has been archived", archived_change_link),
+    (
+        "a planner delegates to the retired datalad doer",
+        lambda r: sub(
+            f"{r}/plugins/govern/skills/ethics-track/SKILL.md",
+            "## Constraints\n",
+            "## Constraints\n\n- Delegate the save to the **datalad doer**.\n",
+        ),
+    ),
     (
         "marketplace omits a capability doer from its enumerated list",
         lambda r: drop_doer_from_marketplace_prose(r, "liab"),

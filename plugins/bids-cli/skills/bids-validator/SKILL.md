@@ -100,7 +100,7 @@ cannot validate a dataset. If it is the only thing installed, there is no valida
 - **Read-only.** Never create, rename, move, delete or edit a dataset file, including
   `dataset_description.json`, `.bidsignore` and sidecars. Never "fix" a reported error. The bids doer
   is read-only by contract and this skill inherits that.
-- **Do not commit.** The datalad doer owns `datalad save`. This skill has nothing to save.
+- **Do not commit.** The planner owns `datalad save`. This skill has nothing to save.
 - Do not run a validator against a derivatives directory as if it were the dataset root, and do not
   validate a path with no `dataset_description.json` — report that the target is not a BIDS dataset.
 - Do not translate flags between distributions, and do not fall back to the Python `bids_validator`

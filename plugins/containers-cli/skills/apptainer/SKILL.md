@@ -7,7 +7,7 @@ description: >
   "get this container onto the HPC", "docker-daemon client version too old", or /apptainer. Do NOT
   trigger to write a Dockerfile (use dockerfile), to build an OCI image (use oci-build), or to
   register or run a container in a dataset — `datalad containers-add` and `containers-run` belong to
-  the datalad doer.
+  the planner.
 argument-hint: '[check|convert|build|verify] [--image <ref>] [--def <file>] [--out <path>]'
 user-invocable: true
 disable-model-invocation: false
@@ -88,7 +88,7 @@ it forward.
    ```
    datalad containers-add <name> --url <sif> --call-fmt "apptainer exec {img} {cmd}"
    ```
-   Registration and running belong to the datalad doer, so provenance keeps one owner. A project
+   Registration and running belong to the planner, so provenance keeps one owner. A project
    with several environments registers several names — one per pipeline — and
    `containers-run --container-name <name>` selects between them.
 
@@ -102,7 +102,7 @@ it forward.
    verified:      inspect ok, exec ok | <what failed>
    transferred:   <destination> | not run
    result:        built | failed | unavailable
-   containers_add: <the command for the datalad doer>
+   containers_add: <the command for the planner to run>
    notes:         <what was not checked: that the cluster runs it>
    ```
 
@@ -121,4 +121,4 @@ it forward.
 - **Never assume one environment per project.** A study with several pipelines has several `.sif`
   files and several registered names; say which one you built.
 - Do not choose what goes in the image. If the recipe is wrong, that is `dockerfile`'s question.
-- Do not commit. The datalad doer owns `datalad save`.
+- Do not commit. The planner owns `datalad save`.
