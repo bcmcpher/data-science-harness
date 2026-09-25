@@ -2,26 +2,28 @@
 
 This project is managed with DataLad. Treat it as you treat git, with these differences.
 
-- **Save, don't commit.** Record changes with `datalad save -m "<what> — <why>" [paths]`, never
-  `git commit`. Use one `-m`: DataLad keeps only the last. Put a body after a blank line inside
-  that one message.
-- **Run with provenance.** A command that reads inputs and writes outputs runs as
-  `datalad run -m "<why>" -i <inputs> -o <outputs> "<command>"`, or `datalad containers-run -n
-  <container>` when it needs a container. Running an analysis bare and saving afterwards loses
-  the record of how the results were made.
+- **Save, don't commit.** Use `datalad save [paths]`, never `git commit`, with exactly one `-m`:
+  DataLad keeps only the last.
+- **Record the step.** A harness skill's message is `<what> — <why>`, a blank line, then `DSH-Op:
+  <skill>` and optional `DSH-Stage`, `DSH-Product: <id>`, `DSH-Obligation: <id> opened|resolved`,
+  and `DSH-Binding` copied from a doer's result:
+  `datalad save -m "$(printf '<what> — <why>\n\nDSH-Op: <skill>\nDSH-Stage: <stage>')"`.
+  Nothing else logs activity; `bash ${CLAUDE_PLUGIN_ROOT}/scripts/dsh-log.sh` reads it back.
+- **Run with provenance.** A command that reads inputs and writes outputs runs as `datalad run
+  -m <message> -i <inputs> -o <outputs> "<command>"`, or `datalad containers-run -n <container>`.
+  Never run it bare and save afterwards.
 - **Keep the tree clean before a run.** `datalad run` refuses a dirty tree. Save or explain
-  pending changes first; do not reach for `--explicit` to get around it.
-- **Push, don't `git push`.** `datalad push --to <sibling>` sends annexed content with the
-  history. A bare `git push` sends only pointers.
-- **Get before you read.** An annexed file may have no local content. Run `datalad get <path>`
-  first, and `datalad drop` only content a sibling still holds.
-- **Keep output quiet.** For `get`, `push` and `clone`, pass `--result-renderer disabled` or
-  `-f json`, then summarize in one line.
-- **Know the state.** A DataLad status block is normally in context at session start. If not,
-  run `bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/dsh-status.sh` before changing anything.
-- **Ask before you publish.** Pushing to or creating a sibling, and dropping content, are
-  outward-facing or hard to reverse. Confirm with the user first.
+  pending changes first; don't use `--explicit` to get around it.
+- **Push, don't `git push`.** `datalad push --to <sibling>` sends annexed content; `git push`
+  sends only pointers.
+- **Get before you read.** Annexed content may be absent: `datalad get <path>` first. `datalad
+  drop` only content a sibling still holds.
+- **Keep output quiet.** For `get`, `push` and `clone`, pass `--result-renderer disabled` or `-f
+  json`, and summarize in one line.
+- **Know the state.** A status block is normally in context. If not, run `bash
+  ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/dsh-status.sh`. Unsure of a verb? Read the `datalad` skill.
+- **Ask before you publish.** Confirm with the user before pushing to or creating a sibling, or
+  dropping content.
 
-A guard blocks `git commit` and `git push` inside a dataset and names the DataLad command to use.
-When a turn ends with unsaved changes you are reminded once to save them meaningfully. Either
-save, or tell the user why they stay unsaved.
+A guard blocks `git commit` and `git push` in a dataset. If a turn ends with unsaved changes you
+are reminded once: save, or tell the user why not.

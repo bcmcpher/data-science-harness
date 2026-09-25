@@ -1,8 +1,8 @@
 ## 1. History reader
 
-- [ ] 1.1 Write `plugins/datalad-cli/scripts/dsh-log.sh`: one JSON line per `DSH-Op` commit (sha, ts, subject, run, fields); stop at the run-record marker; `--legacy` merges `project.yaml` `log` in timestamp order; git + POSIX sh only
-- [ ] 1.2 Unit-test it on a scratch dataset (conda `datalad` env): a save commit, a run commit, a non-harness commit (excluded), and a legacy log
-- [ ] 1.3 Add `DSH-*` rules and the single-`-m` form to `plugins/datalad-cli/rules/datalad.md` (keep ≤ 300 words)
+- [x] 1.1 Write `plugins/datalad-cli/scripts/dsh-log.sh`: one JSON line per `DSH-Op` commit (sha, ts, subject, run, fields); stop at the run-record marker; `--legacy` merges `project.yaml` `log` in timestamp order; git + POSIX sh only
+- [x] 1.2 Unit-test it on a scratch dataset (conda `datalad` env): a save commit, a run commit, a non-harness commit (excluded), and a legacy log
+- [x] 1.3 Add `DSH-*` rules and the single-`-m` form to `plugins/datalad-cli/rules/datalad.md` (keep ≤ 300 words)
 
 ## 2. Ledger
 
