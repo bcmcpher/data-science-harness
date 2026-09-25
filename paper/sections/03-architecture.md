@@ -30,8 +30,10 @@ capability for another — Zenodo for OSF — without rewriting the process.
 Figure 1 is generated, not drawn: `paper/figures/make-two-planes.py` reads each planner skill's
 declared `delegates_to:` and emits the SVG, so the figure cannot drift from the code. Re-run it
 after any delegation change. It carries the asymmetry that is the real claim of this section and is
-easy to miss in prose: all 37 planner skills delegate to `datalad`, and no other doer is reached by
-more than 2 of the 6 planners.
+easy to miss in prose: DataLad is not a delegation edge at all. All 37 planner skills use it natively,
+the way code uses git, and no doer is reached by more than 2 of the 6 planners. (Until
+`native-datalad-planners`, every planner delegated to a datalad doer; the figure then showed one
+node carrying all 37 edges, which was the argument for removing the indirection.)
 
 One honest asymmetry to state here rather than leave for a reader to find: the two-plane split is
 declared in frontmatter on the workflow side only. Planner skills carry `plane: workflow`,
@@ -48,7 +50,8 @@ mechanically checkable contract should say so.
 :width: 100%
 
 The two planes and every delegation edge between them, generated from the repository's own
-`delegates_to:` declarations. The provenance chain is the one dependency that is not swappable.
+`delegates_to:` declarations. DataLad runs natively in every planner rather than behind a doer: the
+provenance chain is the one dependency that is not swappable.
 :::
 
 ## The planner/doer contract
@@ -56,8 +59,10 @@ The two planes and every delegation edge between them, generated from the reposi
 <!--
 openspec/specs/skill-format
 
-A PLANNER holds research-process logic and does not call CLIs. A DOER is a subagent owning tool
-mechanics; doers are the only things that run tools. Delegation is expressed twice — as a
+A PLANNER holds research-process logic. It runs DataLad itself, the way code runs git, and records
+each step in `DSH-*` commit lines; every other tool it delegates. A DOER is a subagent owning one
+peripheral tool's mechanics; it returns a command (`run_via: planner`) or the files it wrote
+(`save_via: planner`) plus a `binding`, and never commits. The main thread is the only committer. Delegation is expressed twice — as a
 frontmatter list and as prose — so it survives translation to harnesses without frontmatter.
 
 The mechanically checkable part is the contribution worth emphasising: tests/lint-plugins.py errors
@@ -107,13 +112,21 @@ Every computation through `datalad run` / `container-run`; every administrative 
 `datalad save`-d. The consequence to state: the analysis record and the administrative record cannot
 diverge, because they are the same history.
 
-Doer refusal rules are part of the design, not implementation detail — no run on a dirty tree, no
-`container-run` against an unregistered container, no empty commit message, no research decisions
-made by the doer. Each one exists to prevent a specific way the chain breaks silently.
+The refusal rules are part of the design, not implementation detail — no run on a dirty tree, no
+`containers-run` against an unregistered container, no empty commit message, no git commit or push
+in a dataset (a hook blocks both). Each one exists to prevent a specific way the chain breaks
+silently. They live in always-loaded rules (≤ 300 words) and a guard hook, not in a subagent.
 
-Mention the containers/datalad boundary as an example of the modularity argument paying off: the
-containers capability builds the image, the datalad capability registers and runs it, so provenance
-has exactly one owner.
+Design history worth one sentence: DataLad used to sit behind a doer like every other tool. That
+treated the provenance substrate as a peripheral, and it duplicated the record — each step wrote a
+commit and a near-identical ledger log entry, which could disagree. DataLad is now native to the
+main thread, and activity is recorded once, in the commit (`DSH-Op`, `DSH-Stage`, `DSH-Binding`…),
+read back by `dsh-log` — which parses the body itself, because DataLad's appended run record hides
+the lines from git's trailer parser.
+
+Mention the containers boundary as an example of the modularity argument paying off: the
+containers doer builds the image and returns the `containers-add` command, and the planner registers
+and runs it, so provenance has exactly one owner — the main thread.
 -->
 
 ## The project ledger
@@ -124,8 +137,9 @@ openspec/specs/project-ledger
 project.yaml at the dataset root, versioned like any other artifact. Closed schema
 (additionalProperties: false), validated by schemas/validate-ledger.py.
 
-Keys: project, products, obligations, contributors, log. Append-only log; corrections are new
-entries.
+Keys: project, products, obligations, contributors — state only. `log` survives as an optional
+legacy key so older ledgers validate; no skill writes it. Activity is the commit history, which is
+immutable, so corrections are new commits by construction rather than by rule.
 
 The argument: administration is a continuous track the pipeline runs inside — the Manage & Comply
 lane — not a stage. Funding, ethics, obligations, and credit get the same provenance discipline as

@@ -2,18 +2,19 @@
 #
 # e2e-smoke.sh — end-to-end smoke test for the data-science-harness v1 vertical slice.
 #
-# Exercises the core loop that the planner skills + datalad doer drive, and ASSERTS the
-# provenance outcomes at each step:
+# Exercises the core loop that the planner skills drive, running DataLad natively, and ASSERTS
+# the provenance outcomes at each step:
 #
-#   new-project        -> YODA + text2git dataset, plain BIDS scaffold, project.yaml log
-#   propose-comparison -> analysis on its own cmp/* branch + log entry
+#   new-project        -> YODA + text2git dataset, plain BIDS scaffold, project.yaml state
+#   propose-comparison -> analysis on its own cmp/* branch, recorded by its commit
 #   run-comparison     -> provenanced run (inputs/cmd/outputs recorded, replayable)
 #   containers-run     -> provenanced run inside a container, image hash annexed + recorded
 #   checkpoint         -> clean, described snapshot
 #   distributability   -> push to a sibling, clone it independently, `datalad get` the result
+#   activity history   -> every harness commit carries DSH-Op/DSH-Stage lines, read via dsh-log
 #
-# This runs the raw DataLad commands the doer would execute (the skills themselves are agent
-# prompts). The containers-run step exercises the extra provenance a plain `datalad run` cannot:
+# This runs the raw DataLad commands the planners run (the skills themselves are agent prompts),
+# with the single-message `DSH-*` form they use. The containers-run step exercises the extra provenance a plain `datalad run` cannot:
 # it registers a container and records the container image's annex key (content hash) in the run
 # commit, so `datalad rerun` re-fetches the exact image. That block is GATED — it self-skips
 # unless the datalad-container extension, an apptainer/singularity runtime, and a .sif are all
@@ -42,6 +43,9 @@ assert_grep() { if grep -qE "$2" "$3" 2>/dev/null; then ok "$1"; else bad "$1  [
 # passes the `import yaml` gate on the blocks below) produced a wall of spurious FAILs.
 skip() { printf '  SKIP: %s\n' "$1"; }
 assert_ledger() { if [ "$2" -eq 2 ]; then skip "$1 — ledger validator dependency absent"; else assert "$1" "[ $2 -eq 0 ]"; fi; }
+# dsh <op> <stage> <subject> [extra DSH line]... — a harness commit message: one string, subject,
+# blank line, DSH lines. Passed as a single -m, because DataLad keeps only the last of several.
+dsh() { local op=$1 stage=$2 subj=$3; shift 3; printf '%s\n\nDSH-Op: %s\nDSH-Stage: %s' "$subj" "$op" "$stage"; for l in "$@"; do printf '\n%s' "$l"; done; }
 
 WORKDIR="${1:-$(mktemp -d "${TMPDIR:-/tmp}/dsh-e2e.XXXXXX")}"
 cleanup() { chmod -R u+w "$WORKDIR" 2>/dev/null || true; rm -rf "$WORKDIR"; }
@@ -156,11 +160,9 @@ project:
   stack: python
 products: []
 obligations: []
-log:
-  - { ts: 2026-07-10T14:30:00Z, op: new-project, stage: initialize, note: "scaffold", branch: main }
 YAML
 
-step "save scaffold" datalad save -m "scaffold YODA+BIDS project demo-study"
+step "save scaffold" datalad save -m "$(dsh new-project initialize "scaffold YODA+BIDS project demo-study — start the study")"
 
 assert "dataset created (.datalad/ present)"          '[ -d .datalad ]'
 assert "project.yaml is a real writable git file (not an annex symlink)" \
@@ -180,22 +182,20 @@ else
 fi
 
 # =========================================================== M3: propose-comparison
-echo; echo "## propose-comparison (named cmp/* branch + log entry)"
+echo; echo "## propose-comparison (named cmp/* branch, recorded by its commit)"
 step "branch cmp/group-diff-y" git checkout -q -b cmp/group-diff-y
-printf '  - { ts: 2026-07-10T15:05:00Z, op: propose-comparison, stage: analyze, note: "group diff", branch: cmp/group-diff-y }\n' >> project.yaml
-step "save propose-comparison" datalad save -m "propose-comparison: cmp/group-diff-y"
+printf '# cmp/group-diff-y\n\nH: group B is older than group A (exploratory).\n' > code/cmp-group-diff-y.md
+step "save propose-comparison" datalad save -m "$(dsh propose-comparison analyze "propose cmp/group-diff-y — group age difference, exploratory")"
 assert "on comparison branch cmp/group-diff-y" '[ "$(git rev-parse --abbrev-ref HEAD)" = "cmp/group-diff-y" ]'
 
 # =========================================================== M3: run-comparison
 echo; echo "## run-comparison (provenanced datalad run)"
 step "provenanced datalad run" \
-  datalad run -m "run cmp/group-diff-y: group age difference" \
+  datalad run -m "$(dsh run-comparison analyze "run cmp/group-diff-y — group age difference")" \
   -i participants.tsv \
   -o derivatives/cmp-group-diff-y/result.json \
   "python3 code/stats.py"
 RUNSHA=$(git rev-parse --short HEAD)
-printf '  - { ts: 2026-07-10T15:40:00Z, op: run-comparison, stage: analyze, note: "commit %s", branch: cmp/group-diff-y }\n' "$RUNSHA" >> project.yaml
-step "save run-comparison log entry" datalad save -m "run-comparison: log entry for $RUNSHA"
 
 assert "result.json produced"       '[ -f derivatives/cmp-group-diff-y/result.json ]'
 assert "computed diff == 7.0"       'grep -q "\"diff\": 7.0" derivatives/cmp-group-diff-y/result.json'
@@ -233,7 +233,7 @@ else
     --call-fmt "$(basename "$CR_RUNTIME") exec {img} {cmd}"
   # hello-world has no shell/python; the outer shell redirects the banner to a tracked output file
   step "containers-run demo-env" \
-    datalad containers-run -m "containers-run: hello banner (image-capture demo)" \
+    datalad containers-run -m "$(dsh run-comparison analyze "hello banner — image-capture demo" "DSH-Binding: containers/$(basename "$CR_RUNTIME")@unknown")" \
     --container-name demo-env -o container-hello.txt \
     "/hello > container-hello.txt"
   datalad containers-list > "$WORKDIR/containers.txt" 2>/dev/null || true
@@ -252,11 +252,12 @@ fi
 # =========================================================== M4: checkpoint
 echo; echo "## checkpoint (clean described snapshot)"
 echo "session notes" > code/NOTES.md
-step "save checkpoint" datalad save -m "checkpoint: session notes"
+step "save checkpoint" datalad save -m "$(dsh checkpoint analyze "session notes — end of session")"
 assert "working tree clean after checkpoint" '[ -z "$(git status --porcelain)" ]'
-# ledger stayed schema-valid through all appended log entries (Phase 1)
+# ledger stayed schema-valid with no log: key (activity lives in the commits)
 FRC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
-assert_ledger "project.yaml still schema-valid after log appends" "$FRC"
+assert_ledger "project.yaml schema-valid with no log: key" "$FRC"
+assert "no skill wrote a ledger log" '! grep -q "^log:" project.yaml'
 
 # =========================================================== manage-product (Phase 2: products[])
 echo; echo "## manage-product (group a comparison into a product) [gated on pyyaml]"
@@ -279,13 +280,13 @@ doc.setdefault("products", []).append({
 with open(path, "w") as fh:
     yaml.safe_dump(doc, fh, sort_keys=False)
 PY
-  step "save manage-product" datalad save -m "manage-product: main-paper groups cmp/group-diff-y"
+  step "save manage-product" datalad save -m "$(dsh manage-product analyze "group cmp/group-diff-y into main-paper — first product" "DSH-Product: main-paper")"
   MRC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
   assert_ledger "ledger valid after grouping a product" "$MRC"
   assert_grep "product 'main-paper' recorded in products[]" "id: main-paper"      "project.yaml"
   assert_grep "product groups the comparison branch"        "cmp/group-diff-y"    "project.yaml"
   assert "product save recorded as a tracked commit" \
-         'git log --oneline -1 | grep -q "manage-product"'
+         'git log -1 --format=%B | grep -q "^DSH-Op: manage-product$"'
 fi
 
 # =========================================================== govern/obligations (Phase 3)
@@ -307,7 +308,7 @@ doc.setdefault("obligations", []).append({
 with open(path, "w") as fh:
     yaml.safe_dump(doc, fh, sort_keys=False)
 PY
-  step "save preregister" datalad save -m "preregister cmp/group-diff-y: pending obligation"
+  step "save preregister" datalad save -m "$(dsh preregister govern "register cmp/group-diff-y — freeze the confirmatory spec" "DSH-Obligation: prereg-group-diff-y opened")"
   ORC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
   assert_ledger "ledger valid after adding a pending obligation" "$ORC"
   assert_grep "confirmatory obligation recorded as pending" "status: pending" "project.yaml"
@@ -324,7 +325,7 @@ for ob in doc.get("obligations", []):
 with open(path, "w") as fh:
     yaml.safe_dump(doc, fh, sort_keys=False)
 PY
-  step "save obligation resolution" datalad save -m "obligations: met prereg-group-diff-y"
+  step "save obligation resolution" datalad save -m "$(dsh obligations govern "resolve prereg-group-diff-y — registered run recorded" "DSH-Obligation: prereg-group-diff-y resolved")"
   ORC2=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
   assert_ledger "ledger valid after resolving obligation to met" "$ORC2"
   assert_grep "obligation resolved forward to met"        "status: met" "project.yaml"
@@ -368,7 +369,7 @@ doc.setdefault("contributors", []).append({
 with open(path, "w") as fh:
     yaml.safe_dump(doc, fh, sort_keys=False, allow_unicode=True)
 PY
-  step "save contributor credit" datalad save -m "people: credit Ada Researcher"
+  step "save contributor credit" datalad save -m "$(dsh people manage "credit Ada Researcher — CRediT roles and ORCID")"
   PRC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
   assert_ledger "ledger valid after crediting a contributor" "$PRC"
   assert_grep "contributor recorded with an ORCID" "orcid:" "project.yaml"
@@ -395,7 +396,7 @@ with open(path, "w") as fh:
     yaml.safe_dump(doc, fh, sort_keys=False)
 PY
   step "save release + version tag" \
-    datalad save -m "release main-paper v$REL_VER" --version-tag "v$REL_VER"
+    datalad save -m "$(dsh dataset-release disseminate "release main-paper v$REL_VER — first versioned state" "DSH-Product: main-paper")" --version-tag "v$REL_VER"
   RRC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
   assert_ledger "ledger valid after release (status -> released)" "$RRC"
   assert "BIDS CHANGES entry written"                      '[ -s CHANGES ]'
@@ -488,13 +489,41 @@ by_id["data-release"].setdefault("relations", []).append({"relation": "IsSupplem
 with open(path, "w") as fh:
     yaml.safe_dump(doc, fh, sort_keys=False)
 PY
-  step "save link-outputs" datalad save -m "link-outputs: main-paper <-> data-release (DataCite relations)"
+  step "save link-outputs" datalad save -m "$(dsh link-outputs disseminate "link main-paper and data-release — DataCite relations both ways" "DSH-Product: main-paper" "DSH-Product: data-release")"
   KRC=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
   assert_ledger "ledger valid after cross-linking products" "$KRC"
   NPROD=$(python3 -c 'import yaml; print(len(yaml.safe_load(open("project.yaml")).get("products",[])))')
   assert "ledger holds multiple products (>=2)"            "[ $NPROD -ge 2 ]"
   assert_grep "forward DataCite relation recorded (IsSupplementedBy)" "IsSupplementedBy" "project.yaml"
   assert_grep "inverse DataCite relation recorded (IsSupplementTo)"   "IsSupplementTo"   "project.yaml"
+fi
+
+# =========================================================== activity history (dsh-log)
+echo; echo "## activity history (DSH-* commit lines read back with dsh-log)"
+# Activity is recorded in the commit that makes each change, not in a ledger log. dsh-log reads
+# the lines from the raw body — including from run commits, where DataLad's appended record hides
+# them from git's own trailer parser.
+DSHLOG="$REPO/plugins/datalad-cli/scripts/dsh-log.sh"
+step "read the activity history" bash -c 'sh "$1" > "$2"' _ "$DSHLOG" "$WORKDIR/dshlog.jsonl"
+hist() { python3 - "$WORKDIR/dshlog.jsonl" "$1" <<'PY'
+import json, sys
+rows = [json.loads(l) for l in open(sys.argv[1])]
+sys.exit(0 if eval(sys.argv[2], {"rows": rows, "ops": [r["op"] for r in rows]}) else 1)
+PY
+}
+for op_stage in new-project:initialize propose-comparison:analyze run-comparison:analyze checkpoint:analyze; do
+  assert "dsh-log: ${op_stage%%:*} recorded with DSH-Stage ${op_stage#*:}" \
+         "hist 'any(r[\"op\"] == \"${op_stage%%:*}\" and r[\"stage\"] == \"${op_stage#*:}\" for r in rows)'"
+done
+assert "dsh-log: the run commit is read past its run record (run: true)" \
+       "hist 'any(r[\"op\"] == \"run-comparison\" and r[\"run\"] and r[\"sha\"].startswith(\"$(git rev-parse "$RUNSHA")\"[:7]) for r in rows)'"
+assert "git's trailer parser misses the run commit's DSH lines (why dsh-log parses bodies)" \
+       '[ -z "$(git log -1 --format="%(trailers:key=DSH-Op)" "$RUNSHA")" ]'
+assert "dsh-log: every harness commit has exactly one op" "hist 'all(r[\"op\"] for r in rows)'"
+if python3 -c 'import yaml' 2>/dev/null; then
+  assert "dsh-log: product and obligation lines recorded" \
+         "hist '\"main-paper\" in sum((r[\"product\"] for r in rows), []) and \"prereg-group-diff-y resolved\" in sum((r[\"obligation\"] for r in rows), [])'"
+  assert "dsh-log: the release is recorded" "hist '\"dataset-release\" in ops'"
 fi
 
 # =========================================================== Distributability (D)

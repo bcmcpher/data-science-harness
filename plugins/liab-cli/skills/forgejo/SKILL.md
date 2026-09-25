@@ -114,10 +114,10 @@ infrastructure: the repository, its visibility, and the URL that goes into a sib
   stop. It may already be serving a dataset.
 - **Never print a token, and never write one into a config file, a remote URL or a report.** Report
   that a credential is present or absent, never its value.
-- **Never register the sibling or push data.** That is the datalad doer's, and the difference
+- **Never register the sibling or push data.** That is the planner's, run with DataLad directly, and the difference
   matters: this skill has created a place to put data, which is not the same as having put it there.
 - **Never report a created repository as a working remote.** The standard this capability answers to
   is a `datalad get` that retrieves annexed content from the host. Until that runs, say `created`.
 - **Never mirror the dataset to a public forge "as a backup".** Data sovereignty is the reason this
   capability exists; a convenience copy on a third-party host defeats it silently.
-- Do not commit. The datalad doer owns `datalad save`.
+- Do not commit. The planner owns `datalad save`.

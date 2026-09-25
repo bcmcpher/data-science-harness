@@ -7,7 +7,7 @@ description: >
   Stage-2 (Curate) ingest step — getting raw data *into* the dataset before annotate/process.
 plane: workflow
 stamped: [S, A, T, P, E]
-delegates_to: [nipoppy, datalad]
+delegates_to: [nipoppy]
 ---
 
 # Skill: raw-to-bids
@@ -15,9 +15,9 @@ delegates_to: [nipoppy, datalad]
 Get raw imaging data into a standardized, **self-contained BIDS** layout so everything downstream
 (annotate, process, analyze) has a canonical structure to work from — and do it **provenanced**:
 nipoppy runs the containerized converter (dcm2bids / HeuDiConv / BIDScoin → Portability/Ephemerality)
-and DataLad wraps it (`datalad run`) so inputs, command, and outputs are recorded. You orchestrate
-two doers: the **nipoppy doer** constructs/validates the `bidsify` command; the **datalad doer**
-runs it with provenance. You never run tools yourself.
+and you wrap it in `datalad run` yourself so inputs, command, and outputs are recorded. You
+delegate to the **nipoppy** doer, which constructs/validates the `bidsify` command; you run it
+with provenance. You never construct the converter command yourself.
 
 > Design note: like `process/run-pipeline`, the nipoppy command is executed *through* `datalad run`
 > — a bare `nipoppy bidsify` is never the final step. The converter container is pinned by nipoppy's
@@ -39,27 +39,30 @@ runs it with provenance. You never run tools yourself.
    > run it once with `--simulate` to preview, and return the exact command plus the inputs it reads
    > (sourcedata/post-reorg) and outputs it writes (`bids/`)."
    If it returns `result: failed` (state/platform gap), relay the fix and stop.
-3. **Ensure a clean tree (datalad doer)** — `datalad run` requires a clean tree:
-   > "status: report modified/untracked files and the current branch."
-   If dirty, route to `analyze/checkpoint` first.
-4. **Run with provenance (datalad doer)** — delegate:
-   > "run: `datalad run -m 'bidsify <converter> on <scope>'` with inputs `<-i from step 2>` and
-   > outputs `<-o from step 2, e.g. bids/>`, command `'<the nipoppy bidsify command>'`."
-   Wait for the structured result (commit sha, recorded outputs, pass/fail). On failure, relay the
-   doer's error + the nipoppy log path; nothing was committed. Stop.
-5. **Update curation status (nipoppy doer → datalad doer)** — after success:
+3. **Ensure a clean tree** — `datalad run` requires a clean tree; check `datalad status`. If
+   dirty, route to `analyze/checkpoint` first.
+4. **Run with provenance** — run the returned command yourself:
+   ```bash
+   datalad run -m "$(printf 'bidsify <converter> on <scope>\n\nDSH-Op: raw-to-bids\nDSH-Stage: curate\nDSH-Binding: nipoppy/<pipeline>@<version>')" -i <inputs from step 2> -o <outputs from step 2, e.g. bids/> "<the nipoppy bidsify command>"
+   ```
+   Copy `binding` from the nipoppy doer's step-2 result into `DSH-Binding`. On failure, relay the
+   error and the nipoppy log path; nothing was committed. Stop.
+5. **Update curation status and record it, in one step** — after success, delegate the update:
    > nipoppy doer: "track-curation to update `tabular/curation_status.tsv` after bidsify."
-   > then datalad doer: "save: `datalad save -m 'track-curation: post-bidsify'`."
-6. **Log it** — append to `project.yaml`:
-   `{ ts, op: raw-to-bids, stage: curate, note: "datalad run nipoppy bidsify <converter> on <scope>; commit <sha>; outputs bids/", branch: <branch> }`.
-7. **Report** — the converter/scope, the provenance commit, the `bids/` output, and the next step:
+
+   Then save it yourself, naming the converter and scope:
+   ```bash
+   datalad save -m "$(printf 'track-curation: post-bidsify <converter> on <scope>\n\nDSH-Op: raw-to-bids\nDSH-Stage: curate')" tabular/curation_status.tsv
+   ```
+6. **Report** — the converter/scope, the provenance commit, the `bids/` output, and the next step:
    `curate/annotate` to enrich metadata, or `process/run-pipeline` to process the BIDS data.
    Suggest `govern/qc-review` (bids-validator) to confirm BIDS validity.
 
 ## Constraints
-- Always execute the converter through the datalad doer's `datalad run` — never let a
-  dataset-mutating `nipoppy bidsify` run bare. Provenance is the point.
+- Always execute the converter under `datalad run` yourself — never let a dataset-mutating
+  `nipoppy bidsify` run bare. Provenance is the point.
 - Require a meaningful `-m` message naming the converter and scope; never a placeholder.
 - Declare inputs/outputs from the nipoppy doer's report — do not invent paths.
 - Do not hand-edit `manifest.tsv` or restructure the raw data yourself — nipoppy owns the layout.
-- Keep `project.yaml` append-only and schema-valid; delegate every tool operation to a doer.
+- Keep `project.yaml` schema-valid; record activity in the commit's `DSH-*` lines, never in
+  `project.yaml` `log`.

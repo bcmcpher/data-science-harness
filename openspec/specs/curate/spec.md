@@ -15,12 +15,14 @@ compliance, or to answer whether the data may be shared. `merge-data` combines t
 supplied join key and reports the row and column arithmetic, because a wrong join does not fail — it
 produces a table. `gen-data-dict` derives a dictionary's skeleton from the data and takes every
 meaning from the user or the `annotate` doer, leaving undescribed columns out and naming them.
+
 ## Requirements
+
 ### Requirement: Raw-to-BIDS conversion is provenanced
 
 `curate/raw-to-bids` MUST have the nipoppy doer construct the converter invocation, MUST ensure a
-clean tree, and MUST have the datalad doer execute it under `datalad run` with explicit inputs and
-outputs. It MUST NOT run the converter outside the provenance chain.
+clean tree, and MUST execute the returned command itself under `datalad run` with explicit inputs
+and outputs. It MUST NOT run the converter outside the provenance chain.
 
 #### Scenario: DICOMs are converted
 
@@ -31,19 +33,21 @@ outputs. It MUST NOT run the converter outside the provenance chain.
 #### Scenario: The tree is dirty
 
 - **WHEN** uncommitted changes exist at conversion time
-- **THEN** the skill resolves that through the datalad doer before running, because `datalad run`
+- **THEN** the skill resolves that with `datalad save` before running, because `datalad run`
   requires a clean tree
 
 ### Requirement: Curation status is recorded after conversion
 
-After a successful conversion, `curate/raw-to-bids` MUST update nipoppy's curation status and append
-a ledger log entry naming the converter, its version, and the scope converted.
+After a successful conversion, `curate/raw-to-bids` MUST update nipoppy's curation status and save
+it in a commit whose message names the converter, its version, and the scope converted, and carries
+`DSH-Op: raw-to-bids` and `DSH-Stage` lines, with a `DSH-Binding` line for the converter named in the
+nipoppy doer's result.
 
 #### Scenario: Conversion completes
 
 - **WHEN** the run succeeds
-- **THEN** curation status is updated and one log entry records what was converted, then the state is
-  saved
+- **THEN** curation status is updated and saved, and that commit's message records what was
+  converted together with its `DSH-Op`, `DSH-Stage` and `DSH-Binding` lines
 
 ### Requirement: Annotation makes the dataset self-describing
 
@@ -61,7 +65,7 @@ dictionary covering each phenotypic column, and fill or extend BIDS sidecars.
 `curate/annotate` MUST delegate controlled-term annotation to the annotate doer and report the
 coverage that doer returns — naming which variables received a term, which did not, and why. This
 annotation step is optional and is offered when richer Metadata and Actionability are wanted. The
-skill MUST declare `delegates_to: [annotate, datalad]`.
+skill MUST declare `delegates_to: [annotate]`.
 
 #### Scenario: Partial controlled-term coverage
 
@@ -83,13 +87,14 @@ skill MUST declare `delegates_to: [annotate, datalad]`.
 
 ### Requirement: Metadata edits are provenanced
 
-`curate/annotate` MUST delegate the save to the datalad doer and append a log entry, so annotation
-joins the same chain as the data it describes.
+`curate/annotate` MUST save its changes with `datalad save` in a commit carrying `DSH-Op: annotate`
+and `DSH-Stage` lines, so annotation joins the same chain as the data it describes.
 
 #### Scenario: Annotations are written
 
 - **WHEN** metadata files are added or changed
-- **THEN** they are committed through the datalad doer with a message naming the operation
+- **THEN** they are committed with `datalad save` with a message naming the operation and carrying
+  `DSH-Op: annotate`
 
 ### Requirement: De-identification is a recorded, provenanced step
 
@@ -188,4 +193,3 @@ an existing description.
 - **WHEN** the annotate doer returns no identifier for a variable
 - **THEN** the free-text description stays and no code is written, inheriting that doer's refusal to
   recall an identifier
-

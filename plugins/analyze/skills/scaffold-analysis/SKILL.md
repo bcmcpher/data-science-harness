@@ -9,7 +9,6 @@ description: >
   write the analysis itself — this skill never does that.
 plane: workflow
 stamped: [A, T, P, E]
-delegates_to: [datalad]
 ---
 
 # Skill: scaffold-analysis
@@ -52,12 +51,11 @@ how it will be invoked under provenance — and leave the middle deliberately em
    - a header comment naming the comparison, the planned approach, and that the analysis is unwritten
 4. **State the run command** the user will hand to `analyze/run-comparison`, with its `-i`, `-o` and
    `-m` arguments filled in from the contract. Do not run it; the stub is designed to fail.
-5. **Log it** — append one entry to `project.yaml`:
-   `{ ts, op: scaffold-analysis, stage: analyze, note: "stub code/cmp-<slug>.<ext>; analysis
-   unwritten", branch: cmp/<slug> }`.
-6. **Save** — delegate to the **datalad doer**:
-   > "save: `datalad save -m 'scaffold-analysis: stub for cmp/<slug> (analysis unwritten)'`."
-7. **Report** — the stub path, the contract it encodes, the placeholder the user must replace, and
+5. **Save** — run it yourself:
+   ```bash
+   datalad save -m "$(printf 'scaffold-analysis: stub for cmp/<slug> (analysis unwritten)\n\nDSH-Op: scaffold-analysis\nDSH-Stage: analyze')" code/cmp-<slug>.<ext>
+   ```
+6. **Report** — the stub path, the contract it encodes, the placeholder the user must replace, and
    the exact `analyze/run-comparison` invocation for when they have.
 
 ## Constraints
@@ -73,4 +71,4 @@ how it will be invoked under provenance — and leave the middle deliberately em
 - **Write nothing outside the agreed output directory**, and no writes back into raw data. A run
   whose outputs are not where it declared them breaks the provenance record it was built for.
 - Do not execute the stub, and do not commit a result alongside it.
-- Keep `log:` append-only and the ledger schema-valid; delegate the save to the datalad doer.
+- Run the save yourself; never append to `project.yaml` `log`.

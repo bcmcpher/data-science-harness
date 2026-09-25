@@ -60,7 +60,7 @@ pattern generalizes — which is what a catalytic fund is buying.
 | Evidence | Source | Status |
 |---|---|---|
 | Agent invocations are wrapped in `datalad run`, capturing **model, prompt and resulting changes** — [`docs/stamped.md`](../stamped.md), AI-era tracking §3.12.5 | repo | **built** |
-| The append-only ledger `log:` records *why*, with corrections as new entries rather than edits; `project/log-decision` exists so that log feeds an eventual Methods section. Schema-validated by [`schemas/project.schema.json`](../../schemas/project.schema.json) | repo | **built** |
+| Every harness commit records *what and why* in its message, with `DSH-*` lines naming the skill and stage, and corrections are new commits rather than edits; `project/log-decision` writes decision records to `docs/decisions/` so they feed an eventual Methods section. The ledger's state is schema-validated by [`schemas/project.schema.json`](../../schemas/project.schema.json) | repo | **built** |
 | [`tests/e2e-smoke.sh`](../../tests/e2e-smoke.sh) asserts this rather than assuming it — provenance is recorded, replayable, and survives push → independent clone → `datalad get` | repo | **built** |
 | The `reproducibility` probe measures the gap directly: clean machine, resolve identifier, clone, rebuild, re-execute, diff, with **number of manual interventions** as a metric — *a rebuild that "worked" after four undocumented fixes did not work* | repo | **specified** |
 
@@ -141,10 +141,10 @@ these in order and instructs *"Do not soften this."*
 1. **Nothing has been evaluated.** The protocol is specified and unrun. Every claim about the
    harness's effect on work quality is a design argument, not a measurement. This is the limitation a
    reader should take away, and it goes first.
-2. **Built is not exercised.** Both planes are now complete — 37 planner skills over 22 plugins and
-   77 skills, specified by 22 specs — and that sharpens rather than softens the limitation. Every
+2. **Built is not exercised.** Both planes are now complete — 37 planner skills over 21 plugins and
+   59 skills, specified by 22 specs — and that sharpens rather than softens the limitation. Every
    capability now has a toolbox, `containers` included — it was the last, and closing it also
-   reframed that capability around the Dockerfile → OCI → `.sif` path people actually use. `datalad` has 19 toolbox skills; `annotate`, `nipoppy` and
+   reframed that capability around the Dockerfile → OCI → `.sif` path people actually use. `datalad` has one toolbox skill with 19 verb references; `annotate`, `nipoppy` and
    `compendium` 4 each; `archive` 3; `liab` 2; `bids` 1.
 
    The real caveat is that having a toolbox is not having run it. Two paths have been exercised

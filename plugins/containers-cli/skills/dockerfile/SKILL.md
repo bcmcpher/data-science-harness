@@ -129,4 +129,4 @@ command and is the whole difference.
 - **Never assume a project has one environment.** Ask which, and record which pipeline it serves.
 - Do not build the image. `oci-build` owns that, and a Dockerfile that has not been built is
   `written`, not `working`.
-- Do not commit. The datalad doer owns `datalad save`.
+- Do not commit. The planner owns `datalad save`.

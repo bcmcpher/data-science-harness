@@ -4,7 +4,7 @@
     "name": "bcmcpher"
   },
   "metadata": {
-    "description": "Governance as a by-product of doing the work: a harness-agnostic set of assistant configurations for academic data science. 6 workflow-plane planner plugins (project, govern, curate, analyze, process, disseminate) delegate to capability-plane doers (datalad, nipoppy, bids, containers, archive, annotate, compendium, liab) and their CLI toolboxes, so every computation and every administrative change runs through one DataLad provenance chain and every research object is Self-contained, Tracked, Actionable, Modular, Portable, Ephemeral and Distributable (see docs/stamped.md). The default export is a living compendium — provenanced dataset, re-executable article, agent-callable method bundle, self-hostable deployment — cross-linked by DOI. Status: both planes are built and every capability has a toolbox; what has not happened is execution — most paths are gated, the gates are tested, and the tools behind them have not been run. The evaluation protocol is specified and unrun (see docs/motivation.md).",
+    "description": "Governance as a by-product of doing the work: a harness-agnostic set of assistant configurations for academic data science. 6 workflow-plane planner plugins (project, govern, curate, analyze, process, disseminate) run DataLad natively, as they would git, and delegate other tools to capability-plane doers (nipoppy, bids, containers, archive, annotate, compendium, liab) and their CLI toolboxes, so every computation and every administrative change runs through one DataLad provenance chain, recorded in the commit history and every research object is Self-contained, Tracked, Actionable, Modular, Portable, Ephemeral and Distributable (see docs/stamped.md). The default export is a living compendium — provenanced dataset, re-executable article, agent-callable method bundle, self-hostable deployment — cross-linked by DOI. Status: both planes are built and every capability has a toolbox; what has not happened is execution — most paths are gated, the gates are tested, and the tools behind them have not been run. The evaluation protocol is specified and unrun (see docs/motivation.md).",
     "version": "0.1.0"
   },
   "plugins": [
@@ -24,11 +24,6 @@
       "description": "Analysis planner: plan-analysis recommends a statistical approach and lists the assumptions it rests on as unchecked, reporting no statistic of its own; propose-comparison opens each comparison on its own branch; scaffold-analysis emits a provenance-wrapped script stub whose placeholder raises rather than returning a plausible number; run-comparison executes it with full (optionally containerized) provenance; plot draws figures only from produced outputs; gen-report assembles results, QC and provenance with a required gaps section; checkpoint takes clean snapshots and manage-product groups kept comparisons into deliverables."
     },
     {
-      "name": "datalad",
-      "source": "./plugins/datalad",
-      "description": "DataLad doer: the tool subagent that executes all DataLad / git-annex operations with provenance on behalf of the planner skills."
-    },
-    {
       "name": "curate",
       "source": "./plugins/curate",
       "description": "Curation planner: raw-to-bids converts raw acquisitions to a BIDS layout via nipoppy with DataLad provenance; annotate and gen-data-dict enrich a dataset's metadata (dataset_description.json, participants.json data dictionary, BIDS sidecars, controlled-term mappings); merge-data joins external tabular sources on a declared key and reports what did not match rather than dropping it; deidentify makes identifier removal a provenanced run with a recorded approach and a required residual-risk statement, and refuses to present that record as a compliance determination. Advances STAMPED Self-containment + Actionability."
@@ -36,7 +31,7 @@
     {
       "name": "process",
       "source": "./plugins/process",
-      "description": "Processing planner: run nipoppy pipelines (fMRIPrep, MRIQC, ...) on BIDS data with full DataLad provenance, then record completion. Orchestrates the nipoppy and datalad doers."
+      "description": "Processing planner: run nipoppy pipelines (fMRIPrep, MRIQC, ...) on BIDS data with full DataLad provenance, then record completion. Runs DataLad directly and delegates nipoppy mechanics to the nipoppy doer."
     },
     {
       "name": "disseminate",
@@ -46,12 +41,12 @@
     {
       "name": "nipoppy",
       "source": "./plugins/nipoppy",
-      "description": "Nipoppy doer: the tool subagent that constructs/validates nipoppy pipeline commands and hands dataset-mutating steps to the datalad doer for provenanced execution."
+      "description": "Nipoppy doer: the tool subagent that constructs/validates nipoppy pipeline commands and hands dataset-mutating steps back to the planner to run under `datalad run`."
     },
     {
       "name": "containers",
       "source": "./plugins/containers",
-      "description": "Containers doer: authors and builds a project's compute environments along the path people actually use — Dockerfile → OCI image → .sif — and expects several per project (an authored analysis environment beside vendored pipeline images, and derived images that add the project's own tools to a standard base), each named and each pinned for its kind. Registration and running stay with the datalad doer."
+      "description": "Containers doer: authors and builds a project's compute environments along the path people actually use — Dockerfile → OCI image → .sif — and expects several per project (an authored analysis environment beside vendored pipeline images, and derived images that add the project's own tools to a standard base), each named and each pinned for its kind. Registration and running stay with the planner, which runs `datalad containers-add` and `containers-run` itself."
     },
     {
       "name": "containers-cli",
@@ -86,7 +81,7 @@
     {
       "name": "datalad-cli",
       "source": "./plugins/datalad-cli",
-      "description": "DataLad skill toolbox: 19 focused skills wrapping individual datalad subcommands (create, run, save, container-run, siblings, push, ...)."
+      "description": "DataLad toolbox for running DataLad natively, the way the assistant runs git. It has one `datalad` skill that routes by verb to 19 verb references (create, run, save, containers-run, siblings, push, ...). It also ships always-loaded rules, hooks that guard `git commit` and `git push`, and `dsh-log`, which reads harness activity back from `DSH-*` commit lines."
     },
     {
       "name": "nipoppy-cli",

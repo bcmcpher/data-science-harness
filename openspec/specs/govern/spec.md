@@ -15,7 +15,9 @@ a funder requirement it did not read, `ethics-track` will not compute an expiry 
 or say whether a use is in scope, and `stamped-assess` reports seven dimensions with evidence and no
 composite — marking what it could not check `unassessed` rather than zero, which is the same
 distinction `annotate` draws between `unannotated` and `unavailable`.
+
 ## Requirements
+
 ### Requirement: Pre-registration freezes the spec before execution
 
 `govern/preregister` MUST capture an immutable specification for a comparison, guide its submission
@@ -37,12 +39,14 @@ to an external registry such as OSF Registrations, ClinicalTrials.gov, or PROSPE
 ### Requirement: The frozen spec is not edited after registration
 
 Once registered, the specification MUST NOT be rewritten. Any change to the analysis plan MUST be
-recorded as a new log entry describing the deviation.
+recorded as a new commit whose message describes the deviation and carries `DSH-Op` and
+`DSH-Stage` lines.
 
 #### Scenario: The analysis plan changes mid-project
 
 - **WHEN** a registered comparison must be run differently than specified
-- **THEN** the frozen spec is left intact and the deviation is logged so it is reportable
+- **THEN** the frozen spec is left intact and the deviation is recorded in a commit message that
+  `dsh-log` returns, so it is reportable
 
 ### Requirement: Obligations are a queryable registry of what is owed
 
@@ -59,12 +63,14 @@ report the next item due ordered by date and then by kind.
 #### Scenario: An obligation is discharged
 
 - **WHEN** a commitment is met or waived
-- **THEN** its status changes and a log entry records the resolution
+- **THEN** its status changes, and the commit that records the change carries
+  `DSH-Obligation: <id> resolved`
 
 ### Requirement: qc-review reports without changing the dataset
 
-`govern/qc-review` MUST delegate BIDS validation to the bids doer and a read-only state inspection to
-the datalad doer, then produce a STAMPED self-assessment scorecard. It MUST NOT modify the dataset.
+`govern/qc-review` MUST delegate BIDS validation to the bids doer and inspect DataLad state itself
+with read-only DataLad commands, then produce a STAMPED self-assessment scorecard. It MUST NOT
+modify the dataset.
 
 #### Scenario: A pre-release review
 
@@ -108,19 +114,20 @@ between `unannotated` and `unavailable`.
 ### Requirement: A ledger can be added to a dataset that does not have one
 
 `govern/init-ledger` MUST create a schema-valid `project.yaml` in an existing dataset, and MUST
-refuse to overwrite, migrate or repair one that already exists. It MUST NOT backfill the append-only
-log with entries for work that predates the ledger, and MUST record where the record begins.
+refuse to overwrite, migrate or repair one that already exists. It MUST NOT backfill the history
+with records of work that predates the ledger, and MUST record where the record begins.
 
 #### Scenario: A ledger already exists
 
 - **WHEN** `init-ledger` runs in a dataset that already has `project.yaml`
-- **THEN** it reports that and stops, leaving the existing append-only log untouched
+- **THEN** it reports that and stops, leaving the existing `project.yaml`, including any legacy
+  `log` entries, untouched
 
 #### Scenario: An existing study adopts the ledger
 
 - **WHEN** a dataset with prior history gains a ledger
-- **THEN** the first log entry records that the ledger was added and from what point the record is
-  complete, rather than reconstructing earlier activity
+- **THEN** the commit that adds the ledger carries `DSH-Op: init-ledger` and its message records
+  from what point the record is complete, rather than reconstructing earlier activity
 
 #### Scenario: The registries are empty at creation
 
@@ -150,14 +157,15 @@ user, and MUST report the sections the user still has to complete.
 
 `govern/ethics-track` MUST record an approval as an `obligations[]` entry with `kind: ethics`, the
 expiry in `due` and the protocol reference in `ref`, with the approval date and every amendment
-appended to the log. It MUST NOT infer an approval date, an expiry, or a protocol number, and MUST
-NOT state whether a planned use falls within an approval's scope.
+recorded in the message of the commit that records it, carrying `DSH-Op: ethics-track`. It MUST NOT
+infer an approval date, an expiry, or a protocol number, and MUST NOT state whether a planned use
+falls within an approval's scope.
 
 #### Scenario: An approval is recorded
 
 - **WHEN** an IRB approval with a protocol number and expiry is supplied
 - **THEN** a `kind: ethics` obligation carries the expiry in `due` and the protocol in `ref`, and the
-  approval date is in the log
+  approval date is in the recording commit's message
 
 #### Scenario: Only an approval date is known
 
@@ -167,7 +175,8 @@ NOT state whether a planned use falls within an approval's scope.
 #### Scenario: The protocol is amended
 
 - **WHEN** an amendment is granted
-- **THEN** it is a new log entry, and any prior record of what was approved remains readable
+- **THEN** it is recorded in a new commit carrying `DSH-Op: ethics-track`, and any prior record of
+  what was approved remains readable through `dsh-log`
 
 #### Scenario: The researcher asks whether an analysis is covered
 
@@ -197,4 +206,3 @@ check as skipped with that reason. It MUST NOT state that a project is COBIDAS-c
 - **WHEN** the review is read as a compliance statement
 - **THEN** it says that two of seven tables were read, and that assessment against the whole
   guideline happens at submission through `disseminate/reporting-checklist`
-

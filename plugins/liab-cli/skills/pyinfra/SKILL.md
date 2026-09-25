@@ -107,6 +107,6 @@ pyinfra's own flag for this is `--dry`. A run without it **is** an apply.
   inventory. The infrastructure the project targets is the operator's decision.
 - **Never print the contents of a secret** — SSH keys, host passwords, tokens in a config. Report
   that a required secret is present or absent, never its value.
-- Do not commit. The datalad doer owns `datalad save`.
+- Do not commit. The planner owns `datalad save`.
 - Do not claim the deployment is compliant with any policy, institutional or otherwise. It records
   what was deployed.

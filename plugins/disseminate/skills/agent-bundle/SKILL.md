@@ -7,7 +7,7 @@ description: >
   paper", "tool bundle". Produces an agent-bundle-kind living product that dogfoods the harness format.
 plane: workflow
 stamped: [A, E]
-delegates_to: [compendium, datalad]
+delegates_to: [compendium]
 ---
 
 # Skill: agent-bundle
@@ -16,8 +16,8 @@ Turn the project's analysis code into an **agent-callable bundle**: the paper's 
 parameterized, tested MCP tools an agent or person can invoke to reproduce or extend results
 (Actionable), each backed by a reproduction test (Ephemerality — verifiably re-runnable). The bundle
 is emitted in the harness's **own** `SKILL.md` + `plugin.json` + MCP format, so the project dogfoods
-the structure it is built from. You delegate the emission to the **compendium doer**, and ledger and
-history reads and the save to the **datalad doer**.
+the structure it is built from. You delegate the emission to the **compendium doer**; ledger and
+history reads, and the save, run directly, in the main thread.
 
 Load `plugins/disseminate/references/paper2agent-bundle.md` for the bundle layout and mapping before
 generating.
@@ -51,11 +51,13 @@ generating.
    signature, and runs `tests/lint-plugins.py` over what it wrote — a bundle that claims the
    harness's format without having been checked against it is an assertion. Relay the lint result as
    the doer reports it, including `not run`.
-4. **Register + log** — add the bundle path to the product's `outputs[]` (or create an
-   `agent-bundle`-kind product); append
-   `{ ts, op: agent-bundle, stage: disseminate, note: "Paper2Agent bundle for <id>", branch: <branch> }`.
-5. **Save** — delegate to the datalad doer: "save: `datalad save -m 'agent-bundle: synthesize <id>'`."
-6. **Report** — the bundle path, the tools exposed and the comparison each reproduces, the lint
+4. **Register + save** — add the bundle path to the product's `outputs[]` (or create an
+   `agent-bundle`-kind product); save:
+   ```bash
+   datalad save -m "$(printf 'agent-bundle: synthesize <id>\n\nDSH-Op: agent-bundle\nDSH-Stage: disseminate\nDSH-Product: <id>')"
+   ```
+   Add a `DSH-Binding:` line copied from the compendium doer's report if it names one.
+5. **Report** — the bundle path, the tools exposed and the comparison each reproduces, the lint
    result, any candidate dropped for having no recorded run, how to run the MCP server and the
    reproduction tests, and the next step: `link-outputs` to relate the bundle to the code
    (`IsDerivedFrom`) and paper (`IsSupplementTo`). **Say that the tests have not been run**, unless
@@ -74,5 +76,5 @@ generating.
   pass.** The format claim is the whole reason the bundle is shaped this way.
 - **Never claim the bundle works.** Emitting a server is not starting one, and writing tests is not
   passing them. Say which of those has happened.
-- Record the bundle under the product's `outputs[]`; keep `log:` append-only and the ledger
-  schema-valid. Delegate reads/saves to the datalad doer.
+- Record the bundle under the product's `outputs[]`; keep the ledger schema-valid. Run DataLad
+  yourself; delegate the bundle emission to the compendium doer.

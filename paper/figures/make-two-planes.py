@@ -65,16 +65,15 @@ def esc(s):
 
 def main():
     edges, sizes = delegation_graph()
-    if not edges:
-        print("ERROR: no workflow skills with delegates_to found", file=sys.stderr)
+    if not sizes:
+        print("ERROR: no workflow skills found", file=sys.stderr)
         return 1
 
-    planners = [p for p in PLANNER_ORDER if p in edges]
-    planners += [p for p in sorted(edges) if p not in planners]
+    planners = [p for p in PLANNER_ORDER if p in sizes]
+    planners += [p for p in sorted(sizes) if p not in planners]
+    for p in planners:
+        edges.setdefault(p, {})
     doers = sorted({d for m in edges.values() for d in m})
-    # datalad carries every edge; put it in the middle so the fan is legible.
-    doers = [d for d in doers if d != "datalad"]
-    doers.insert(len(doers) // 2, "datalad")
 
     W, H = 1000, 486
     BW, BH = 132, 46
@@ -96,16 +95,19 @@ def main():
         f'WORKFLOW PLANE &#183; {len(planners)} planners, {sum(sizes.values())} skills &#183; knows the research process</text>',
         f'<text x="26" y="{bot_y - 26}" font-size="13" font-weight="bold" fill="#8a6d3b">'
         f'CAPABILITY PLANE &#183; {len(doers)} doers, each paired 1:1 with a *-cli toolbox &#183; knows one tool</text>',
+        # DataLad is not a delegation target: every planner runs it in the main thread, like git.
+        f'<rect x="30" y="{top_y + BH + 8}" width="{W - 60}" height="20" rx="4" fill="#fff6f5" stroke="#c0392b"/>',
+        f'<text x="{W / 2:.0f}" y="{top_y + BH + 22}" font-size="11.5" text-anchor="middle" fill="#c0392b">'
+        f'<tspan font-weight="bold">DataLad</tspan> &#183; native in every planner &#183; datalad save / run, '
+        f'each step recorded in DSH-* commit lines &#183; not delegated</text>',
     ]
 
     for p in planners:
         for d, n in sorted(edges[p].items()):
-            hot = d == "datalad"
             L.append(
-                f'<path d="M {pcx[p]:.0f} {top_y + BH} C {pcx[p]:.0f} {top_y + BH + 70}, '
+                f'<path d="M {pcx[p]:.0f} {top_y + BH + 28} C {pcx[p]:.0f} {top_y + BH + 90}, '
                 f'{dcx[d]:.0f} {bot_y - 70}, {dcx[d]:.0f} {bot_y}" fill="none" '
-                f'stroke="{"#c0392b" if hot else "#8ba3c0"}" stroke-width="{1.1 + n * 0.28:.1f}" '
-                f'opacity="{0.55 if hot else 0.75}"/>'
+                f'stroke="#8ba3c0" stroke-width="{1.1 + n * 0.28:.1f}" opacity="0.75"/>'
             )
 
     def box(x, y, label, sub, fill, stroke, bold=False):
@@ -117,22 +119,20 @@ def main():
         n = sizes.get(p, 0)
         box(px[i], top_y, p, f"{n} skill" + ("s" if n != 1 else ""), "#ffffff", "#8aa6c8")
     for i, d in enumerate(doers):
-        hot = d == "datalad"
         n = sum(1 for p in planners if d in edges[p])
-        box(dx[i], bot_y, d, f"{n} planner" + ("s" if n != 1 else ""),
-            "#fff6f5" if hot else "#ffffff", "#c0392b" if hot else "#c4b295", bold=hot)
+        box(dx[i], bot_y, d, f"{n} planner" + ("s" if n != 1 else ""), "#ffffff", "#c4b295")
 
     total = sum(sizes.values())
-    other = max(sum(1 for p in planners if d in edges[p]) for d in doers if d != "datalad")
+    most = max(sum(1 for p in planners if d in edges[p]) for d in doers)
     L.append(
         f'<text x="{W / 2:.0f}" y="{H - 22}" font-size="12" text-anchor="middle" fill="#40525f">'
-        f'All {total} planner skills delegate to '
-        f'<tspan fill="#c0392b" font-weight="bold">datalad</tspan>; no other doer is reached by more '
-        f'than {other} of the {len(planners)} planners.</text>'
+        f'All {total} planner skills use '
+        f'<tspan fill="#c0392b" font-weight="bold">datalad</tspan> natively; no doer is reached by more '
+        f'than {most} of the {len(planners)} planners.</text>'
     )
     L.append(
         f'<text x="{W / 2:.0f}" y="{H - 6}" font-size="12" text-anchor="middle" fill="#40525f">'
-        f'The seven other doers are swappable. The provenance chain is not.</text>'
+        f'The {len(doers)} doers are swappable. The provenance chain is not.</text>'
     )
     L.append("</svg>")
 

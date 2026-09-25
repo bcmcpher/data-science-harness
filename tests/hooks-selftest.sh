@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# hooks-selftest.sh — unit tests for the datalad-cli hook scripts and their OpenCode install.
+# hooks-selftest.sh — unit tests for the datalad-cli hook scripts, dsh-log, and the OpenCode install.
 #
 # Each hook script is fed a Claude Code-shaped JSON payload in a scratch dataset, and its exit code
 # and output are asserted:
@@ -11,8 +11,11 @@
 #                          DATALAD_AUTOSAVE=1 saves, DATALAD_AUTOSAVE=0 does nothing
 #   dsh-status.sh          silent outside a dataset and in a plain repo; status (and rules with
 #                          --with-rules) inside one; DSH_RULES_IN_CONFIG=1 suppresses the rules
+#   dsh-log.sh             save and run commits read (run lines hidden from git trailers), a
+#                          non-harness commit excluded, --legacy merges project.yaml log in order
 #   bin/install.sh         OpenCode dry-run lists the generated plugin and the instructions entry;
-#                          a real install twice keeps opencode.json's keys and lists the rules once
+#                          a real install twice keeps opencode.json's keys and lists the rules once;
+#                          --prune removes a retired plugin's skills, agents and bundle, not the user's
 #
 # Requirements: git with an identity, python3, and DataLad (use the conda `datalad` env).
 # Exit codes: 0 = all passed, 1 = a failure, 2 = cannot run here.
@@ -22,6 +25,7 @@ set -u
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 SCRIPTS="$ROOT/plugins/datalad-cli/hooks/scripts"
+DSHLOG="$ROOT/plugins/datalad-cli/scripts/dsh-log.sh"
 
 for tool in git python3 datalad; do
   command -v "$tool" >/dev/null 2>&1 || { echo "SKIP: $tool not found" >&2; exit 2; }
@@ -78,6 +82,24 @@ check "inside: status block"               'bash "$SCRIPTS/dsh-status.sh" "$DS" 
 check "--with-rules: rules first"          'bash "$SCRIPTS/dsh-status.sh" --with-rules "$DS" | head -1 | grep -q "^# DataLad rules"'
 check "DSH_RULES_IN_CONFIG=1: no rules"    '! DSH_RULES_IN_CONFIG=1 bash "$SCRIPTS/dsh-status.sh" --with-rules "$DS" | grep -q "DataLad rules"'
 
+echo "# dsh-log.sh"
+L="$WORK/log"
+datalad create -c text2git "$L" >/dev/null 2>&1
+(cd "$L" && echo a > a.txt \
+  && datalad save -m "$(printf 'add a — why\n\nDSH-Op: new-project\nDSH-Stage: initialize\nDSH-Product: p1\nDSH-Obligation: irb opened')" >/dev/null \
+  && datalad run -m "$(printf 'make b — why\n\nDSH-Op: run-pipeline\nDSH-Binding: nipoppy/fmriprep@23.2.0')" -o b.txt "echo b > b.txt" >/dev/null 2>&1 \
+  && echo c > c.txt && datalad save -m "not the harness" >/dev/null \
+  && printf 'project: {id: x}\nlog:\n  - { ts: 2000-01-01T00:00:00Z, op: legacy-op, stage: govern,\n      note: "old, entry" }\n' > project.yaml \
+  && datalad save -m "$(printf 'ledger\n\nDSH-Op: new-project')" >/dev/null)
+out="$(sh "$DSHLOG" -C "$L")"
+jq_() { python3 -c "import json,sys; r=[json.loads(l) for l in sys.stdin]; sys.exit(not eval(sys.argv[1]))" "$1"; }
+check "one line per DSH-Op commit"          'jq_ "len(r)==3" <<<"$out"'
+check "save commit fields"                  'jq_ "r[0][\"op\"]==\"new-project\" and r[0][\"stage\"]==\"initialize\" and r[0][\"product\"]==[\"p1\"] and r[0][\"obligation\"]==[\"irb opened\"] and not r[0][\"run\"]" <<<"$out"'
+check "run commit read past the record"     'jq_ "r[1][\"run\"] and r[1][\"op\"]==\"run-pipeline\" and r[1][\"binding\"]==[\"nipoppy/fmriprep@23.2.0\"]" <<<"$out"'
+check "git trailers miss the run lines"     '[ -z "$(git -C "$L" log -1 --skip=2 --format="%(trailers:key=DSH-Op)")" ]'
+check "non-harness commit excluded"         '! grep -q "not the harness" <<<"$out"'
+check "--legacy merges in ts order"         'sh "$DSHLOG" -C "$L" --legacy | jq_ "len(r)==4 and r[0][\"sha\"] is None and r[0][\"legacy\"] and r[0][\"subject\"]==\"old, entry\" and r[1][\"sha\"]"'
+
 echo "# bin/install.sh --harness opencode"
 T="$WORK/oc"
 mkdir -p "$T"
@@ -91,6 +113,16 @@ bash "$ROOT/bin/install.sh" --harness opencode --target "$T" datalad-cli >/dev/n
 check "plugin generated"                   '[ -f "$T/plugins/dsh-datalad-cli.js" ]'
 check "rules listed once, keys kept"       'python3 -c "import json,sys; d=json.load(open(sys.argv[1])); i=d[\"instructions\"]; sys.exit(not (d[\"model\"]==\"x/y\" and i[0]==\"mine.md\" and sum(p.endswith(\"rules/datalad.md\") for p in i)==1))" "$T/opencode.json"'
 check "installed rules path resolved"      'grep -q "$T/dsh/plugins/datalad-cli/hooks/scripts/dsh-status.sh" "$T/dsh/plugins/datalad-cli/rules/datalad.md"'
+# A retired plugin left over from an older install, plus a user's own skill that must survive.
+mkdir -p "$T/dsh/plugins/retired/skills/old-verb" "$T/dsh/plugins/retired/agents" "$T/skills/old-verb" "$T/skills/mine" "$T/agents"
+touch "$T/dsh/plugins/retired/skills/old-verb/SKILL.md" "$T/skills/old-verb/SKILL.md" "$T/skills/mine/SKILL.md"
+touch "$T/dsh/plugins/retired/agents/retired-doer.md" "$T/agents/retired-doer.md" "$T/plugins/dsh-retired.js"
+pdry="$(bash "$ROOT/bin/install.sh" --harness opencode --target "$T" --prune --dry-run datalad-cli 2>&1)"
+check "--prune --dry-run lists stale items"  'grep -q "prune .*skills/old-verb" <<<"$pdry" && grep -q "prune .*agents/retired-doer.md" <<<"$pdry" && grep -q "prune .*dsh-retired.js" <<<"$pdry"'
+check "--prune --dry-run removes nothing"    '[ -e "$T/skills/old-verb" ] && [ -e "$T/dsh/plugins/retired" ]'
+bash "$ROOT/bin/install.sh" --harness opencode --target "$T" --prune datalad-cli >/dev/null 2>&1
+check "--prune removes the retired plugin"   '[ ! -e "$T/skills/old-verb" ] && [ ! -e "$T/agents/retired-doer.md" ] && [ ! -e "$T/dsh/plugins/retired" ] && [ ! -e "$T/plugins/dsh-retired.js" ]'
+check "--prune keeps a user skill"          '[ -f "$T/skills/mine/SKILL.md" ] && [ -f "$T/skills/datalad/SKILL.md" ]'
 if command -v node >/dev/null 2>&1; then
   check "generated plugin parses"          'node --check "$T/plugins/dsh-datalad-cli.js" 2>/dev/null || node --input-type=module --check < "$T/plugins/dsh-datalad-cli.js"'
 fi

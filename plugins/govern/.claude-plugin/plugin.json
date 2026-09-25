@@ -1,6 +1,6 @@
 {
   "name": "govern",
-  "description": "Governance planner (workflow plane): the Manage & Comply lane + QC/review. init-ledger gives an existing dataset a project.yaml (the brownfield entry point); dmp turns a Data Management Plan's promises into tracked obligations; ethics-track records IRB/IACUC protocols, expiries and amendments and surfaces renewals; preregister freezes a comparison's spec before execution; obligations tracks and resolves commitments; qc-review and stamped-assess report conformance and STAMPED coverage per dimension, scoring what they could not check as unassessed rather than zero. Commitments live in the ledger obligations[] and are provenanced via the datalad doer.",
+  "description": "Governance planner (workflow plane): the Manage & Comply lane + QC/review. init-ledger gives an existing dataset a project.yaml (the brownfield entry point); dmp turns a Data Management Plan's promises into tracked obligations; ethics-track records IRB/IACUC protocols, expiries and amendments and surfaces renewals; preregister freezes a comparison's spec before execution; obligations tracks and resolves commitments; qc-review and stamped-assess report conformance and STAMPED coverage per dimension, scoring what they could not check as unassessed rather than zero. Commitments live in the ledger obligations[] and are recorded by the planner's own datalad save, with DSH-* commit lines.",
   "version": "0.2.0",
   "author": {
     "name": "bcmcpher"

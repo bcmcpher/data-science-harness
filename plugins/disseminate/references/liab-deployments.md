@@ -19,7 +19,7 @@ declarative and reproducible.
 - **Forgejo** hosts the DataLad dataset's git history on infrastructure the lab controls.
 - **git-annex special remote** serves the annexed file content, so a clone can `datalad get` the
   data from the self-hosted store — the same Distributability as a cloud sibling, but data-sovereign.
-- Registered as a sibling via the datalad doer (`create-sibling` against the Forgejo/annex store),
+- Registered as a sibling by the planner, running DataLad directly (`create-sibling` against the Forgejo/annex store),
   then `disseminate/publish` pushes to it — LiaB is a *destination*, not a replacement for the
   release/provenance flow.
 - Record the deployment as a product (often `other`) that relates to the dataset via

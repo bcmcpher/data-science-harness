@@ -28,14 +28,15 @@ a rootful Docker demands group membership the next user may not have. That belon
 rather than being discovered on a cluster.
 
 The boundaries are deliberate and narrow. This capability builds and pins; **registering
-(`datalad containers-add`) and running (`containers-run`) stay with the datalad doer**, so provenance
-has exactly one owner. And **`nipoppy` declares which pipeline and version a dataset runs** while
+(`datalad containers-add`) and running (`containers-run`) stay with the planner**, which runs DataLad
+directly, so provenance has exactly one owner. And **`nipoppy` declares which pipeline and version a dataset runs** while
 this capability obtains, pins and converts the image that pipeline executes in — neither owns both.
 
 What it does not choose is the science: which packages an analysis needs is the user's, and this
 capability only translates what the project already declared.
 
 ## Requirements
+
 ### Requirement: The built image is reported, not assumed
 
 The doer MUST report the operation, the exact build command, `result`, and the resulting image path,
@@ -57,8 +58,8 @@ it. It MUST NOT register the image, and MUST NOT run an analysis itself.
 #### Scenario: A run needs an environment
 
 - **WHEN** `analyze/run-comparison` requires a container that does not exist yet
-- **THEN** it delegates the build to the containers doer, then delegates registration and the run to
-  the datalad doer
+- **THEN** it delegates the build to the containers doer, then registers the image with the returned
+  `datalad containers-add` command and runs the analysis under `datalad containers-run` itself
 
 #### Scenario: A new project needs a recipe
 
@@ -264,4 +265,3 @@ provide an offline check reporting which runtimes are usable.
 - **WHEN** the offline check is run
 - **THEN** it reports each runtime as available or unavailable with a stated reason, and answers a
   request for an unknown tool as a usage error
-

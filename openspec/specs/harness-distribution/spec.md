@@ -49,7 +49,7 @@ vocabulary, and `mode: subagent` MUST be inserted exactly once. The body MUST pa
 
 #### Scenario: A doer is installed for OpenCode
 
-- **WHEN** `plugins/datalad/agents/datalad-doer.md` is installed with `--harness opencode`
+- **WHEN** `plugins/bids/agents/bids-doer.md` is installed with `--harness opencode`
 - **THEN** the installed copy has no `name:` or `tools:` line and carries a single `mode: subagent`
 
 #### Scenario: An agent already declares a mode

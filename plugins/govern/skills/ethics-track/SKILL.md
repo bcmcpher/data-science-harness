@@ -8,7 +8,6 @@ description: >
   (curate/deidentify), or to decide whether a use is permitted under an approval.
 plane: workflow
 stamped: [M, T]
-delegates_to: [datalad]
 ---
 
 # Skill: ethics-track
@@ -24,9 +23,9 @@ the one thing it must never do is produce a plausible date.
 
 > Ledger shape, settled in `extend-ledger-for-planned-skills` so it is not re-decided here: an
 > approval is an `obligations[]` entry with `kind: ethics`, the **expiry** in `due`, and the protocol
-> number or URL in `ref`. The approval date and every amendment are appended to `log:`, where the
-> append-only rule already gives an amendment history for free. See `docs/project-ledger.md`
-> convention 5.
+> number or URL in `ref`. The approval date and every amendment are stated in the message of the
+> `DSH-Op: ethics-track` commit that records them, where immutable commit history already gives an
+> amendment trail for free. See `docs/project-ledger.md` convention 5.
 
 ## When to use
 - An approval, renewal or amendment has been granted and needs recording.
@@ -39,8 +38,9 @@ the one thing it must never do is produce a plausible date.
 ## Steps
 
 1. **Read what is already recorded** — the `kind: ethics` entries in `obligations[]` and the
-   `op: ethics-track` entries in `log:`. Present the current state before changing it: which
-   protocols, which expiries, what the amendment history is.
+   `ethics-track` entries from
+   `bash plugins/datalad-cli/scripts/dsh-log.sh --legacy | grep '"op":"ethics-track"'`. Present the
+   current state before changing it: which protocols, which expiries, what the amendment history is.
 
 2. **Get the facts from the user or a document.** The protocol number, the approving body, the
    approval date, the expiry date, and what the protocol covers. Ask for each you do not have.
@@ -51,25 +51,25 @@ the one thing it must never do is produce a plausible date.
    is covered, `status: pending`. Pending is correct: an approval that has not yet expired is an
    outstanding commitment to stay within it and to renew on time.
 
-4. **Record the approval date and the scope in `log:`** —
-   `{ ts, op: ethics-track, stage: govern, note: "...", branch }`. The note carries the approval date
-   and a short statement of scope, because `due` only holds the expiry.
+4. **Validate, then save and record the approval in one step** — the approval date and a short
+   statement of scope go in a prose paragraph in the commit message, because `due` only holds the
+   expiry.
+   ```bash
+   python3 schemas/validate-ledger.py project.yaml
+   datalad save -m "$(printf 'ethics-track: record <protocol> approval — approved <date>, covers <scope>\n\nDSH-Op: ethics-track\nDSH-Stage: govern\nDSH-Obligation: <id> opened')" project.yaml
+   ```
 
-5. **Record an amendment as a new log entry, never as an edit.** An amendment changes what is
-   approved; the history of what was approved when is the thing an audit asks for. If the amendment
-   changes the expiry, update `due` on the obligation **and** log what changed and when.
+5. **Record an amendment as a new commit, never as an edit to a prior one.** An amendment changes
+   what is approved; the history of what was approved when is the thing an audit asks for, and
+   immutable commit history gives that for free. If the amendment changes the expiry, update `due`
+   on the obligation and save it in a new `DSH-Op: ethics-track` commit whose message states what
+   changed and when.
 
 6. **Surface upcoming renewals.** Compare each `due` against today and report anything inside a
    window the user cares about (ask; do not assume 60 days). An expired approval is reported as
    expired, plainly — not as "due soon".
 
-7. **Validate and save.**
-   ```bash
-   python3 schemas/validate-ledger.py project.yaml
-   ```
-   Then delegate: "save: `datalad save -m 'ethics-track: <action>'`."
-
-8. **Report** the protocols with their expiries, the amendment history, what is expiring or expired,
+7. **Report** the protocols with their expiries, the amendment history, what is expiring or expired,
    and any fact you could not obtain and therefore did not record.
 
 ## Constraints
@@ -79,8 +79,8 @@ the one thing it must never do is produce a plausible date.
   reminder that fires after the approval lapsed, which is worse than no reminder at all.
 - **Never invent or complete a protocol number.** If the user gives a partial number, record the
   partial and say it is partial.
-- **Never record an amendment by editing a prior record.** Amendments are new `log:` entries; the
-  approval history is the point.
+- **Never record an amendment by editing a prior record.** Amendments are new commits; the approval
+  history is the point.
 - **Never state that an analysis is permitted, covered, or within scope.** Report what the approval
   text says and name who decides — the researcher and their board. An approval's scope is a legal
   judgment, and this skill's output is evidence for it, not a substitute.
@@ -89,6 +89,7 @@ the one thing it must never do is produce a plausible date.
   reason. The schema requires `resolved_by` when status is `met`, so an obligation cannot be closed
   by assertion.
 - **Never record consent scope or data-use restrictions as though the ledger models them.** It does
-  not. Note them in `log:` prose and say plainly that the schema does not carry them, rather than
-  implying a structured guarantee that does not exist.
-- Keep `log:` append-only and the ledger schema-valid; delegate the save to the datalad doer.
+  not. Note them in the commit message prose and say plainly that the schema does not carry them,
+  rather than implying a structured guarantee that does not exist.
+- Record activity in the commit's `DSH-*` lines; never append to `project.yaml` `log`. Save with
+  `datalad save` yourself.

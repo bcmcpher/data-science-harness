@@ -65,8 +65,8 @@ MOVE 4 — the contribution. Forward reference to section 03; do not architect h
     workflow can swap one for another.
   - One provenance chain: every computation through `datalad run`, every administrative change
     `datalad save`-d, so the analysis record and the administrative record cannot diverge.
-  - A versioned ledger: products, obligations, contributors, and an append-only log, validated
-    against a schema.
+  - A versioned ledger of state — products, obligations, contributors — validated against a schema,
+    with activity recorded once, as `DSH-*` lines in the commit that did the work.
   - The living compendium as the default export, not an extra step.
   - A set of refusals: the harness declines to emit an environment, a figure or a tool parameter it
     cannot trace to something declared. Forward-reference section 03; this is the move a reader is
@@ -76,8 +76,9 @@ State the design commitment plainly: governance should be a by-product of doing 
 anything that requires a separate act of discipline will be skipped under deadline.
 
 STATE OF THE BUILD, for this move's last sentence — take it from disk, not from an earlier draft.
-Both planes are built: 22 plugins, 77 registered skills (37 planner / 40 toolbox), 8 doers each
-paired 1:1 with a `*-cli` toolbox, 22 specs. What is *not* built is evidence, and the sentence must
+Both planes are built: 21 plugins, 59 registered skills (37 planner / 22 toolbox), 7 doers each
+paired 1:1 with a `*-cli` toolbox plus the `datalad-cli` toolbox the main thread uses natively,
+22 specs. What is *not* built is evidence, and the sentence must
 carry both halves or it overclaims. Section 05 has the specifics; do not enumerate them here.
 -->
 

@@ -4,7 +4,7 @@
   "title": "data-science-harness project ledger (project.yaml)",
   "description": "The administrative source of truth at the dataset root, datalad save-d like any other artifact. Additive by design: new top-level keys are introduced per roadmap phase. Phase 1 adds `products` and `obligations` alongside the existing `project` header and append-only `log`.",
   "type": "object",
-  "required": ["project", "log"],
+  "required": ["project"],
   "additionalProperties": false,
   "properties": {
     "project": {
@@ -37,7 +37,7 @@
     },
     "log": {
       "type": "array",
-      "description": "Append-only activity log. Corrections are new entries; never rewrite or reorder prior entries.",
+      "description": "LEGACY. Activity is now recorded in the DSH-* lines of commit messages and read with plugins/datalad-cli/scripts/dsh-log.sh; no skill writes this. Kept so ledgers written before that change still validate; `dsh-log --legacy` reads it.",
       "items": { "$ref": "#/$defs/logEntry" }
     }
   },
@@ -110,7 +110,7 @@
         "due": { "type": "string", "format": "date" },
         "status": { "type": "string", "enum": ["pending", "met", "waived"] },
         "ref": { "type": "string", "description": "The EXTERNAL reference: a pre-registration id, an IRB protocol number, a funder award URL. Internal evidence belongs in resolved_by, so a reader can tell which kind they are checking." },
-        "resolved_by": { "type": "string", "description": "The recorded action that met this obligation: a commit SHA, a log entry timestamp, or a product id. REQUIRED when status is `met` — a status flip that records nothing is the failure this registry exists to prevent." }
+        "resolved_by": { "type": "string", "description": "The recorded action that met this obligation: a commit SHA (preferred, and the only form new skills write), a legacy log entry timestamp, or a product id. REQUIRED when status is `met` — a status flip that records nothing is the failure this registry exists to prevent." }
       },
       "if": { "properties": { "status": { "const": "met" } }, "required": ["status"] },
       "then": { "required": ["resolved_by"] }

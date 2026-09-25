@@ -48,19 +48,34 @@ contributors:       # people + CRediT credit (Phase 5: project/people)
     affiliation_ror: https://ror.org/00xxxx
     roles: [Conceptualization, Formal analysis, Writing – original draft]
 
-log:                # append-only activity log
+log:                # LEGACY — read by dsh-log --legacy; no skill writes it
   - { ts: 2026-07-20T14:30:00Z, op: new-project, stage: initialize,
       note: "scaffolded YODA+BIDS dataset + container recipe", branch: main }
 ```
 
+`project.yaml` holds **state**: what the project is, what it produces, what it owes, and who did
+it. **Activity** — what happened, when, and why — lives in the commit history, one `DSH-*`-bearing
+commit per action (see below). Only `project` is required. `log` remains a permitted key so that
+ledgers written before activity moved into commits still validate; `dsh-log --legacy` reads it
+alongside the commits.
+
 ## Conventions every planner reuses
 
-These are the only ways a skill mutates the ledger. Follow them exactly, then delegate a
-`datalad save` to the **datalad doer** so the change is tracked.
+These are the only ways a skill mutates the ledger. Follow them exactly, then run `datalad save`
+yourself so the change is tracked.
 
-1. **Append to `log:`** — add one `{ ts, op, stage, note, branch? }` entry describing what happened.
-   Never rewrite or reorder prior entries; a correction is a *new* entry. `ts` is ISO-8601 UTC;
-   `op` is the skill name.
+1. **Record the action in the commit, not the ledger.** The save that carries the change has a
+   `<what> — <why>` subject and, after a blank line, `DSH-Op: <skill>` plus any of `DSH-Stage`,
+   `DSH-Product: <id>`, `DSH-Obligation: <id> opened|resolved` and `DSH-Binding:
+   <doer>/<tool>@<version>`, all in **one** `-m` (DataLad keeps only the last of several):
+
+   ```bash
+   datalad save -m "$(printf 'register cmp-01 — confirmatory test frozen\n\nDSH-Op: preregister\nDSH-Stage: govern\nDSH-Obligation: prereg-cmp-01 opened')" project.yaml
+   ```
+
+   History is immutable, so a correction is a *new* commit. Read the history with
+   `plugins/datalad-cli/scripts/dsh-log.sh` (`--legacy` adds pre-change `log:` entries). Never
+   append to `log:`.
 
 2. **Upsert a `products[]` entry** — find the product by `id` (create the list/entry if absent) and
    set its fields. A product groups the `comparisons` (cmp/* branches) that constitute it, the
@@ -71,8 +86,9 @@ These are the only ways a skill mutates the ledger. Follow them exactly, then de
    pre-registration); flip `status` to `met`/`waived` (never delete the entry) when it is discharged.
 
    **Resolving means naming the evidence.** An obligation at `status: met` MUST carry `resolved_by`:
-   a commit SHA, a `log:` entry timestamp, or a product id. The schema enforces this, so a status
-   flip cannot stand in for a record of what actually happened.
+   a commit SHA (preferred, and the only form new skills write), a legacy `log:` entry timestamp,
+   or a product id. The commit that sets `met` carries `DSH-Obligation: <id> resolved`. The schema
+   enforces `resolved_by`, so a status flip cannot stand in for a record of what actually happened.
 
    `ref` and `resolved_by` are deliberately different fields. `ref` is the **external** reference —
    a registration id, an IRB protocol number, a funder award URL. `resolved_by` is **internal**
@@ -91,27 +107,28 @@ These are the only ways a skill mutates the ledger. Follow them exactly, then de
    `preparing`, `submitted`, `under-review`, `revision-requested`, `accepted`, `rejected`,
    `withdrawn`; `decision` is free text, because editors do not use a closed vocabulary.
 
-5. **Ethics protocol detail is an obligation plus log entries**, not a structured block. An IRB or
+5. **Ethics protocol detail is an obligation plus commits**, not a structured block. An IRB or
    IACUC record is an `obligations[]` entry with `kind: ethics`, the expiry in `due`, and the
-   protocol number or URL in `ref`. The approval date and every amendment are appended to `log:`,
-   where the append-only rule already provides an amendment history. `govern/ethics-track` reads and
-   writes exactly that shape.
+   protocol number or URL in `ref`. The approval date and every amendment are stated in the
+   `DSH-Op: ethics-track` commit that records them, where immutable history already provides an
+   amendment trail. `govern/ethics-track` reads and writes exactly that shape.
 
-6. **Provenance by default** — every ledger write is followed by a `datalad save` via the datalad
-   doer. The ledger is never edited "off to the side".
+6. **Provenance by default** — every ledger write is followed by a `datalad save` in the same
+   step. The ledger is never edited "off to the side".
 
 ## Which skills touch which sections
 
 | Section | Written by |
 |---|---|
 | `project` | `project/new-project` (once) |
-| `log` | every planner (append); `project/log-decision` records decisions + rationale |
+| `log` | legacy — no skill writes it. Activity is in commit `DSH-*` lines; `project/log-decision` writes `docs/decisions/<date>-<slug>.md` |
 | `products` | `analyze/manage-product` (create/group), `disseminate/dataset-release` + `link-outputs` (dois/relations), `disseminate/submission-track` (submissions) |
 | `obligations` | `govern/preregister`, `govern/obligations`, `govern/dmp`, `govern/ethics-track`, `project/track-milestone`; resolved as work completes |
 | `contributors` | `project/people` (CRediT roles + ORCID/ROR; mirrored to `dataset_description.json` Authors) |
 
-`project/status-report` reads the whole ledger and renders `PROJECT.md` / funder reports — it never
-writes project state, only the append-only `status-report` log entry.
+`project/status-report` reads the whole ledger and `dsh-log --legacy` and renders a report. It
+is read-only: it writes nothing unless asked to keep a copy, in which case it saves
+`reports/status-<date>.md`.
 
 ## Evolution
 

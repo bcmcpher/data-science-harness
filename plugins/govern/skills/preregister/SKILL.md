@@ -8,7 +8,6 @@ description: >
   the rigor spectrum for analyze/propose-comparison — the frozen spec becomes a tracked obligation.
 plane: workflow
 stamped: [S, T, A]
-delegates_to: [datalad]
 ---
 
 # Skill: preregister
@@ -17,8 +16,8 @@ Turn a comparison into a **confirmatory** one: freeze its specification *before*
 analyzed, register that spec with an external registry, and record it as an outstanding
 **obligation** in the ledger. The frozen spec is the STAMPED spec-centric research object
 (Self-contained, Tracked, Actionable) — the durable thing; the later run is Ephemeral and is checked
-*against* this spec. You own the freeze/registration judgment; you delegate the save to the
-**datalad doer**.
+*against* this spec. You own the freeze/registration judgment, and you save it yourself with
+`datalad save`.
 
 > This is the confirmatory path of `analyze/propose-comparison`. A "preregistration" recorded *after*
 > looking at the outcome is not one — the freeze must precede execution. `analyze/run-comparison`
@@ -44,9 +43,12 @@ analyzed, register that spec with an external registry, and record it as an outs
 3. **Record the obligation** — add to `project.yaml` `obligations[]` (per `docs/project-ledger.md`):
    `{ id: prereg-<slug>, kind: preregistration, description: "<what>; frozen for cmp/<slug>",
    due: <optional date>, status: pending, ref: <registration URL or omit> }`.
-4. **Log it** — append `{ ts, op: preregister, stage: govern, note: "froze + registered cmp/<slug> (<ref>)", branch: cmp/<slug> }`.
-5. **Save** — delegate to the **datalad doer**: "save: `datalad save -m 'preregister cmp/<slug>: freeze spec + register (<ref>)'`."
-6. **Report** — the frozen spec path, the registration ref (or that it is pending), the new pending
+4. **Save and record in one step** — the commit is the record; nothing is appended to a log.
+   ```bash
+   datalad save -m "$(printf 'preregister cmp/<slug>: freeze spec + register (<ref>)\n\nDSH-Op: preregister\nDSH-Stage: govern\nDSH-Obligation: prereg-<slug> opened')" code/prereg/<slug>.md project.yaml
+   ```
+   Use exactly one `-m`.
+5. **Report** — the frozen spec path, the registration ref (or that it is pending), the new pending
    obligation, and that `run-comparison` must check outcomes against this spec — deviations are
    reportable. The obligation is discharged (via `govern/obligations`) once the confirmatory
    comparison is completed as specified.
@@ -57,5 +59,6 @@ analyzed, register that spec with an external registry, and record it as an outs
 - The frozen spec is immutable after registration — a change means a new comparison + a new
   registration, recorded as such.
 - Never fabricate a registration id/URL — record only what the registry actually assigned.
-- Add the obligation per the ledger conventions; keep `log:` append-only and the ledger
-  schema-valid. Delegate the save to the datalad doer.
+- Add the obligation per the ledger conventions, and keep the ledger schema-valid. Record activity
+  in the commit's `DSH-*` lines; never append to `project.yaml` `log`. Save with `datalad save`
+  yourself.

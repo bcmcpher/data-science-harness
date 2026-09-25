@@ -113,4 +113,4 @@ is a minimal, lint-clean instance of exactly this shape; read it before writing 
   skill does not start it.
 - **Never expose a tool over an analysis that has no recorded run.** There is nothing for its test to
   assert against, and the bundle would present an unprovenanced result as a callable method.
-- Do not commit. The datalad doer owns `datalad save`.
+- Do not commit. The planner owns `datalad save`.

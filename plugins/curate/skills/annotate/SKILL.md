@@ -9,7 +9,7 @@ description: >
   "make this dataset self-describing". This advances the Metadata (M) and Actionable (A) of STAMPED.
 plane: workflow
 stamped: [M, A]
-delegates_to: [annotate, datalad]
+delegates_to: [annotate]
 ---
 
 # Skill: annotate
@@ -17,7 +17,7 @@ delegates_to: [annotate, datalad]
 Make the dataset **Metadata-rich (M)** and **Actionable (A)**: fill in the descriptive and
 controlled-vocabulary metadata that lets a human — or an agent — understand and query the data
 without opening the raw files. Every metadata edit is a file in the dataset, so you keep it
-**provenanced** by delegating the save to the **datalad doer**; you never annotate off to the side.
+**provenanced** by saving it yourself with `datalad save`; you never annotate off to the side.
 
 > Scope note: the always-available core is BIDS/dataset-level metadata — `dataset_description.json`,
 > a `participants.json` data dictionary, and BIDS sidecars — which need no extra tools and are fully
@@ -36,7 +36,7 @@ without opening the raw files. Every metadata edit is a file in the dataset, so 
   or to run a pipeline (`process/run-pipeline`). Annotate describes; it does not compute.
 
 ## Steps
-1. **Survey current metadata (datalad doer for state)** — inspect what exists: is
+1. **Survey current metadata** — inspect what exists: is
    `dataset_description.json` present and complete (Name, BIDSVersion, Authors, License,
    DatasetType)? Does every non-id column in `participants.tsv` have an entry in
    `participants.json`? Which imaging files lack sidecars? Report the gaps before editing.
@@ -61,25 +61,26 @@ without opening the raw files. Every metadata edit is a file in the dataset, so 
    It returns candidates with their source and never selects a term — **you** put each one to
    the user for confirmation, because which term is correct is a research judgment. Pass the
    confirmed term back for it to write. It writes the metadata files and leaves them uncommitted,
-   which is what step 6 then saves.
-6. **Provenance the edits (datalad doer)** — delegate the save so the annotation is tracked:
-   > "save: `datalad save -m 'annotate: <what was added, e.g. participants.json data dictionary +
-   > dataset_description authors>'`."
-7. **Log it** — append to `project.yaml`:
-   `{ ts, op: annotate, stage: curate, note: "<metadata added>", branch: <branch> }`.
-8. **Report** — what was annotated and what controlled-term coverage the annotate doer returned,
+   which is what step 6 then saves. Its result carries a `binding` for the tool that produced
+   each term; copy it into a `DSH-Binding` line on that save.
+6. **Save and record in one step** — the commit is the record:
+   ```bash
+   datalad save -m "$(printf 'annotate: <what was added, e.g. participants.json data dictionary + dataset_description authors>\n\nDSH-Op: annotate\nDSH-Stage: curate\nDSH-Binding: annotate/<tool>@<version>')" <paths>
+   ```
+   Omit `DSH-Binding` when no controlled-term backend ran. Use exactly one `-m`.
+7. **Report** — what was annotated and what controlled-term coverage the annotate doer returned,
    keeping its three states distinct: annotated (with the source of each term), unannotated (with
    the reason), and backends that were unavailable. Suggest `bids-validator` and (when ready)
    pushing a Neurobagel graph.
 
 ## Constraints
-- Delegate the save to the datalad doer so metadata is provenanced — never leave annotation edits
-  uncommitted, and never call `datalad` directly.
+- Save with `datalad save` yourself so metadata is provenanced — never leave annotation edits
+  uncommitted.
 - Never fabricate controlled-vocabulary codes (SNOMED/Neurobagel/NIDM/ReproSchema) or authorship —
-  delegate the lookup to the annotate doer or ask; cite the source of every term. Never call
+  delegate the lookup to the **annotate** doer or ask; cite the source of every term. Never call
   `bagel-cli`, `pynidm` or `reproschema` directly.
 - Keep edits BIDS-valid; a data dictionary or sidecar that breaks the schema is worse than none.
   Recommend `bids-validator` rather than asserting validity.
 - Do not restructure or rename data files here — annotation describes existing data; renaming is a
   curation/conversion concern.
-- Keep `project.yaml` append-only.
+- Record activity in the commit's `DSH-*` lines; never append to `project.yaml` `log`.

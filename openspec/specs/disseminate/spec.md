@@ -11,12 +11,14 @@ its inputs rather than its procedure: its items are copied from checklist text b
 `plugins/disseminate/references/`, each file naming the openly licensed publication it derives from,
 because a checklist assembled from recall looks complete and omits exactly the items the guideline
 was written for.
+
 ## Requirements
+
 ### Requirement: Publishing verifies distributability rather than assuming it
 
 `disseminate/publish` MUST ensure a clean, committed tree, guard against publishing secrets, push
-both git history and annexed content to a chosen sibling through the datalad doer, and then verify
-that a fresh clone can `datalad get` the results.
+both git history and annexed content to a chosen sibling with `datalad push`, and then verify that a
+fresh clone can `datalad get` the results.
 
 #### Scenario: A dataset is published
 
@@ -31,8 +33,8 @@ that a fresh clone can `datalad get` the results.
 
 ### Requirement: A release fixes an exact, citable state
 
-`disseminate/dataset-release` MUST bump the product version, write a BIDS `CHANGES` entry, and tag
-the exact state through the datalad doer on a clean tree, before any deposit is attempted.
+`disseminate/dataset-release` MUST bump the product version, write a BIDS `CHANGES` entry, save it
+with `datalad save`, and tag the exact state on a clean tree, before any deposit is attempted.
 
 #### Scenario: Cutting a release
 
@@ -75,8 +77,8 @@ an archive record MUST be delegated to the archive doer rather than described in
 #### Scenario: An external identifier cannot be resolved
 
 - **WHEN** the target is an external DOI that does not resolve, or whose resolution cannot be checked
-- **THEN** the relation is recorded, and both the log entry's note and the report mark the target
-  as unresolved
+- **THEN** the relation is recorded, and both the recording commit's message and the report mark the
+  target as unresolved
 
 #### Scenario: The source product carries a DOI
 
@@ -134,8 +136,8 @@ checked. The skill MUST NOT state that a product is compliant with a guideline.
 ### Requirement: The executable article rebuilds its own figures
 
 `disseminate/executable-article` MUST delegate scaffolding and building to the compendium doer, and
-MUST declare `delegates_to: [compendium, datalad]`. The produced article's figures MUST be wired to
-the provenanced data and built in the project's container environment, so the article regenerates its
+MUST declare `delegates_to: [compendium]`. The produced article's figures MUST be wired to the
+provenanced data and built in the project's container environment, so the article regenerates its
 results rather than embedding static images.
 
 #### Scenario: A reproducible preprint is scaffolded
@@ -152,9 +154,9 @@ results rather than embedding static images.
 ### Requirement: The agent bundle exposes methods as callable tools
 
 `disseminate/agent-bundle` MUST delegate bundle emission to the compendium doer and MUST declare
-`delegates_to: [compendium, datalad]`. The bundle MUST be emitted in the harness's own skill and
-manifest format alongside an MCP configuration, and MUST include tests that reproduce the product's
-recorded results.
+`delegates_to: [compendium]`. The bundle MUST be emitted in the harness's own skill and manifest
+format alongside an MCP configuration, and MUST include tests that reproduce the product's recorded
+results.
 
 #### Scenario: Methods are made agent-callable
 
@@ -170,10 +172,9 @@ recorded results.
 ### Requirement: Lab-in-a-Box deployment is planned before it touches a host
 
 `disseminate/liab-deploy` MUST delegate deployment to the liab doer and MUST declare
-`delegates_to: [liab, datalad]`. It MUST produce a reviewable deployment plan by default, and MUST
-register the resulting endpoint as a DataLad sibling through the datalad doer. It MUST record what
-was deployed and MUST NOT assert that the deployment satisfies any jurisdiction's data-residency
-requirements.
+`delegates_to: [liab]`. It MUST produce a reviewable deployment plan by default, and MUST register
+the resulting endpoint as a DataLad sibling itself, running DataLad directly. It MUST record what was deployed and MUST NOT assert that the deployment
+satisfies any jurisdiction's data-residency requirements.
 
 #### Scenario: Planning a self-hosted deployment
 
@@ -189,17 +190,19 @@ requirements.
 #### Scenario: Recording the deployment
 
 - **WHEN** the deployment is recorded in the ledger
-- **THEN** the entry states which hosts serve which data, without a compliance claim
+- **THEN** the recording commit's message states which hosts serve which data, without a compliance
+  claim
 
 ### Requirement: Every product and release is recorded in the ledger
 
-Each skill in this plugin MUST register its output as or against a product in `project.yaml`, append
-a log entry, and save through the datalad doer.
+Each skill in this plugin MUST register its output as or against a product in `project.yaml` and
+save with `datalad save` in a commit carrying `DSH-Op`, `DSH-Stage` and `DSH-Product` lines.
 
 #### Scenario: Any dissemination step completes
 
 - **WHEN** an article, bundle, checklist, release, or deployment is produced
-- **THEN** the ledger names it, the log records it, and the state is committed
+- **THEN** the ledger names it, and the commit that records it carries `DSH-Op`, `DSH-Stage` and a
+  `DSH-Product` line naming the product
 
 ### Requirement: A submission history is appended to, never overwritten
 
@@ -235,4 +238,3 @@ given, and MUST NOT record an outcome that has not happened.
 
 - **WHEN** a product is under review
 - **THEN** its `status` is `in-progress`, and only an actual release makes it `released`
-

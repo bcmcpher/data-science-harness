@@ -5,7 +5,7 @@ description: >
   create an OSF project for a dataset, mint an OSF DOI, or check whether OSF is usable. Trigger on
   "deposit to OSF", "publish on OSF", "create an OSF project", "mint an OSF DOI", "OSF sibling for
   this release", or /osf. Do NOT trigger for adding OSF as ordinary storage without a release (use
-  datalad-siblings), or for a DOI minted by another archive.
+  /datalad siblings), or for a DOI minted by another archive.
 argument-hint: '[check|deposit|mint|lookup] [--version <tag>] [--mode annex|export|exportonly|gitonly]'
 user-invocable: true
 disable-model-invocation: false
@@ -53,7 +53,7 @@ requires the project to be **public**, and a minted DOI cannot be withdrawn.
    If not, stop and ask. Never create or move a tag.
 
 5. **Create the OSF sibling** — the sibling mechanics are in
-   `plugins/datalad-cli/skills/datalad-siblings/SKILL.md`. Choose the mode with the user:
+   `plugins/datalad-cli/skills/datalad/references/verbs/siblings.md`. Choose the mode with the user:
    - `annex` (default): git-annex keys; the project is a DataLad remote, not a browsable release.
    - `export`: a human-readable file tree plus the annex remote — usually right for a release.
    - `exportonly`: the readable tree without git history.
@@ -66,7 +66,7 @@ requires the project to be **public**, and a minted DOI cannot be withdrawn.
    of the same name. Report the project URL `create-sibling-osf` prints; the node id is the short id
    at the end of it.
 
-6. **Push the tagged state** — follow `plugins/datalad-cli/skills/datalad-push/SKILL.md`:
+6. **Push the tagged state** — follow `plugins/datalad-cli/skills/datalad/references/verbs/push.md`:
    ```bash
    datalad push --to osf --data anything
    ```

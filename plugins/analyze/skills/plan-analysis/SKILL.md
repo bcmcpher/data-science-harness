@@ -9,7 +9,6 @@ description: >
   (analyze/run-comparison), or to freeze a plan for pre-registration (govern/preregister).
 plane: workflow
 stamped: [T, A]
-delegates_to: [datalad]
 ---
 
 # Skill: plan-analysis
@@ -52,12 +51,11 @@ written down**, recorded in the ledger so the choice is auditable later.
    approach requires. State how each could be checked, and mark the whole list 🔧.
 5. **State the multiple-comparison situation** — how many tests the plan implies and what would need
    correcting. Do not pick a correction silently.
-6. **Log it** — append one entry to `project.yaml`:
-   `{ ts, op: plan-analysis, stage: analyze, note: "recommended <approach> for <question>;
-   assumptions unchecked", branch }`.
-7. **Save** — delegate to the **datalad doer**:
-   > "save: `datalad save -m 'plan-analysis: <approach> for <question>'`."
-8. **Report** — the approach, the alternatives, the assumption list, the multiple-comparison note,
+6. **Save** — run it yourself:
+   ```bash
+   datalad save -m "$(printf 'plan-analysis: <approach> for <question>; assumptions unchecked\n\nDSH-Op: plan-analysis\nDSH-Stage: analyze')"
+   ```
+7. **Report** — the approach, the alternatives, the assumption list, the multiple-comparison note,
    and the next step: `analyze/propose-comparison` to open the branch (then `govern/preregister`
    first if confirmatory), and `analyze/scaffold-analysis` to get a runnable stub.
 
@@ -78,4 +76,4 @@ written down**, recorded in the ledger so the choice is auditable later.
   options.
 - A recommendation is not a pre-registration. Only `govern/preregister` freezes a plan, and only the
   user decides the plan is final.
-- Keep `log:` append-only and the ledger schema-valid; delegate the save to the datalad doer.
+- Run the save yourself; never append to `project.yaml` `log`.

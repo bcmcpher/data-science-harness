@@ -1,6 +1,6 @@
 {
   "name": "analyze",
-  "description": "Analysis planner (workflow plane): run the comparison engine — plan the statistical approach and its assumptions, scaffold a provenance-wrapped script stub, propose comparisons on their own DataLad branch, run them with full (optionally containerized) provenance, plot and report what they produced, and checkpoint clean snapshots. Delegates DataLad mechanics to the datalad doer.",
+  "description": "Analysis planner (workflow plane): run the comparison engine — plan the statistical approach and its assumptions, scaffold a provenance-wrapped script stub, propose comparisons on their own DataLad branch, run them with full (optionally containerized) provenance, plot and report what they produced, and checkpoint clean snapshots. Runs DataLad directly and records each step in DSH-* commit lines.",
   "version": "0.2.0",
   "author": {
     "name": "bcmcpher"

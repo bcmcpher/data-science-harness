@@ -21,7 +21,7 @@ README.
 `data_requirement.json` names and puts it where that file says. It records nothing about having done
 so — no commit, no input declaration, no checksum in the dataset's history. Data that arrives this
 way and is then analysed produces results whose inputs cannot be traced, which is the exact gap this
-harness exists to close. So a fetch that matters is run **through the datalad doer** as a recorded
+harness exists to close. So a fetch that matters is run **by the planner under `datalad run`** as a recorded
 run, and this skill's job is to construct it and say so, not to quietly download.
 
 The second thing: **if the dataset already tracks the data, this is the wrong tool.** Annexed content
@@ -45,7 +45,7 @@ intact. Fetching a second copy from a URL gives you the same bytes with none of 
    file does not exist, stop and ask for it** — a data requirement invented here would be a claim
    about where the project's data comes from, and that is the author's to make.
 
-3. **Check whether DataLad already has it.** Ask the datalad doer whether the destination path is
+3. **Check whether DataLad already has it.** Check with DataLad (`datalad status`, `datalad subdatasets`) whether the destination path is
    tracked and whether its content is present. If it is, report that and stop: `datalad get` is the
    right retrieval, and it preserves the link between the data and the runs that used it.
 
@@ -58,7 +58,7 @@ intact. Fetching a second copy from a URL gives you the same bytes with none of 
    ```
    repo2data --repo2data-fetch --repo2docker <the declaration>
    ```
-   Hand that command to the datalad doer with the declaration as the input and the destination as
+   Hand that command back for the planner to run under `datalad run`, with the declaration as the input and the destination as
    the output:
    > "run: `<command>` with input `<data_requirement.json>` and output `<dest>`, message
    > `fetch declared data for <product>`."
@@ -78,7 +78,7 @@ intact. Fetching a second copy from a URL gives you the same bytes with none of 
 
 ## Constraints
 
-- **Never fetch directly.** Construct the command and hand it to the datalad doer. `constructed` is
+- **Never fetch directly.** Construct the command and hand it back to the planner, which runs it under `datalad run`. `constructed` is
   this skill's successful outcome, in the same way it is for a nipoppy computation.
 - **Never invent a URL, DOI or destination**, and never repair one that 404s by finding a similar
   dataset. A declaration that points at something that has moved is a finding about the project, and
@@ -91,4 +91,4 @@ intact. Fetching a second copy from a URL gives you the same bytes with none of 
   expects; unless the declaration carries a checksum and it was verified, say that it did not.
 - **Never treat a successful download as a licence to use the data.** Whether the terms permit the
   intended use is a governance question and belongs in the ledger's obligations.
-- Do not commit. The datalad doer owns `datalad save` and `datalad run`.
+- Do not commit. The planner owns `datalad save` and `datalad run`.

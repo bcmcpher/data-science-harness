@@ -6,22 +6,22 @@ description: >
   state", "wrap up this session", or at the end of a working session before switching context.
 plane: workflow
 stamped: [T]
-delegates_to: [datalad]
 ---
 
 # Skill: checkpoint
 
 Take a clean, described snapshot of the dataset. This keeps the provenance chain continuous (a
-dirty working tree produces misleading run records downstream). You delegate the save to the
-**datalad doer**.
+dirty working tree produces misleading run records downstream). DataLad is native, so you run the
+save yourself.
 
 > **The hook raises unsaved work; this skill describes it.** `datalad-cli` ships a `Stop` hook
 > (`hooks/scripts/datalad-checkpoint.sh`) that, once per distinct dirty state, reminds the
 > assistant to save with a message stating what and why. It does not commit unless the user set
 > `DATALAD_AUTOSAVE=1`, which restores a silent `Auto-checkpoint <ts>: <files>` save.
 >
-> What this skill adds is a *described* snapshot and a ledger entry: it composes a message saying
-> what changed and appends to `project.yaml`. Reach for it when the state is worth describing.
+> What this skill adds is a *described* snapshot: it composes a message saying what changed and
+> saves it with `DSH-Op: checkpoint`, so the checkpoint is in the history `dsh-log` reads. Reach
+> for it when the state is worth describing.
 >
 > Because the hook runs continuously, checkpointing is **not a lifecycle stage** — it belongs to
 > the Manage & Comply lane, alongside `project/log-decision`.
@@ -33,21 +33,21 @@ dirty working tree produces misleading run records downstream). You delegate the
   notes, and other loose changes.
 
 ## Steps
-1. **Inspect state** — delegate to the datalad doer:
-   > "status: report modified/untracked files in this dataset and the current branch."
-   If nothing is unsaved, tell the user there is nothing to checkpoint and stop.
-2. **Compose a message** — summarize what changed since the last save into a meaningful `-m`
+1. **Inspect state** — run `datalad status` (or read the status block already in context) for
+   modified/untracked files and the current branch. If nothing is unsaved, tell the user there is
+   nothing to checkpoint and stop.
+2. **Compose a message** — summarize what changed since the last save into a meaningful subject
    (e.g. "checkpoint: draft stats.py + participant notes"). Ask the user if the change set is
    ambiguous.
-3. **Save** — delegate to the datalad doer:
-   > "save: `datalad save -m '<message>'` on the current branch."
-4. **Log it** — append to `project.yaml`:
-   `{ ts, op: checkpoint, stage: <current-stage>, note: "<message>", branch: <branch> }`.
-5. **Report** — the commit sha and current branch.
+3. **Save** — run it yourself, with exactly one `-m`:
+   ```bash
+   datalad save -m "$(printf '<message>\n\nDSH-Op: checkpoint\nDSH-Stage: <current-stage>')"
+   ```
+4. **Report** — the commit sha and current branch.
 
 ## Constraints
-- Delegate status and save to the datalad doer; never call datalad directly.
+- Run DataLad yourself; it is native, not a doer.
 - Always use a meaningful message — never "wip"/"save"/placeholder.
-- Keep `project.yaml` append-only.
+- Record activity in the commit's `DSH-*` lines; never append to `project.yaml` `log`.
 - Do not force-save over a comparison mid-run; if a `container-run` is in progress, let it finish
   (it commits its own outputs).

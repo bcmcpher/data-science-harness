@@ -22,7 +22,7 @@ to be executed under `datalad run`.
 here writes data or derivatives, and nipoppy on its own records nothing about how they came to be.
 A `process` run executed bare produces a `derivatives/` tree that nothing can re-derive and no
 commit explains — and it will be indistinguishable, six months later, from one that was provenanced.
-The command is constructed, simulated, and returned; the datalad doer runs it.
+The command is constructed, simulated, and returned; the planner runs it under `datalad run`.
 
 ## Steps
 
@@ -53,7 +53,7 @@ The command is constructed, simulated, and returned; the datalad doer runs it.
    availability varies by command; the reference says which applies.
 
 5. **Declare the inputs and outputs the run needs.** This is the part that cannot be recovered
-   afterwards: the datalad doer needs `-i` and `-o` paths to record, and a run whose outputs are
+   afterwards: the planner's `datalad run` needs `-i` and `-o` paths to record, and a run whose outputs are
    under-declared saves an incomplete result.
    ```
    inputs:  bids/, config.json, the container image
@@ -91,4 +91,4 @@ The command is constructed, simulated, and returned; the datalad doer runs it.
   dataset's declarations, and changing them to fit a command inverts which one is authoritative.
 - **Never report a completed pipeline as good results.** Exit 0 means the container ran. Whether the
   outputs are usable is `govern/qc-review`'s question.
-- Do not commit, and do not run `datalad run` yourself. The datalad doer owns both.
+- Do not commit, and do not run `datalad run` yourself. The planner owns both.

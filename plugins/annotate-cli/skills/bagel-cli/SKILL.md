@@ -120,7 +120,7 @@ is wrong, and will produce codes that only look right.
   this toolbox exists to prevent, and it is invisible in the output — it looks like a real code.
 - Never hand-write the JSONLD that `bagel pheno` would emit. If the tool is unavailable, the answer
   is that the graph file was not produced.
-- Do not commit. Write the outputs and let the caller delegate the save to the datalad doer.
+- Do not commit. Write the outputs and let the calling planner save them with `datalad save`.
 - Do not edit `participants.tsv` — no renamed columns, no recoded values. This skill describes the
   table; changing it is a curation step with its own provenance.
 - Do not push a graph to a Neurobagel node. Producing the file is in scope; standing up or feeding a

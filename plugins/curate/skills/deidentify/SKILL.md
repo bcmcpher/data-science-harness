@@ -2,7 +2,7 @@
 name: deidentify
 description: >
   Remove identifying information from a dataset as a recorded, provenanced step — decide what must
-  go per category, run each removal through the datalad doer, and record the approach, the inputs,
+  go per category, run each removal under `datalad run`, and record the approach, the inputs,
   what was deliberately kept, and the residual risk. Trigger on "de-identify", "deidentify",
   "anonymize", "remove PHI", "scrub identifiers", "deface", "date-shift", "strip participant
   identifiers", "prepare this for sharing". Do NOT trigger to audit for PHI exposure after the fact
@@ -10,7 +10,6 @@ description: >
   what was done, it does not clear a dataset for release.
 plane: workflow
 stamped: [M, T]
-delegates_to: [datalad]
 ---
 
 # Skill: deidentify
@@ -56,34 +55,40 @@ quietly ran one would be claiming a judgment it cannot make.
    pseudonym, coarsening (year instead of date, age band instead of age), or deliberate retention.
    Each category gets an explicit decision — including the ones you are leaving alone.
 
-3. **Record the plan as a decision before running anything.** A `log:` entry naming the categories,
-   the approach chosen for each, and the reason. This goes in first so that if the removal is
-   interrupted, the intent is still on the record.
+3. **State the plan before running anything.** Name the categories, the approach chosen for each
+   (including any deliberately kept), and the reason. This becomes the "why" in each run's commit
+   message in step 4, so the intent is on the record even if a run is interrupted.
 
-4. **Run each removal through the datalad doer**, one provenanced run per transformation:
-   > "run `<the user's de-identification command>` on `<inputs>` producing `<outputs>`, and record
-   > it with `datalad run`."
-
+4. **Run each removal yourself**, one provenanced `datalad run` per transformation:
+   ```bash
+   datalad run -m "$(printf '<category> deidentify: <approach> — <why>\n\nDSH-Op: deidentify\nDSH-Stage: curate')" -i <inputs> -o <outputs> "<the user's de-identification command>"
+   ```
    One run per category rather than one run for everything, so a later reader can see which
    transformation produced which change — and so a single step can be re-run without redoing the
-   rest. Never edit files directly to strip an identifier.
+   rest. Never edit files directly to strip an identifier. Note the resulting commit sha; step 6
+   needs it.
 
 5. **Verify the removal happened, and say how you verified it.** Re-inspect the affected fields.
    A command that exited 0 is not evidence that a header field is gone. If verification is not
    possible — as with defacing, where the check is visual — say that the check is the researcher's
    and has not been performed here.
 
-6. **Record the result in the ledger, including the residual risk.** Append a `log:` entry with the
-   approach applied, the inputs it touched, what was verified and how, what was deliberately kept
-   and why, and what risk remains. Then delegate the `datalad save`.
-
-7. **Resolve the obligation, if there is one.** An ethics or data-management commitment recorded as
-   an `obligations[]` entry with `kind: ethics` moves to `status: met` **with `resolved_by` naming
-   the run that met it** — a commit SHA or the timestamp of the log entry from step 6. The schema
+6. **Write the de-identification record and save it, resolving the obligation if there is one.**
+   Write `docs/deidentification/<YYYY-MM-DD>-<slug>.md` with the approach applied per category,
+   the inputs it touched, the run commits from step 4, what was verified and how, what was
+   deliberately kept and why, and the **residual-risk statement**. The record is required whether
+   or not an obligation exists: it is where the residual risk lives. If an ethics or data-management
+   commitment is recorded as an `obligations[]` entry with `kind: ethics`, move it to `status: met`
+   **with `resolved_by` naming the run that met it** — the commit sha from step 4. The schema
    requires `resolved_by` when status is `met`, so an obligation cannot be closed here by assertion.
-   If no such obligation exists, say so rather than creating one retroactively.
+   Save both in one commit:
+   ```bash
+   datalad save -m "$(printf 'record de-identification of <scope> — <residual risk in one line>\n\nDSH-Op: deidentify\nDSH-Stage: curate\nDSH-Obligation: <id> resolved')" docs/deidentification/ project.yaml
+   ```
+   Omit the `DSH-Obligation` line and `project.yaml` when no obligation exists, and say so rather
+   than creating one retroactively.
 
-8. **Report.**
+7. **Report.**
    ```
    op:            deidentify
    inventory:     <identifier categories found, per source>
@@ -118,6 +123,6 @@ quietly ran one would be claiming a judgment it cannot make.
 - **Never treat deliberate retention as an oversight, or an oversight as retention.** A kept scan
   date is legitimate when it is recorded as a choice, and indistinguishable from a mistake when it
   is not.
-- Do not edit dataset files directly to strip an identifier — every removal is a `datalad run` via
-  the datalad doer, so it appears in the provenance chain like any other transformation.
-- Do not commit. The datalad doer owns `datalad save`.
+- Do not edit dataset files directly to strip an identifier — every removal is a `datalad run` you
+  execute yourself, so it appears in the provenance chain like any other transformation.
+- Record activity in the commit's `DSH-*` lines; never append to `project.yaml` `log`.

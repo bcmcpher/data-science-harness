@@ -10,7 +10,7 @@ Nipoppy toolbox (capability plane): reference material for the
 |---|---|---|---|
 | `nipoppy-query` | read-only | `status`, `pipeline search`, `pipeline list` | Run directly; nothing to save |
 | `nipoppy-track` | bookkeeping write | `track-curation`, `track-processing` | Run directly, report the files written, save as a checkpoint |
-| `nipoppy-compute` | dataset-mutating computation | `reorg`, `bidsify`, `process`, `extract` | Construct and simulate; **never execute** — the datalad doer runs it under `datalad run` |
+| `nipoppy-compute` | dataset-mutating computation | `reorg`, `bidsify`, `process`, `extract` | Construct and simulate; **never execute** — the planner runs it under `datalad run` |
 | `nipoppy-setup` | declarations | `init`, `pipeline install/create/validate/upload` | Run directly, report what was created and what is still owed |
 
 The split is by class because the *handling rule* is a property of the class, not of the verb.

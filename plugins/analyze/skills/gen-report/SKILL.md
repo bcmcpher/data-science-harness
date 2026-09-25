@@ -9,7 +9,6 @@ description: >
   (govern/stamped-assess).
 plane: workflow
 stamped: [A, M, T]
-delegates_to: [datalad]
 ---
 
 # Skill: gen-report
@@ -32,10 +31,9 @@ each came from — so the results can be reviewed without re-running anything.
 1. **Fix the scope** — one comparison branch, or the comparisons of one product from `products[]`.
    Name it explicitly; a report that silently spans whatever was lying around cannot be reproduced.
 2. **Gather the produced outputs** — the result files, figures and QC outputs under
-   `derivatives/cmp-<slug>/`. For each, record the commit that produced it. Delegate the history
-   lookup to the **datalad doer**:
-   > "for each of `<the output paths>`, report the commit that last modified it and whether that
-   > commit is a recorded run."
+   `derivatives/cmp-<slug>/`. For each, record the commit that produced it: run
+   `git log -1 --format=%H -- <path>`, then check that commit against
+   `bash plugins/datalad-cli/scripts/dsh-log.sh --legacy` to see whether it is a recorded run.
    An output with no run behind it is reported as such — it was produced by hand.
 3. **Extract the numbers by reading the files.** Every table cell is read from an output; where a
    value is not in any output, the cell says `not reported`, never a computed-on-the-fly figure.
@@ -47,11 +45,11 @@ each came from — so the results can be reviewed without re-running anything.
    - **a gaps section**: assumptions never checked, comparisons that failed or were not run, outputs
      produced outside a recorded run, and anything the plan promised that the results do not contain
    - provenance: branch, commits, container image if the runs were containerized
-5. **Log it** — append one entry to `project.yaml`:
-   `{ ts, op: gen-report, stage: analyze, note: "report <path> over <comparisons>", branch }`.
-6. **Save** — delegate to the **datalad doer**:
-   > "save: `datalad save -m 'gen-report: <scope>'`."
-7. **Report** — the report path, what it covers, and the gaps section verbatim, because that is the
+5. **Save** — run it yourself:
+   ```bash
+   datalad save -m "$(printf 'gen-report: <scope>\n\nDSH-Op: gen-report\nDSH-Stage: analyze')" <paths>
+   ```
+6. **Report** — the report path, what it covers, and the gaps section verbatim, because that is the
    part a reader skips and the part that determines what the results mean.
 
 ## Constraints
@@ -67,5 +65,4 @@ each came from — so the results can be reviewed without re-running anything.
 - **Never report an assumption as checked** because `analyze/plan-analysis` listed it. The plan lists
   assumptions; the gaps section says which were tested, and the honest answer is usually none.
 - Do not run, re-run or repair an analysis to fill a gap in the report — the gap is the finding.
-- Keep `log:` append-only and the ledger schema-valid; delegate every history lookup and the save to
-  the datalad doer.
+- Run every history lookup and the save yourself; never append to `project.yaml` `log`.

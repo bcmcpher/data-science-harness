@@ -16,8 +16,8 @@ a reason rather than emitting a term no source returned, and reports a backend i
 action. Most of the toolbox validates terms rather than finding them: only a SNOMED query and an
 interactive `pynidm` session resolve a new identifier.
 
-It writes metadata files and never commits them; the save belongs to the datalad doer, so annotation
-joins the same provenance chain as the data it describes.
+It writes metadata files and never commits them; the planner saves them with `datalad save`, so
+annotation joins the same provenance chain as the data it describes.
 
 ## Requirements
 
@@ -59,8 +59,8 @@ can gain annotation from one vocabulary while another stays empty.
 
 ### Requirement: The doer writes metadata but does not commit
 
-The annotate doer MUST write metadata files into the dataset and MUST NOT commit them. The save MUST
-be delegated to the datalad doer by the calling planner.
+The annotate doer MUST write metadata files into the dataset and MUST NOT commit them. The calling
+planner MUST save them itself with `datalad save`.
 
 #### Scenario: Annotation completes
 

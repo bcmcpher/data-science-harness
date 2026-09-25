@@ -9,7 +9,6 @@ description: >
   (disseminate/dataset-release).
 plane: workflow
 stamped: [M, T]
-delegates_to: [datalad]
 ---
 
 # Skill: submission-track
@@ -47,14 +46,12 @@ than remembered.
    - **Accepted** — set `status: accepted` with the decision. The product's own `status` becomes
      `released` only when a version is actually released, which is `dataset-release`'s job, not this
      one.
-5. **Log it** — `{ ts, op: submission-track, stage: disseminate, note: "...", branch }` naming the
-   product, the venue and the transition.
-6. **Validate and save.**
+5. **Validate and save.**
    ```bash
    python3 schemas/validate-ledger.py project.yaml
+   datalad save -m "$(printf 'submission-track: <product> -> <venue> <status>\n\nDSH-Op: submission-track\nDSH-Stage: disseminate\nDSH-Product: <product>')"
    ```
-   Then delegate: "save: `datalad save -m 'submission-track: <product> -> <venue> <status>'`."
-7. **Report** the full history, the current state, and what the next step would be — a preprint, a
+6. **Report** the full history, the current state, and what the next step would be — a preprint, a
    revision, a new venue, or a release.
 
 ## Constraints
@@ -75,4 +72,4 @@ than remembered.
   in a field that reads as a fact.
 - **Never record reviewer identities**, and do not paste reviewer text that names people. The ledger
   is committed to a dataset that may be published.
-- Keep `log:` append-only and the ledger schema-valid; delegate the save to the datalad doer.
+- Keep the ledger schema-valid; run the save yourself.
