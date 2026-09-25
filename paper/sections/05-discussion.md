@@ -30,8 +30,8 @@ ORDER MATTERS. First limitation first.
    limitation a reader should take away, and it goes first.
 
 2. BUILT IS NOT EXERCISED. This replaces the old "uneven capability plane" limitation. Both planes
-   are now structurally complete — 8 doers, each paired 1:1 with a toolbox, no orphan on either
-   side — and that sharpens the limitation rather than softening it, because shape is no longer
+   are now structurally complete — 7 doers, each paired 1:1 with a toolbox, and DataLad's toolbox
+   used natively by the main thread — and that sharpens the limitation rather than softening it, because shape is no longer
    what is missing. Be specific, from `tests/e2e-smoke.sh` and `.github/workflows/ci.yml`:
 
      - `nipoppy` and `process` have **no test of any kind** — no gate test, no real-tool test.

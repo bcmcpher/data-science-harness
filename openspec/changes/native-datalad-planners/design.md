@@ -23,7 +23,7 @@ git trailers.
 **Goals:**
 - One record of activity: the commit history, which DataLad already makes authoritative.
 - Planners use DataLad the way code uses git: directly, briefly, correctly.
-- Fewer skills competing for the trigger decision (21 → 1 in the toolbox).
+- Fewer skills competing for the trigger decision (19 → 1 in the toolbox).
 - Existing ledgers keep validating, and their history stays readable.
 
 **Non-Goals:**

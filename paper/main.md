@@ -24,8 +24,8 @@ project ledger carries products, obligations, and credit alongside the data. The
 living compendium: a provenanced dataset, a re-executable article, an agent-callable method bundle,
 and a self-hostable deployment, cross-linked by persistent identifier.
 
-**Status.** Both planes are built: 22 plugins, 77 skills, and 8 capability doers each paired with a
-command-level toolbox, specified by 22 OpenSpec records and held to a structural lint. What is not
+**Status.** Both planes are built: 21 plugins, 59 skills, and 7 capability doers each paired with a
+command-level toolbox, with DataLad used natively, specified by 22 OpenSpec records and held to a structural lint. What is not
 built is evidence. Most capability paths are gated, the gates are tested, and the tools behind them
 have not been run here; two capabilities have no test of any kind. The evaluation protocol in this
 paper is specified and **unrun**, and no number reported anywhere in this work comes from a
@@ -48,8 +48,8 @@ Two things this abstract must NOT do:
   - describe Brain Researcher as complementary without saying where the interface is
 
 The Status move must be regenerated from disk, never edited from memory. As of this draft:
-22 plugins, 77 registered skills (37 planner / 40 toolbox), 8 doers paired 1:1 with 8 `*-cli`
-toolboxes, 9 agents, 22 specs. `nipoppy` and `process` are the two capabilities with no test of
+21 plugins, 59 registered skills (37 planner / 22 toolbox), 7 doers paired 1:1 with 7 `*-cli`
+toolboxes plus `datalad-cli` (no doer; native), 8 agents, 22 specs. `nipoppy` and `process` are the two capabilities with no test of
 any kind; check `tests/e2e-smoke.sh` before repeating that claim.
 
 Structure to follow (Schwabe 2016 funnel; see docs/writing/article-anatomy.md):

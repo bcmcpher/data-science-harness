@@ -14,7 +14,8 @@
 #   dsh-log.sh             save and run commits read (run lines hidden from git trailers), a
 #                          non-harness commit excluded, --legacy merges project.yaml log in order
 #   bin/install.sh         OpenCode dry-run lists the generated plugin and the instructions entry;
-#                          a real install twice keeps opencode.json's keys and lists the rules once
+#                          a real install twice keeps opencode.json's keys and lists the rules once;
+#                          --prune removes a retired plugin's skills, agents and bundle, not the user's
 #
 # Requirements: git with an identity, python3, and DataLad (use the conda `datalad` env).
 # Exit codes: 0 = all passed, 1 = a failure, 2 = cannot run here.
@@ -112,6 +113,16 @@ bash "$ROOT/bin/install.sh" --harness opencode --target "$T" datalad-cli >/dev/n
 check "plugin generated"                   '[ -f "$T/plugins/dsh-datalad-cli.js" ]'
 check "rules listed once, keys kept"       'python3 -c "import json,sys; d=json.load(open(sys.argv[1])); i=d[\"instructions\"]; sys.exit(not (d[\"model\"]==\"x/y\" and i[0]==\"mine.md\" and sum(p.endswith(\"rules/datalad.md\") for p in i)==1))" "$T/opencode.json"'
 check "installed rules path resolved"      'grep -q "$T/dsh/plugins/datalad-cli/hooks/scripts/dsh-status.sh" "$T/dsh/plugins/datalad-cli/rules/datalad.md"'
+# A retired plugin left over from an older install, plus a user's own skill that must survive.
+mkdir -p "$T/dsh/plugins/retired/skills/old-verb" "$T/dsh/plugins/retired/agents" "$T/skills/old-verb" "$T/skills/mine" "$T/agents"
+touch "$T/dsh/plugins/retired/skills/old-verb/SKILL.md" "$T/skills/old-verb/SKILL.md" "$T/skills/mine/SKILL.md"
+touch "$T/dsh/plugins/retired/agents/retired-doer.md" "$T/agents/retired-doer.md" "$T/plugins/dsh-retired.js"
+pdry="$(bash "$ROOT/bin/install.sh" --harness opencode --target "$T" --prune --dry-run datalad-cli 2>&1)"
+check "--prune --dry-run lists stale items"  'grep -q "prune .*skills/old-verb" <<<"$pdry" && grep -q "prune .*agents/retired-doer.md" <<<"$pdry" && grep -q "prune .*dsh-retired.js" <<<"$pdry"'
+check "--prune --dry-run removes nothing"    '[ -e "$T/skills/old-verb" ] && [ -e "$T/dsh/plugins/retired" ]'
+bash "$ROOT/bin/install.sh" --harness opencode --target "$T" --prune datalad-cli >/dev/null 2>&1
+check "--prune removes the retired plugin"   '[ ! -e "$T/skills/old-verb" ] && [ ! -e "$T/agents/retired-doer.md" ] && [ ! -e "$T/dsh/plugins/retired" ] && [ ! -e "$T/plugins/dsh-retired.js" ]'
+check "--prune keeps a user skill"          '[ -f "$T/skills/mine/SKILL.md" ] && [ -f "$T/skills/datalad/SKILL.md" ]'
 if command -v node >/dev/null 2>&1; then
   check "generated plugin parses"          'node --check "$T/plugins/dsh-datalad-cli.js" 2>/dev/null || node --input-type=module --check < "$T/plugins/dsh-datalad-cli.js"'
 fi

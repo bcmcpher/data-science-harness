@@ -58,8 +58,6 @@ git and a POSIX shell.
 - **WHEN** `dsh-log --legacy` runs on a dataset whose `project.yaml` has `log` entries
 - **THEN** those entries appear alongside commit-derived entries in timestamp order
 
-## MODIFIED Requirements
-
 ### Requirement: The toolbox is one skill with per-verb references
 
 `plugins/datalad-cli/` MUST provide a single `datalad` skill. The skill MUST be user-invocable
@@ -79,6 +77,8 @@ improvising the invocation.
 
 - **WHEN** a user invokes `/datalad save "message"` without a planner
 - **THEN** the skill runs standalone, because the toolbox is usable on its own
+
+## MODIFIED Requirements
 
 ### Requirement: Provenanced execution is the default run path
 
@@ -121,12 +121,17 @@ verified with `datalad containers-list`, and the container MUST be registered wi
 
 ## RENAMED Requirements
 
-- FROM: `### Requirement: The toolbox provides one user-invocable skill per CLI verb`
-- TO: `### Requirement: The toolbox is one skill with per-verb references`
 - FROM: `### Requirement: The doer refuses to run against a dirty tree`
 - TO: `### Requirement: Runs refuse a dirty tree`
 
 ## REMOVED Requirements
+
+### Requirement: The toolbox provides one user-invocable skill per CLI verb
+
+**Reason**: The 19 per-verb skills are consolidated into one `datalad` skill, so a single trigger
+decision covers the toolbox. The per-verb steps and constraints are kept verbatim as references.
+**Migration**: See "The toolbox is one skill with per-verb references". `/datalad-<verb>` becomes
+`/datalad <verb>`; `plugins/datalad-cli/README.md` lists the mapping.
 
 ### Requirement: The datalad doer is the only executor of DataLad commands
 

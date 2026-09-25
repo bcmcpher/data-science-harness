@@ -20,7 +20,7 @@ the guardrails in the main thread. It removes the indirection and the duplicate 
 
 - **BREAKING: the datalad doer is retired.** `plugins/datalad/` is removed. Planners run DataLad
   commands directly, as they would git.
-- **The toolbox becomes one skill.** The 21 per-verb `datalad-cli` skills are consolidated into a
+- **The toolbox becomes one skill.** The 19 per-verb `datalad-cli` skills are consolidated into a
   single `datalad` skill, and the per-verb detail moves to `references/verbs/<verb>.md`. The skill
   takes a `<verb> [args]` argument, replacing per-verb slash commands such as `/datalad-save`.
   This breaks from the vendored upstream layout, which is an accepted cost.

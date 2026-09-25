@@ -2,7 +2,7 @@
 
 A walkthrough for a researcher setting up and running a complete analysis **using every plugin** in the collection. Steps are ordered by lifecycle stage (0 → 8) with the cross-cutting *Manage & Comply* lane running throughout.
 
-Skills are named as `plugin/skill`. **Workflow-plane** plugins (`govern`, `project`, `curate`, `analyze`, `process`, `disseminate`) drive each stage; they delegate down to **capability-plane** doers (`datalad`, `nipoppy`, `bids`, `containers`, `archive`) for the actual tool mechanics — shown as *(→ the `x` doer)*. See the [README architecture](../README.md#architecture) for the two-plane model and [STAMPED](stamped.md) for the principles.
+Skills are named as `plugin/skill`. **Workflow-plane** plugins (`govern`, `project`, `curate`, `analyze`, `process`, `disseminate`) drive each stage; they run DataLad themselves, the way code runs git, and delegate every other tool to a **capability-plane** doer (`nipoppy`, `bids`, `containers`, `archive`, `annotate`, `compendium`, `liab`) — shown as *(→ the `x` doer)*. Each commit a skill makes carries `DSH-*` lines naming the skill and stage, so the commit history is the activity record; `plugins/datalad-cli/scripts/dsh-log.sh` reads it back. See the [README architecture](../README.md#architecture) for the two-plane model and [STAMPED](stamped.md) for the principles.
 
 > **This walkthrough describes the intended workflow, not a fully built one.** A skill marked
 > ***(planned)*** does not exist on disk — it is design intent. The authoritative list of what *does*
@@ -51,7 +51,7 @@ Set up the administrative and scientific *plan* before touching data.
 
 1. **`analyze/literature-search` *(planned)*** — *(scope deliberately thin, pending participant feedback)* a lightweight BibTeX-collection helper (PubMed / Semantic Scholar), **not** an AI summary engine. The clearer connection is to meta-analysis tooling like **NeuroSynth Compose / NiMARE**.
 2. **`analyze/propose-comparison`** — sketch the first comparison(s): outcomes, design, and power/effect-size estimation. Choose the rigor mode (quick query vs pre-registered — see [Comparisons](#the-comparison-spectrum-in-practice)).
-3. **`govern/init-ledger`** — create `project.yaml`, the administrative source of truth, in a dataset that does not have one. It refuses to overwrite an existing ledger and never backfills the log.
+3. **`govern/init-ledger`** — create `project.yaml`, the administrative source of truth, in a dataset that does not have one. It refuses to overwrite an existing ledger and never invents history.
 4. **`project/people`** — add collaborators with ORCID and CRediT roles to the ledger.
 5. **`govern/dmp`** — author a Data Management Plan (RDA maDMP / funder template); its obligations are written into the ledger. It asserts no funder requirement it did not read from a supplied template or hear from you.
 6. **`govern/ethics-track`** — record the IRB/IACUC protocol, approval, and expiry (drives a renewal obligation). It never computes an expiry from an approval date: a wrong expiry fires the renewal reminder after the approval lapsed.
@@ -66,7 +66,7 @@ Set up the administrative and scientific *plan* before touching data.
 
 ## Stage 1 — Initialize
 
-1. **`project/new-project`** — scaffold a YODA-structured DataLad dataset *(→ `datalad`)*, a BIDS skeleton *(→ the `bids` doer)*, the environment/container *(→ the `containers` doer)*, `CLAUDE.md`, and the project ledger. (`govern/init-ledger` is the brownfield entry point — use it when the dataset already exists.)
+1. **`project/new-project`** — scaffold a YODA-structured DataLad dataset (run directly), a BIDS skeleton *(→ the `bids` doer)*, the environment/container *(→ the `containers` doer)*, `CLAUDE.md`, and the project ledger. (`govern/init-ledger` is the brownfield entry point — use it when the dataset already exists.)
 2. **`project/new-project --with-liab`** *(optional)* — provision **Lab-in-a-Box working infrastructure**: stand up a self-hosted Forgejo git host, HedgeDoc for lab notes, and dumpthings for metadata capture via `liab-deployments`, so the project lives on data-sovereign infra from day one.
 
 > 🔧 **Do-it-yourself:** lay out your `code/` directory, decide naming conventions for derivatives, and pin your environment (`environment.yml` / `renv.lock` / `requirements.txt`). Build/select the analysis container now if you're using one.
@@ -85,7 +85,7 @@ Get raw data into a standardized, annotated form. The `curate` workflow orchestr
 
 > 🔧 **Do-it-yourself:** the real data wrangling — cleaning, format conversion for non-standard inputs, defining variables and units, deciding how to handle missingness and outliers. The skills *standardize and annotate* what you've defined; they don't define it.
 
-6. **`curate/deidentify`** *(→ the `datalad` doer)* — inventory what identifiers are actually present per category (tabular, filenames, DICOM/NIfTI headers, and facial anatomy in structural imaging), decide removal / pseudonym / coarsening / deliberate retention with the user, and run each removal as its own `datalad run` so it joins the provenance chain like any other transformation. The record is the point: the approach, what was verified and how, what was deliberately kept, and a **residual-risk statement that is required and never blank** — an empty one is itself the claim that nothing remains. An ethics obligation is resolved by `resolved_by` naming the run, which the ledger schema enforces, so it cannot be closed by assertion.
+6. **`curate/deidentify`** — inventory what identifiers are actually present per category (tabular, filenames, DICOM/NIfTI headers, and facial anatomy in structural imaging), decide removal / pseudonym / coarsening / deliberate retention with the user, and run each removal as its own `datalad run` so it joins the provenance chain like any other transformation. The record is the point: the approach, what was verified and how, what was deliberately kept, and a **residual-risk statement that is required and never blank** — an empty one is itself the claim that nothing remains. An ethics obligation is resolved by `resolved_by` naming the run's commit, which the ledger schema enforces, so it cannot be closed by assertion.
 
 > 🔧 **Do-it-yourself:** choosing and running the de-identification tools — defacing (`pydeface`, `mri_deface`, `mideface`), DICOM header scrubbing, PHI column detection, date-shifting — and **inspecting the output**. None of it ships with the harness, and the skill will not select a tool or invent a command line for you: a defacing tool with the wrong mask removes brain tissue, and an inconsistently applied date-shift destroys a longitudinal design while looking like it worked. The skill scaffolds the decision and the record; you run the tool and check it.
 
@@ -100,7 +100,7 @@ The `analyze` workflow runs each comparison through the `datalad` capability so 
 1. **`analyze/plan-analysis`** — recommend a statistical approach from the design and the data's shape, and list the assumptions it rests on as **unchecked**. It reports no statistic of its own.
 2. **`analyze/propose-comparison`** — record the comparison (quick query or pre-registered) as its own unit.
 3. **`analyze/scaffold-analysis`** — emit the script stub for it: declared inputs, one output directory, the run command, and a placeholder that raises where the model goes.
-4. **`analyze/run-comparison`** *(→ `datalad-cli/datalad-run` or `datalad-cli/datalad-container-run`)* — execute the comparison on its own DataLad branch so inputs, command, and outputs are recorded. These auto-trigger on `python …`, `Rscript …`, `apptainer exec …`, etc. Preprocessing pipelines declared via **Nipoppy** also run through this path *(→ the `nipoppy` doer)*, keeping provenance intact. For a confirmatory comparison, the result is checked against the registered spec.
+4. **`analyze/run-comparison`** *(runs `datalad run` or `datalad containers-run` itself)* — execute the comparison on its own DataLad branch so inputs, command, and outputs are recorded. These auto-trigger on `python …`, `Rscript …`, `apptainer exec …`, etc. Preprocessing pipelines declared via **Nipoppy** also run through this path *(→ the `nipoppy` doer)*, keeping provenance intact. For a confirmatory comparison, the result is checked against the registered spec.
 5. **`analyze/plot`** — figures from the produced outputs, written as a script and run through `run-comparison` so each panel carries the same provenance as the analysis.
 
 > 🔧 **Do-it-yourself:** you write the model. `plan-analysis` recommends *which* approach and `analyze/scaffold-analysis` writes everything around it — argument parsing, declared inputs, the output directory, the run command — leaving a placeholder that **raises** where model specification, feature engineering, estimator and hyperparameter choices go. The `datalad` capability wraps whatever you then run. The stub is deliberately unable to produce a result until you have written one.
@@ -126,7 +126,7 @@ The `analyze` workflow runs each comparison through the `datalad` capability so 
 ## Stage 5 — Export
 
 1. **`disseminate`** *(→ `publish/osf-push`)* — push the dataset version to an OSF node and register it as a DataLad sibling.
-2. Provenance summary from `datalad-cli/datalad-log` accompanies the bundle.
+2. A provenance summary from the run records (`/datalad log`) and the `dsh-log` activity history accompanies the bundle.
 
 > 🔧 **Do-it-yourself:** decide *what* is shareable (which derivatives, which intermediates), the access level (public / embargo), and any storage constraints.
 
@@ -145,7 +145,7 @@ The `analyze` workflow runs each comparison through the `datalad` capability so 
 
 Produce the living research compendium and the classic outputs.
 
-1. **`disseminate/draft-manuscript`** — IMRaD scaffold with Methods / Data-availability / provenance auto-filled from the DataLad log + ledger.
+1. **`disseminate/draft-manuscript`** — IMRaD scaffold with Methods / Data-availability / provenance auto-filled from the DataLad run records, the `dsh-log` history and the ledger.
 2. **`disseminate/reporting-checklist`** — apply the right EQUATOR guideline (CONSORT / STROBE / PRISMA / ARRIVE) or COBIDAS for neuroimaging.
 3. **`disseminate/executable-article`** — scaffold a NeuroLibre reproducible preprint (MyST / Jupyter Book + `binder/` + `repo2data`) whose figures regenerate from the pipeline.
 4. **`disseminate/agent-bundle`** — emit a Paper2Agent-style MCP server exposing the methods as callable, tested tools.
@@ -165,9 +165,9 @@ Produce the living research compendium and the classic outputs.
 Running in parallel from Stage 0 onward:
 
 - **`govern/obligations`** (shared core with `govern`) — on demand, list what's due, including **pre-registered comparisons still to complete**; a Claude Code `SessionStart` hook surfaces items due soon.
-- **`project/track-milestone`**, **`project/log-decision`**, **`project/people`**, **`project/status-report`** — keep the ledger current. A moved deadline updates `due` *and* logs the old date with the reason, because a slip is information.
+- **`project/track-milestone`**, **`project/log-decision`**, **`project/people`**, **`project/status-report`** — keep the ledger current. A moved deadline updates `due` *and* states the old date and the reason in its commit, because a slip is information. `log-decision` writes each decision to `docs/decisions/`; `status-report` only reads.
 - **`govern/stamped-assess`** — re-run periodically, not just at QC.
-- **`analyze/checkpoint`** and the `datalad-cli` **`Stop` hook** — keep the tracking chain unbroken. The hook fires at the end of each turn and, once per distinct dirty state, asks for a save with a message stating what and why (it commits nothing itself unless `DATALAD_AUTOSAVE=1`); the skill is for when the state is worth *describing*, and it writes a ledger entry as well as a commit. Checkpointing is deliberately **not a stage**: something that happens every turn is not a phase of a project. Pair it with **`project/log-decision`** — record *why* you made each analytic choice, because that log feeds your eventual Methods section.
+- **`analyze/checkpoint`** and the `datalad-cli` **`Stop` hook** — keep the tracking chain unbroken. The hook fires at the end of each turn and, once per distinct dirty state, asks for a save with a message stating what and why (it commits nothing itself unless `DATALAD_AUTOSAVE=1`); the skill is for when the state is worth *describing*, and its commit carries `DSH-Op: checkpoint`. Checkpointing is deliberately **not a stage**: something that happens every turn is not a phase of a project. Pair it with **`project/log-decision`** — record *why* you made each analytic choice, because those decision records feed your eventual Methods section.
 
 > ⚠️ **Scaffolding gap:** reminders are pull-based (a skill you invoke) plus an opt-in Claude hook. There's no cross-harness push for a deadline you'd miss while *not* in a session — acceptable for v1, but worth noting for users who live in their calendar, not their terminal.
 

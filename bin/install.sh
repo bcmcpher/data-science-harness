@@ -15,12 +15,15 @@ Options:
   --scope SCOPE      Install scope: project or global (default: project)
   --target DIR       Override target config directory
   --dry-run          Show what would be installed without copying files
+  --prune            First remove installed skills, agents and plugin bundles whose source is
+                     gone (e.g. a retired plugin); with --dry-run, list them instead
   -h, --help         Show this help
 
 Examples:
   bin/install.sh --harness opencode --scope project
   bin/install.sh --harness opencode --scope global project analyze datalad
   bin/install.sh --harness claude-code --scope project
+  bin/install.sh --prune --dry-run
 
 With no plugin names, all plugins under plugins/*/.claude-plugin/plugin.json are installed.
 USAGE
@@ -119,6 +122,47 @@ rewrite_installed_markdown() {
     -e "s|plugins/|$bundle_plugins/|g" \
     -e "s|\${CLAUDE_PLUGIN_ROOT}|$root_for_claude_var|g" \
     -- "$file"
+}
+
+prune_path() {
+  local path="$1"
+  if [ "$DRY_RUN" = 1 ]; then
+    say "prune $(shell_quote "$path")"
+    return
+  fi
+  rm -rf -- "$path"
+  say "pruned $(shell_quote "$path")"
+}
+
+# Only what this installer put there is pruned: the installed bundle under dsh/plugins/ records
+# which skills and agents each plugin shipped, so anything it lists that the source no longer
+# provides is stale. A user's own skills and agents are never in a bundle and are never touched.
+prune_installed() {
+  local inst plugin src item name
+  [ -d "$BUNDLE_PLUGINS" ] || return 0
+  for inst in "$BUNDLE_PLUGINS"/*/; do
+    [ -d "$inst" ] || continue
+    inst="${inst%/}"
+    plugin="$(basename -- "$inst")"
+    src="$ROOT/plugins/$plugin"
+    for item in "$inst"/skills/*/; do
+      [ -f "$item/SKILL.md" ] || continue
+      name="$(basename -- "$item")"
+      compgen -G "$ROOT/plugins/*/skills/$name/SKILL.md" >/dev/null && continue
+      [ -e "$TARGET_DIR/skills/$name" ] && prune_path "$TARGET_DIR/skills/$name"
+    done
+    for item in "$inst"/agents/*.md; do
+      [ -f "$item" ] || continue
+      name="$(basename -- "$item")"
+      compgen -G "$ROOT/plugins/*/agents/$name" >/dev/null && continue
+      [ -e "$TARGET_DIR/agents/$name" ] && prune_path "$TARGET_DIR/agents/$name"
+    done
+    if [ ! -f "$src/.claude-plugin/plugin.json" ]; then
+      [ -e "$TARGET_DIR/plugins/dsh-$plugin.js" ] && prune_path "$TARGET_DIR/plugins/dsh-$plugin.js"
+      prune_path "$inst"
+    fi
+  done
+  return 0
 }
 
 all_plugins() {
@@ -381,6 +425,7 @@ HARNESS="opencode"
 SCOPE="project"
 TARGET=""
 DRY_RUN=0
+PRUNE=0
 PLUGINS=()
 
 while [ "$#" -gt 0 ]; do
@@ -414,6 +459,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     --dry-run)
       DRY_RUN=1
+      shift
+      ;;
+    --prune)
+      PRUNE=1
       shift
       ;;
     -h|--help)
@@ -466,6 +515,10 @@ say "plugins: ${PLUGINS[*]}"
 
 if [ "$DRY_RUN" = 0 ]; then
   mkdir -p -- "$TARGET_DIR/skills" "$TARGET_DIR/agents" "$BUNDLE_PLUGINS"
+fi
+
+if [ "$PRUNE" = 1 ]; then
+  prune_installed
 fi
 
 for plugin in "${PLUGINS[@]}"; do
