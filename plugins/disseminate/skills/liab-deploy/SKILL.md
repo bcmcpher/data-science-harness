@@ -25,11 +25,11 @@ before generating.
 > Scope note: you decide *that* the project should self-host and what the deployment should contain.
 > The liab doer owns the mechanics, and it is the one capability in this harness whose mistakes are
 > not confined to a working tree — so it **plans by default** and applies only on an explicit
-> instruction that names the target host. Delegate rather than running `pyinfra` yourself.
+> instruction that names the target host. Delegate rather than running pyinfra yourself.
 >
 > Two of its answers you must pass on rather than smooth over. A **partial application** is not a
 > deployment: it names the host and the operation that failed, and the next thing anyone would do is
-> push data to a half-configured box. And **`applied` is not `working`** — a green `pyinfra` run
+> push data to a half-configured box. And **`applied` is not `working`** — a green pyinfra run
 > means the operations applied, not that the service serves. Only a successful `datalad get` of
 > annexed content from the self-hosted remote earns the word `working`, which is the same standard
 > `disseminate/publish` already applies to a cloud sibling.
@@ -83,9 +83,9 @@ before generating.
    (`IsVariantFormOf`).
 
 ## Constraints
-- **Scaffold and plan; do not deploy.** Never run `pyinfra` yourself and never provision a remote
+- **Scaffold and plan; do not deploy.** Never run pyinfra yourself and never provision a remote
   host on the user's behalf. A **plan** is delegable to the liab doer and is safe by construction
-  (`--dry`, no changes); an **apply** is not yours to request. Present it and let the operator run it
+  (a dry run that changes nothing); an **apply** is not yours to request. Present it and let the operator run it
   against their own infrastructure, naming the target host.
 - **Record what was deployed; do not claim compliance.** The deployment record says which hosts were
   configured with what, and whether retrieval was verified. It does not assert that the arrangement

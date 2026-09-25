@@ -31,7 +31,7 @@ a data dictionary is worse than a blank, because downstream analysis will trust 
 ## When to use
 - A `.tsv` has columns with no `participants.json` entry, or a merged table has new columns.
 - Do NOT use for the full metadata pass (`curate/annotate`), to merge sources
-  (`curate/merge-data`), or to validate BIDS structure (the `bids-validator` skill).
+  (`curate/merge-data`), or to validate BIDS structure (`govern/qc-review`, or the bids-cli toolbox).
 
 ## Steps
 
