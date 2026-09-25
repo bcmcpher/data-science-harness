@@ -9,12 +9,15 @@ as the science. This spec records the schema **as implemented** in
 `schemas/project.schema.json`, validated by `schemas/validate-ledger.py` and exercised by
 `tests/e2e-smoke.sh`. The richer aspirational ledger sketched in the README is not implemented and
 is tracked as documentation drift, not as a requirement.
+
 ## Requirements
+
 ### Requirement: The ledger has a fixed, closed top-level shape
 
 `project.yaml` MUST be an object with `additionalProperties: false` and exactly these permitted
-top-level keys: `project`, `products`, `obligations`, `contributors`, `log`. Of these, `project` and
-`log` MUST be present.
+top-level keys: `project`, `products`, `obligations`, `contributors`, `log`. Of these, only `project`
+MUST be present. `log` is legacy. It is permitted so that ledgers written before activity moved
+into commits still validate, and no skill writes to it.
 
 #### Scenario: An unrecognised top-level key is introduced
 
@@ -23,8 +26,13 @@ top-level keys: `project`, `products`, `obligations`, `contributors`, `log`. Of 
 
 #### Scenario: A minimal valid ledger
 
-- **WHEN** a ledger contains only a `project` object with a `name` and an empty `log` array
+- **WHEN** a ledger contains only a `project` object with a `name`
 - **THEN** validation passes
+
+#### Scenario: A ledger written before this change
+
+- **WHEN** a ledger contains a populated `log` array
+- **THEN** validation still passes
 
 ### Requirement: The project header is written once
 
@@ -36,22 +44,6 @@ and not rewritten by later skills.
 
 - **WHEN** `project/new-project` completes
 - **THEN** `project.yaml` exists at the dataset root with a populated `project.name` and is committed
-
-### Requirement: The log is append-only
-
-`log` MUST be an array of entries each having `ts` (date-time) and `op`, and optionally `stage`,
-`note`, and `branch`. Skills MUST append; they MUST NOT rewrite or reorder prior entries. A
-correction is a new entry.
-
-#### Scenario: A skill records an action
-
-- **WHEN** any planner skill completes an action that changes project state
-- **THEN** it appends one entry naming the operation, and the entry count strictly increases
-
-#### Scenario: A previous decision turns out to be wrong
-
-- **WHEN** a recorded decision is superseded
-- **THEN** a new entry is appended describing the correction, and the original entry is left intact
 
 ### Requirement: Products group kept comparisons into deliverables
 
@@ -99,23 +91,24 @@ Each entry in `obligations` MUST have `id`, `kind` (`preregistration`, `confirma
 `dmp`, `ethics`, `milestone`, `funder-report`, `other`), and `status` (`pending`, `met`, `waived`),
 and MAY carry `description`, `due` (date), and `ref`.
 
-An obligation at `status: met` MUST carry `resolved_by` naming the recorded action that met it — a
-commit SHA, a log entry timestamp, or a product id. `ref` remains the *external* reference (a
-registration id or URL) and MUST NOT be used to carry internal evidence, because whoever later
-checks the claim needs to know which of the two they are reading.
+An obligation at `status: met` MUST carry `resolved_by` naming the recorded action that met it: a
+commit SHA (preferred, and the only form new skills write), a legacy log entry timestamp, or a
+product id. The commit that sets `met` MUST carry `DSH-Obligation: <id> resolved`. `ref` remains the
+*external* reference (a registration id or URL) and MUST NOT be used to carry internal evidence,
+because whoever later checks the claim needs to know which of the two they are reading.
 
 #### Scenario: A pre-registered comparison is registered
 
 - **WHEN** `govern/preregister` freezes a confirmatory comparison spec
 - **THEN** a `confirmatory-comparison` obligation is appended with `status: pending` and the
-  registration identifier in `ref`
+  registration identifier in `ref`, and the commit carries `DSH-Obligation: <id> opened`
 
 #### Scenario: The registered comparison is executed
 
 - **WHEN** `analyze/run-comparison` completes that comparison and the result is checked against the
   frozen spec
-- **THEN** the obligation moves to `met` with `resolved_by` naming the recording run, and any
-  deviation from the registered spec is recorded in the log
+- **THEN** the obligation moves to `met` with `resolved_by` naming the recording run's commit SHA,
+  and any deviation from the registered spec is stated in that commit's message
 
 #### Scenario: An obligation is marked met with no evidence
 
@@ -140,3 +133,19 @@ DataCite creators.
 - **WHEN** `project/people` adds a contributor with an ORCID and CRediT roles
 - **THEN** a later release derives its DataCite creators from that list rather than from free text
 
+### Requirement: Activity is recorded in commits, not in the ledger
+
+Skills MUST record activity in the `DSH-*` lines of the commit that makes the change, as defined
+by the `datalad` capability. They MUST NOT append to `project.yaml` `log`. The history of a project
+MUST be read with `dsh-log`, which also returns legacy `log` entries, so no record is lost.
+
+#### Scenario: A skill records an action
+
+- **WHEN** any planner skill completes an action that changes project state
+- **THEN** exactly one new commit carries its `DSH-Op`, and `project.yaml` `log` is unchanged
+
+#### Scenario: A previous decision turns out to be wrong
+
+- **WHEN** a recorded decision is superseded
+- **THEN** a new commit records the correction, and the original commit is left intact, because
+  history is immutable

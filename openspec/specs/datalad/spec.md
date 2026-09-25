@@ -5,44 +5,19 @@
 The capability-plane wrapper over DataLad and git-annex. DataLad is the harness's connective tissue:
 every computation goes through `datalad run` or `datalad container-run`, and every administrative
 change is `datalad save`-d, so neither the analysis chain nor the administrative record is ever
-broken. This capability is the reference shape for the whole plane — one doer agent
-(`plugins/datalad/agents/datalad-doer.md`) plus a vendored `datalad-cli` toolbox of one skill per
-CLI verb. Its behaviour is exercised end to end by `tests/e2e-smoke.sh`.
+broken. DataLad is native to the main thread, as git is: planners run `datalad save`, `datalad run`
+and `datalad containers-run` themselves, and record each step in the `DSH-*` lines of the commit
+message, which `dsh-log.sh` reads back. There is no doer. The `datalad-cli` plugin supplies the
+always-loaded rules, the guard and status hooks, and one `datalad` skill that routes to a reference
+per verb. Its behaviour is exercised end to end by `tests/e2e-smoke.sh`.
+
 ## Requirements
-### Requirement: The datalad doer is the only executor of DataLad commands
-
-Planner skills MUST NOT invoke the DataLad CLI. Any dataset creation, provenanced run, save, status
-or log inspection, sibling operation, push, or `get` MUST be delegated to the datalad doer, which
-owns the mechanics.
-
-#### Scenario: A planner needs to record a result
-
-- **WHEN** any workflow-plane skill reaches the point of committing a change
-- **THEN** it delegates to the datalad doer with a plain-language request rather than constructing a
-  command itself
-
-### Requirement: The toolbox provides one user-invocable skill per CLI verb
-
-`plugins/datalad-cli/` MUST provide a skill per DataLad verb the harness relies on, each
-`user-invocable: true` with an `argument-hint`, and each scoping `allowed-tools` to what that verb
-needs. The doer MUST read the matching skill and follow its steps and constraints rather than
-improvising the invocation.
-
-#### Scenario: The doer is asked to push to a sibling
-
-- **WHEN** the doer receives a push request
-- **THEN** it consults the `datalad-push` skill and constructs the command from that skill's rules
-
-#### Scenario: A user drives a verb directly
-
-- **WHEN** a user invokes a `datalad-*` skill themselves without a planner
-- **THEN** the skill runs standalone, because toolbox skills are usable on their own
 
 ### Requirement: Provenanced execution is the default run path
 
-The doer MUST execute analysis commands through `datalad run` or `datalad container-run` with
-explicit inputs, outputs, and a non-empty message, so the result is replayable by `datalad rerun`.
-It MUST NOT run an analysis bare and save the result afterwards.
+Analysis commands MUST be executed through `datalad run` or `datalad containers-run`, with explicit
+inputs, outputs, and a non-empty message carrying the `DSH-*` lines, so the result is replayable by
+`datalad rerun`. An analysis MUST NOT be run bare and saved afterwards.
 
 #### Scenario: A comparison is executed
 
@@ -53,51 +28,29 @@ It MUST NOT run an analysis bare and save the result afterwards.
 #### Scenario: Message or paths are missing
 
 - **WHEN** a required parameter such as the commit message or an output path is absent or ambiguous
-- **THEN** the doer asks the delegating planner rather than guessing a message or inventing a path
+- **THEN** the planner asks the user rather than guessing a message or inventing a path
 
-### Requirement: The doer refuses to run against a dirty tree
+### Requirement: Runs refuse a dirty tree
 
-The doer MUST verify a clean working tree before `run` or `container-run`, and MUST verify a DataLad
-context exists before operating on a directory.
+A clean working tree MUST be verified before `run` or `containers-run`, and a DataLad context MUST
+be verified before operating on a directory.
 
 #### Scenario: Uncommitted changes are present
 
-- **WHEN** a run is requested while `datalad status` reports modifications
-- **THEN** the doer stops and asks for a save or confirmation instead of running
+- **WHEN** a run is about to start while `datalad status` reports modifications
+- **THEN** the planner stops and asks for a save or confirmation instead of running
 
 ### Requirement: Container runs use a registered container
 
-The doer MUST NOT call `datalad container-run` with an unregistered container. It MUST verify
-registration with `datalad containers-list` and register with `containers-add` when needed, so the
-container image's annex key is recorded in the run commit.
+`datalad containers-run` MUST NOT be called with an unregistered container. Registration MUST be
+verified with `datalad containers-list`, and the container MUST be registered with
+`containers-add` when needed, so the container image's annex key is recorded in the run commit.
 
 #### Scenario: A provenanced container run
 
 - **WHEN** an analysis is run inside a registered container
 - **THEN** the run commit annotates the image's annex key, and a later `datalad rerun` re-fetches
   that exact image
-
-### Requirement: Every operation returns a structured result
-
-The doer MUST report `op`, the exact command executed, `result` (`ok` or `failed`), and where
-applicable the commit, outputs, and ending branch, plus notes on tree state or next steps. It MUST
-show a constructed command before executing anything that writes to the dataset.
-
-#### Scenario: An operation fails
-
-- **WHEN** a DataLad command returns non-zero
-- **THEN** the doer commits nothing further, surfaces the error, and returns `result: failed` with a
-  suggested fix rather than leaving outputs half-written
-
-### Requirement: The doer makes no research decisions
-
-The doer MUST NOT decide which analysis to run, whether to promote a comparison, or how to version a
-release. It executes and reports; the planner decides.
-
-#### Scenario: An ambiguous request arrives
-
-- **WHEN** the request implies a research choice rather than a mechanical one
-- **THEN** the doer returns the question to the planner instead of choosing
 
 ### Requirement: Datasets are distributable
 
@@ -226,3 +179,80 @@ auto-save is off by default.
 - **WHEN** a user reads the datalad-cli README
 - **THEN** it explains the reminder behaviour and how to enable `DATALAD_AUTOSAVE=1`
 
+### Requirement: DataLad commands run in the main thread
+
+Planner skills MUST run DataLad commands directly, the way they would run git. The commands
+covered are dataset creation, provenanced runs, save, status, log, sibling operations, push and
+get. No subagent MAY be interposed for DataLad operations. A planner MUST NOT declare `datalad` in
+`delegates_to`.
+
+#### Scenario: A planner records a result
+
+- **WHEN** a workflow-plane skill reaches the point of committing a change
+- **THEN** it runs `datalad save` itself with a message carrying its `DSH-*` lines, and no
+  subagent is spawned
+
+#### Scenario: Another doer returns a mutating command
+
+- **WHEN** the nipoppy doer returns a constructed command with `run_via: datalad-run`
+- **THEN** the planner runs it under `datalad run` with the doer's declared inputs and outputs
+
+### Requirement: Harness commits carry DSH lines
+
+Every commit a harness skill makes MUST have a single-message body containing exactly one
+`DSH-Op: <skill-name>` line. It MAY contain `DSH-Stage`, and zero or more each of
+`DSH-Binding: <doer>/<tool>@<version>`, `DSH-Product: <id>` and
+`DSH-Obligation: <id> <opened|resolved>`. No other `DSH-` key is defined. A `DSH-Binding` value
+MUST be copied from a doer's structured result, never assumed by the planner. The message MUST be
+passed as one `-m` argument, because `datalad save` keeps only the last of several.
+
+#### Scenario: A save commit
+
+- **WHEN** `govern/ethics-track` saves an amendment
+- **THEN** the commit message has a subject stating what and why, followed by a paragraph with
+  `DSH-Op: ethics-track` and `DSH-Stage: govern`
+
+#### Scenario: A doer chose the tool
+
+- **WHEN** the archive doer mints through its `auto` selection and reports `backend: zenodo`
+- **THEN** the release commit carries `DSH-Binding: archive/zenodo@<reported version>`
+
+### Requirement: dsh-log reads the activity history
+
+`plugins/datalad-cli/scripts/dsh-log.sh` MUST print one JSON object per commit that has a `DSH-Op`
+line. Each object MUST include `sha`, `ts`, `subject`, `run` (true for `datalad run` commits) and
+the parsed `DSH-*` fields. It MUST read lines from `datalad run` commits by stopping at the run
+record marker, rather than relying on git's trailer parser. With `--legacy`, it MUST also print
+each `project.yaml` `log` entry in the same shape with `sha: null`. It MUST need nothing beyond
+git and a POSIX shell.
+
+#### Scenario: A run commit
+
+- **WHEN** a `datalad run` commit's message body contains `DSH-Op: run-pipeline`
+- **THEN** `dsh-log` returns it with `run: true`, even though `git log --format='%(trailers)'`
+  returns nothing for that commit
+
+#### Scenario: A ledger written before this change
+
+- **WHEN** `dsh-log --legacy` runs on a dataset whose `project.yaml` has `log` entries
+- **THEN** those entries appear alongside commit-derived entries in timestamp order
+
+### Requirement: The toolbox is one skill with per-verb references
+
+`plugins/datalad-cli/` MUST provide a single `datalad` skill. The skill MUST be user-invocable
+with an argument of the form `<verb> [args]`, and MUST route by verb to
+`references/verbs/<verb>.md` for every DataLad verb the harness relies on. Each verb reference
+MUST keep the steps and constraints of the per-verb skill it replaces. The main thread MUST read
+the matching verb reference before constructing an operation it is unsure of, rather than
+improvising the invocation.
+
+#### Scenario: A push is needed
+
+- **WHEN** a planner reaches a push step
+- **THEN** the main thread consults `references/verbs/push.md` and constructs the command from its
+  rules
+
+#### Scenario: A user drives a verb directly
+
+- **WHEN** a user invokes `/datalad save "message"` without a planner
+- **THEN** the skill runs standalone, because the toolbox is usable on its own

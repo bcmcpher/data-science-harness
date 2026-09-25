@@ -5,7 +5,7 @@
 The workflow-plane plugin for running established neuroimaging pipelines — fMRIPrep, MRIQC, and
 their peers — on a dataset's BIDS data. It exists as its own step because a pipeline run is the
 sharpest case of the harness's central rule: nipoppy knows how to build the invocation, but only
-DataLad may execute it, so the derivatives that result are reachable from the raw data by
+the planner may execute it, under `datalad run`, so the derivatives that result are reachable from the raw data by
 `datalad rerun`. Provides `run-pipeline`.
 
 ## Requirements
@@ -28,7 +28,7 @@ delegate command construction to the nipoppy doer. It MUST NOT assemble the invo
 
 ### Requirement: Pipelines execute only through datalad run
 
-The constructed command MUST be executed by the datalad doer under `datalad run` on a clean tree,
+The constructed command MUST be executed by the planner itself under `datalad run` on a clean tree,
 never bare.
 
 #### Scenario: A pipeline completes
@@ -45,11 +45,12 @@ never bare.
 ### Requirement: Completion is tracked and logged
 
 After a successful run, `process/run-pipeline` MUST record processing status through the nipoppy
-doer, append a ledger log entry naming the pipeline, version, and scope, and save through the
-datalad doer.
+doer and save it with `datalad save` in a commit whose message names the pipeline, version, and
+scope, and carries `DSH-Op: run-pipeline` and `DSH-Stage` lines, with a `DSH-Binding` line for the
+pipeline named in the nipoppy doer's result.
 
 #### Scenario: Recording what was processed
 
 - **WHEN** processing finishes
-- **THEN** the tracked status and the log entry agree on which participants were processed with which
-  pipeline version
+- **THEN** the tracked status and the recording commit's message agree on which participants were
+  processed with which pipeline version

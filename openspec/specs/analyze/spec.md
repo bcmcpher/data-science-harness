@@ -16,11 +16,12 @@ wrong. So `plan-analysis` states assumptions without asserting them and reports 
 draws only what an output file contains, and `gen-report` reports a missing result as missing.
 
 ## Requirements
+
 ### Requirement: A comparison is a branch plus a record, not a pipeline stage
 
 `analyze/propose-comparison` MUST capture what is being compared and why, its inputs and expected
-outputs, and its rigor mode, then create a clearly named `cmp/*` branch through the datalad doer.
-A comparison MUST be introducible at any point in the project.
+outputs, and its rigor mode, then create a clearly named `cmp/*` branch, running DataLad directly
+as it runs git. A comparison MUST be introducible at any point in the project.
 
 #### Scenario: A new analysis is proposed
 
@@ -61,19 +62,21 @@ before execution, and its result MUST be checked against the registered spec.
 ### Requirement: Comparisons execute with full provenance inside the project container
 
 `analyze/run-comparison` MUST confirm it is on the comparison's branch, gather the run's inputs,
-outputs, and message, ensure the container image exists via the containers doer, and delegate
-execution to the datalad doer as a `container-run`.
+outputs, and message, ensure the container image exists via the containers doer, and run the
+execution itself under `datalad containers-run`. The run commit MUST carry `DSH-Op` and
+`DSH-Stage` lines in its message.
 
 #### Scenario: A comparison is run
 
 - **WHEN** the analysis script for a `cmp/*` branch is executed
-- **THEN** the commit records the command, inputs, outputs, and the container image's annex key
+- **THEN** the commit records the command, inputs, outputs, and the container image's annex key,
+  and its message carries `DSH-Op: run-comparison`
 
 #### Scenario: The container image is missing
 
 - **WHEN** no built image exists for the project's recipe
-- **THEN** the containers doer builds it and the datalad doer registers it before the run, rather
-  than the analysis falling back to the host environment
+- **THEN** the containers doer builds it and the planner registers it with `datalad containers-add`
+  before the run, rather than the analysis falling back to the host environment
 
 ### Requirement: Products group kept comparisons into deliverables
 
@@ -93,14 +96,15 @@ it, then upsert a product into `products[]` rather than appending a duplicate.
 
 ### Requirement: Checkpoint leaves the tracking chain unbroken
 
-`analyze/checkpoint` MUST inspect state, compose a descriptive message, save through the datalad
-doer, and log the checkpoint. It MUST NOT use an empty or placeholder message.
+`analyze/checkpoint` MUST inspect state, compose a descriptive message, and save with
+`datalad save`, the commit carrying `DSH-Op: checkpoint` and `DSH-Stage` lines so the checkpoint is
+in the history `dsh-log` reads. It MUST NOT use an empty or placeholder message.
 
 #### Scenario: Ending a work session
 
 - **WHEN** a user wraps up before switching context
-- **THEN** the tree is clean, the snapshot carries a message describing what changed, and the branch
-  it ended on is reported
+- **THEN** the tree is clean, the snapshot carries a message describing what changed and a
+  `DSH-Op: checkpoint` line, and the branch it ended on is reported
 
 ### Requirement: A statistical approach is recommended with its assumptions stated, never asserted
 
@@ -202,4 +206,3 @@ significant, robust, replicated or publication-ready.
 - **WHEN** an output file was produced by hand rather than by a recorded run
 - **THEN** the report says so, because an output without provenance is a different claim from one
   with it
-

@@ -40,5 +40,5 @@
 
 - [x] 7.1 README: the Axis 1 table and prose describe DataLad as native; the workflow/capability description is updated
 - [x] 7.2 `docs/motivation.md`, `docs/end-to-end-workflow.md`, `paper/sections/03-architecture.md`: drop the datalad doer and describe commit-recorded activity
-- [ ] 7.4 After archive, update the Purpose paragraphs that still name the datalad doer (`openspec/specs/datalad`, `containers`, `annotate`, `process`); deltas do not carry Purpose text
+- [x] 7.4 After archive, update the Purpose paragraphs that still name the datalad doer (`openspec/specs/datalad`, `containers`, `annotate`, `process`); deltas do not carry Purpose text
 - [x] 7.3 `bin/install.sh --prune`: remove installed files for plugins no longer in the source (the retired `datalad-doer`); dry-run shows them

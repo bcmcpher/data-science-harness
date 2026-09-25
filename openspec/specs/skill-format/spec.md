@@ -8,7 +8,9 @@ research process and never touches a CLI, a doer agent owns tool mechanics and i
 that runs tools, and delegation between them is declared in frontmatter *and* stated in prose so it
 survives translation to harnesses that have no frontmatter vocabulary. Every requirement below is
 enforced today by `tests/lint-plugins.py`; `templates/skill/SKILL.md` is the authored form.
+
 ## Requirements
+
 ### Requirement: Skill identity matches its location
 
 Every skill SHALL declare a `name` in YAML frontmatter, and that name SHALL equal the name of the
@@ -59,9 +61,10 @@ Vendored `*-cli` toolbox plugins are exempt: they wrap a single CLI verb and car
 
 ### Requirement: Delegation is declared and resolvable
 
-A planner skill SHALL express every delegation twice — once as a `delegates_to` list in
+A planner skill SHALL express every delegation to a doer twice: once as a `delegates_to` list in
 frontmatter, and once in the instruction body as prose naming the doer. Each entry in
-`delegates_to` SHALL name a plugin that actually provides an agent.
+`delegates_to` SHALL name a plugin that actually provides an agent. DataLad is not a delegation
+target. A planner runs DataLad directly and SHALL NOT refer to a "datalad doer".
 
 #### Scenario: Delegating to a plugin with no doer
 
@@ -73,6 +76,11 @@ frontmatter, and once in the instruction body as prose naming the doer. Each ent
 - **WHEN** a skill body says "delegate to the **containers** doer" but `delegates_to` omits `containers`
 - **THEN** the lint reports an error; and **WHEN** `delegates_to` lists a doer the body never names,
   the lint emits a warning
+
+#### Scenario: A planner saves its work
+
+- **WHEN** a planner's step records a change
+- **THEN** it runs `datalad save` in its own steps, and declares no DataLad delegation
 
 ### Requirement: Planner skills carry the standard instruction sections
 
@@ -155,4 +163,3 @@ Pinning MUST be limited to agents that only read and report.
 
 - **WHEN** the bids doer or the coordinator is authored
 - **THEN** it may declare a pinned `model:` from the allowed set
-
