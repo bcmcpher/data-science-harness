@@ -69,11 +69,12 @@ difference.
 6. **Apply only on an explicit instruction naming the target host.** Echo the hostnames back and have
    them confirmed first. "Yes" is not confirmation; the hostname is. An inventory mistake must surface
    as a wrong hostname in that exchange rather than as a wrong server changed.
-7. **Verify the sibling, via the datalad doer.** Registration is a `datalad siblings` operation and
-   the retrieval test is `datalad get`:
-   > "register the self-hosted store as a sibling with `--publish-depends` on its storage remote,
-   > then get an annexed file from it in a fresh clone and report whether the content arrived."
-   Until that returns content, report `applied`, never `working`.
+7. **Hand the sibling verification to the planner.** Registration is a `datalad siblings`
+   operation and the retrieval test is `datalad get`, and both are the planner's to run. Return the
+   commands under `run_via: planner`:
+   > register the self-hosted store as a sibling with `--publish-depends` on its storage remote,
+   > then get an annexed file from it in a fresh clone and check whether the content arrived.
+   Until the planner reports that content arrived, the result is `applied`, never `working`.
 8. **Report.**
    ```
    op:        plan-deploy | apply-deploy | verify-sibling
@@ -86,6 +87,8 @@ difference.
    changes:   <per host: operations that would run, or did>
    failed:    <per host: operations that failed — empty is a claim, state it explicitly>
    retrieval: <datalad get from the self-hosted remote: content arrived | not attempted | failed>
+   run_via:   planner                          # the siblings + get commands to verify, if applied
+   binding:   liab/pyinfra@<version>
    notes:     <what was not verified — host reachability, that the service serves>
    ```
 
@@ -110,8 +113,8 @@ difference.
   satisfies an obligation is a governance judgment.
 - **Never add a host to an inventory, or edit `inventory.py`/`deploy.py` to make a run succeed.**
   What infrastructure the project targets is the operator's decision.
-- **You do not commit.** The datalad doer owns `datalad save`, `datalad siblings` and `datalad get`.
-  Ask it.
+- **You do not commit.** The planner owns `datalad save`, `datalad siblings` and `datalad get`.
+  Return the commands; do not run them.
 - Do not decide whether the project should self-host, or which services it needs. Planners decide;
   you plan, apply and verify.
 

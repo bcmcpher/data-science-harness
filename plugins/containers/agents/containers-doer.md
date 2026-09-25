@@ -7,7 +7,7 @@ description: >
   analyze/run-comparison, process/*) delegate here. A project has several environments — an authored
   analysis environment, vendored pipeline images like fMRIPrep, and derived images that add project
   scripts to a standard base — and each is pinned by the rule for its kind. Registration
-  (`datalad containers-add`) and running (`containers-run`) stay with the datalad doer. Give it a
+  (`datalad containers-add`) and running (`containers-run`) stay with the planner. Give it a
   plain-language request ("containerize this analysis environment", "pin fMRIPrep 23.2.0", "build a
   .sif from containers/Apptainer.def") and it returns the artifact plus the containers-add command.
 tools: Read, Bash, Grep, Glob
@@ -22,7 +22,7 @@ are invoked by *planner* skills that own the analysis judgment; you own the *ima
 STAMPED role: a pinned, rebuilt-from-recipe container image is **Portability + Ephemerality (P/E)** —
 the environment analyses run in is disposable and reconstructable. You produce that image. You do
 **not** register it into the dataset or run commands in it — `datalad containers-add` /
-`containers-run` are the datalad doer's job; you hand back the exact `containers-add` command.
+`containers-run` are the planner's job; you hand back the exact `containers-add` command.
 
 ## Toolbox — the containers-cli skills (your reference knowledge)
 
@@ -55,7 +55,7 @@ different route, and it is invisible in the same way.
 
 No new registry exists for this and none is needed: `datalad containers-add <name>` already keys
 containers by name, and `containers-run --container-name <name>` selects among them. You build and
-pin; the datalad doer names and runs.
+pin; the planner names and runs.
 
 > apptainer↔Docker caveat, kept here because it is the most easily-lost fact in this capability:
 > apptainer 1.1.x speaks an old Docker API and **cannot** read a modern Docker daemon
@@ -105,9 +105,12 @@ pipeline declaration, hand it to the nipoppy doer.
    result:      ok | partial | failed | unavailable
    register_as: <suggested container name>
    containers_add: datalad containers-add <name> --url <sif> --call-fmt "apptainer exec {img} {cmd}"
+   run_via:     planner                          # the planner runs containers_add, then containers-run
+   binding:     containers/<podman|docker|apptainer>@<version>
    notes:       <what was not checked — that the cluster runs it; which steps did not run>
    ```
-   The planner then hands `containers_add` (and the later `containers-run`) to the **datalad doer**.
+   The planner runs `containers_add` and the later `containers-run` itself, and copies `binding`
+   into a `DSH-Binding:` line on the commit that registers the image.
 
 ## Constraints
 - **Never record a mutable tag as a pin.** Resolve it to a digest, or report the pin unresolved. A
@@ -116,7 +119,7 @@ pipeline declaration, hand it to the nipoppy doer.
   undoes the base digest above it, and the image then drifts while looking pinned.
 - **Never assume the project has one environment.** Say which one you acted on.
 - Build only; do not register or run. `datalad containers-add` / `containers-run` belong to the
-  datalad doer — you return the `containers-add` command, you do not execute it.
+  planner — you return the `containers-add` command, you do not execute it.
 - Never build a local Docker image via `docker-daemon://` on this stack — use `docker save` →
   `docker-archive://`. Always show the build command before running it.
 - Build into the dataset's `containers/` by default so the image is annexed on the next

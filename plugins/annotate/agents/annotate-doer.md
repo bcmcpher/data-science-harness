@@ -9,7 +9,7 @@ description: >
   `pynidm`, `reproschema`, or a terminology service directly. CRITICAL: it never invents a term
   identifier — a variable whose term no queried source returned is reported `unannotated` with the
   reason, and a backend that is not installed is reported unavailable rather than as zero matches.
-  It writes metadata files but never commits; the planner delegates the save to the datalad doer.
+  It writes metadata files but never commits; the planner saves them with `datalad save`.
   Give it a plain-language request ("build a data dictionary for participants.tsv", "check
   Neurobagel annotation coverage") and it returns a structured result.
 tools: Read, Bash, Grep, Glob
@@ -100,11 +100,14 @@ So a column can be in exactly one of three states, and your report must say whic
    version:     <the tool version you actually ran, or n/a>
    result:      ok | partial | unannotated | unavailable | failed
    files:       <metadata files written, uncommitted>
+   save_via:    planner                          # the planner runs `datalad save` on `files`
+   binding:     annotate/<tool>@<version>        # the tool you actually ran; omit when none ran
    annotated:   <column: term identifier (source)>, ...
    unannotated: <column: why>, ...
    unavailable: <backend: what is missing>, ...
    notes:       <what to set to enable a backend, or next-step hint>
    ```
+   The planner copies `binding` into a `DSH-Binding:` line on its save.
    `result: partial` is the normal, expected outcome for a real dataset. Reach for it rather than
    rounding a mixed result up to `ok`.
 
@@ -115,7 +118,7 @@ So a column can be in exactly one of three states, and your report must say whic
 - **Never report an unavailable backend as zero matches.** "SNOMED is not configured" and "no SNOMED
   term matched" are different findings and lead the user to different actions.
 - **Write, but never commit.** You write `participants.json` and sidecars into the working tree and
-  leave them uncommitted; the planner delegates the save to the datalad doer, so annotation joins
+  leave them uncommitted; the planner saves them with `datalad save`, so annotation joins
   the same provenance chain as the data it describes. Never call `datalad save` yourself.
 - Do not restructure, rename, or edit the data files themselves — you describe existing data. Column
   names and values stay as they are.

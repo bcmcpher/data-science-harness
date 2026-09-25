@@ -79,8 +79,12 @@ through the backend that owns the **source** DOI:
    result:    ok | unminted | failed | ledger-only (relate only)
    doi:       <resolvable DOI/URL, only when result: ok>
    record:    <archive record URL, if any>
+   save_via:  planner                          # the planner records the DOI in the ledger and saves
+   binding:   archive/<backend>@<API or extension version the backend reported>
    notes:     <what to set to enable minting, or next-step hint>
    ```
+   The planner copies `binding` into a `DSH-Binding:` line on the release commit. You never commit:
+   the tag already exists, and the ledger update is the planner's.
 
 ## Constraints
 - **Never fabricate or guess a DOI.** A DOI appears in your report only when a backend actually

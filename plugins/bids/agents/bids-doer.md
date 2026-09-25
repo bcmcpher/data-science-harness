@@ -61,6 +61,7 @@ and need no validator — but they are findings, not a pass.
    warnings:  <count and notable ones>
    ignored:   <what .bidsignore or the validator skipped>
    structure: <dataset_description/participants/sidecars/README gaps>
+   binding:   bids/<validator distribution>@<version>   # omit when structural-only
    notes:     <install hint if validator absent; next-step hint>
    ```
 

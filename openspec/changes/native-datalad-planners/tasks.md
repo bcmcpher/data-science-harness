@@ -18,9 +18,9 @@
 
 ## 4. Retire the doer
 
-- [ ] 4.1 Remove `plugins/datalad/` and its marketplace entry
-- [ ] 4.2 Other doers (nipoppy, containers, annotate, archive, compendium, liab): hand results to the planner with `run_via`/`save_via: planner`, and add `binding` to each result block
-- [ ] 4.3 `project/agents/coordinator.md`: read state + `dsh-log --legacy`; drop the log-vs-history discrepancy rule and replace it with "harness commit lacking DSH-Op"
+- [x] 4.1 Remove `plugins/datalad/` and its marketplace entry
+- [x] 4.2 Other doers (nipoppy, containers, annotate, archive, compendium, liab): hand results to the planner with `run_via`/`save_via: planner`, and add `binding` to each result block
+- [x] 4.3 `project/agents/coordinator.md`: read state + `dsh-log --legacy`; drop the log-vs-history discrepancy rule and replace it with "harness commit lacking DSH-Op"
 
 ## 5. Planners (all 37)
 
