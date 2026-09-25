@@ -11,7 +11,7 @@ After `native-datalad-planners`, DataLad, git and git-annex are native to the ma
 commands belong in planners, the way git commands belong in ordinary code. The peripheral tools are
 different. nipoppy, containers, MyST, pyinfra and the annotation backends sit behind doers
 precisely so that a doer can pick, pin or change its tool without the planners being rewritten.
-Seven planners still spell out those tools' command lines (20 spans in total). `process/run-pipeline`
+Seven planners still spell out those tools' command lines (24 spans in total). `process/run-pipeline`
 builds `nipoppy process --pipeline …` itself, although `openspec/specs/process/spec.md` says it
 MUST NOT. Nothing checks this boundary. The three-layer finding is also not recorded anywhere.
 

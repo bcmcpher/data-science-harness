@@ -46,6 +46,15 @@ DESCRIPTION_MAX = 1024
 # A plugin's rules/*.md is loaded into every session's main thread, so it carries a hard budget.
 RULES_MAX_WORDS = 300
 CHECK_SCRIPT_DIRS = ("tests", "schemas")
+# Binaries of the peripheral tools that sit behind doers. A workflow-plane skill states intent to the
+# doer rather than quoting these tools' command lines. DataLad, git and git-annex are native to the
+# main thread and deliberately absent. A new toolbox plugin adds its binary here.
+PERIPHERAL_BINARIES = {
+    "nipoppy", "bids-validator", "apptainer", "singularity", "docker", "podman", "heudiconv",
+    "dcm2bids", "pydeface", "bagel", "pynidm", "reproschema", "myst", "repo2data", "pyinfra",
+    "osf", "zenodo", "curl",
+}
+_INLINE_CODE = re.compile(r"`([^`\n]+)`")
 
 # Third-party modules whose import name differs from the distribution providing it. There is no
 # way to derive this without installing the package, so it is a hand-kept list; extend it when a
@@ -117,6 +126,29 @@ def body_of(path: str) -> str:
         text = fh.read()
     end = text.find("\n---", 3) if text.startswith("---") else -1
     return text[end + 4 :] if end != -1 else text
+
+
+def peripheral_spans(path: str) -> list[tuple[int, str]]:
+    """(file line, binary) for each inline code span or fenced-block line in the body whose first
+    token is a peripheral binary. Flags alone are never counted: out of context a flag cannot be
+    attributed to a tool, and most flags in planners are DataLad's."""
+    with open(path) as fh:
+        lines = fh.read().splitlines()
+    start = 0
+    if lines and lines[0] == "---":
+        start = next((i + 1 for i in range(1, len(lines)) if lines[i] == "---"), 0)
+    hits, fenced = [], False
+    for i in range(start, len(lines)):
+        ln = lines[i]
+        if ln.lstrip().startswith("```"):
+            fenced = not fenced
+            continue
+        spans = [ln] if fenced else _INLINE_CODE.findall(ln)
+        for s in spans:
+            tok = s.split()
+            if tok and tok[0] in PERIPHERAL_BINARIES:
+                hits.append((i + 1, tok[0]))
+    return hits
 
 
 # ----------------------------------------------------------------------------- skills
@@ -199,6 +231,11 @@ def check_skill(root: str, path: str, plugin_name: str, doers: dict[str, list[st
         error(p, f"body delegates to the `{d}` doer but `delegates_to:` does not list it")
     for d in sorted(set(map(str, declared)) & set(doers) - mentioned):
         warn(p, f"`delegates_to: {d}` is declared but the body never delegates to that doer")
+
+    # A planner states intent to a peripheral doer; the doer owns the command line.
+    if plane == "workflow":
+        for line, binary in peripheral_spans(path):
+            error(p, f"line {line}: quotes a `{binary}` command — state the intent to the doer in words")
 
 
 # ----------------------------------------------------------------------------- agents

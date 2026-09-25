@@ -9,16 +9,16 @@ When this change starts, `native-datalad-planners` has landed:
 What remains is the boundary between planners and the *peripheral* doers: nipoppy, containers,
 annotate, archive, compendium, liab and bids.
 
-Per-skill counts from 2026-09-22 of inline spans and fenced lines that start with a peripheral
-binary:
+Per-skill counts of inline spans and fenced lines that start with a peripheral binary, recounted
+on 2026-09-25 after `native-datalad-planners` (the 2026-09-22 draft counted 20):
 
 | Skill | Spans |
 |---|---|
+| `annotate` | 8 |
 | `executable-article` | 5 |
-| `run-pipeline` | 4 |
+| `run-pipeline` | 3 |
 | `liab-deploy` | 3 |
 | `raw-to-bids` | 3 |
-| `annotate` | 3 |
 | `gen-data-dict` | 1 |
 | `deidentify` | 1 |
 
@@ -56,7 +56,7 @@ spans are never counted. A flag cannot be attributed to a tool out of context, a
 planners are DataLad's.
 
 *Alternative: a ratchet with a committed baseline.* This was drafted first, when 114 spans
-counted DataLad too. Once DataLad was excluded, 20 spans remained. Fixing them is cheaper than
+counted DataLad too. Once DataLad was excluded, 24 spans remained. Fixing them is cheaper than
 maintaining a baseline file.
 
 **D2. A violation is an error.** The tree is clean after this change, so any new span is drift.
