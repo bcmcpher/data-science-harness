@@ -6,9 +6,9 @@
 
 ## 2. Ledger
 
-- [ ] 2.1 `schemas/project.schema.json`: drop `log` from `required`; mark `log` legacy in its description; `resolved_by` description prefers a commit SHA
-- [ ] 2.2 Update `examples/project.yaml` (no new `log` writes; keep a legacy block to prove validity) and `docs/project-ledger.md`
-- [ ] 2.3 `schemas/validate-ledger.py` passes on the example and on a ledger with no `log`
+- [x] 2.1 `schemas/project.schema.json`: drop `log` from `required`; mark `log` legacy in its description; `resolved_by` description prefers a commit SHA
+- [x] 2.2 Update `examples/project.yaml` (no new `log` writes; keep a legacy block to prove validity) and `docs/project-ledger.md`
+- [x] 2.3 `schemas/validate-ledger.py` passes on the example and on a ledger with no `log`
 
 ## 3. Consolidate the toolbox
 

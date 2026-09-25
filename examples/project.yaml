@@ -1,7 +1,8 @@
 # project.yaml — the project ledger (v1, Phase 1).
-# The administrative source of truth: a project header, an append-only activity `log`, and the
-# `products` / `obligations` registries. Validated against schemas/project.schema.json; conventions
-# in docs/project-ledger.md. Validate with: python3 schemas/validate-ledger.py examples/project.yaml
+# The administrative source of truth for state: a project header and the `products` /
+# `obligations` / `contributors` registries. Activity is recorded in the DSH-* lines of commit
+# messages and read with plugins/datalad-cli/scripts/dsh-log.sh. Validated against
+# schemas/project.schema.json; conventions in docs/project-ledger.md. Validate with: python3 schemas/validate-ledger.py examples/project.yaml
 #
 # It is `datalad save`-d like any other file, so the administrative record is provenance-tracked
 # alongside the science.
@@ -66,7 +67,7 @@ obligations:
     description: "Main paper submitted to a first venue"
     due: 2026-08-31
     status: met
-    resolved_by: 2026-08-04T09:15:00Z   # the submission-track log entry below
+    resolved_by: 2026-08-04T09:15:00Z   # a legacy log timestamp (below); new skills write a commit SHA
 
 contributors:
   # People + CRediT credit (project/people); mirrored to dataset_description.json Authors.
@@ -76,8 +77,9 @@ contributors:
     roles: [Conceptualization, Formal analysis, Writing – original draft]
 
 log:
-  # Append-only. Each entry: { ts, op, stage, note, branch? }.
-  # Never rewrite or reorder prior entries — corrections are new entries.
+  # LEGACY. Written before activity moved into commit DSH-* lines; no skill appends here any more.
+  # Kept to show that such a ledger still validates, and that `dsh-log --legacy` reads it.
+  # Each entry: { ts, op, stage, note, branch? }.
   - { ts: 2026-07-10T14:30:00Z, op: new-project, stage: initialize,
       note: "scaffolded YODA+BIDS dataset + container recipe", branch: main }
 
