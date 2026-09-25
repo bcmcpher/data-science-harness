@@ -120,7 +120,7 @@ Two planes, and one rule joining them.
 | Plane | What lives here | Rule |
 |---|---|---|
 | **Capability** (technical) | Thin wrappers over one external tool each — Nipoppy, BIDS, containers, archives — plus the DataLad toolbox. Mechanical, reusable STAMPED primitives. | A capability holds tool mechanics and no research-process logic. A doer returns a command or files; it never commits. |
-| **Workflow** (conceptual) | Tool-agnostic research process in research vocabulary — govern, initialize, curate, analyze, process, disseminate. | A workflow skill runs DataLad itself, as code runs git, and records each step in `DSH-*` commit lines. Every other tool goes through its doer. |
+| **Workflow** (conceptual) | Tool-agnostic research process in research vocabulary — govern, initialize, curate, analyze, process, disseminate. | A workflow skill runs DataLad itself, as code runs git, and records each step in `DSH-*` commit lines. Every other tool goes through its doer, asked in words rather than by command line. |
 
 This is STAMPED Modularity applied to the harness itself, and it buys two things: capabilities
 recombine under different workflows, and a workflow can swap one capability for another — Zenodo for
@@ -130,6 +130,21 @@ It also makes the research judgment *inspectable*. A planner skill must carry `#
 `## Steps` and `## Constraints` — human-authored process judgment, enforced by the structural lint —
 while tool mechanics are quarantined below. The contract fails a check rather than decaying into
 convention.
+
+The planes come from a hackathon finding: a planner adapts most easily when three layers stay
+apart. The **narrative plan** is what the researcher is doing. The **implementation** is the
+tools that manipulate files. The **compute environment** is what this machine offers. The first
+two map onto the planes. A planner states the plan in words, including every research decision
+(pipeline, version, scope, target), and asks a doer to turn it into a command. It never quotes the
+command line of a peripheral tool, so a doer can pick, pin or replace its tool without the planner
+being rewritten, and the lint errors if a planner does. DataLad, git and git-annex are the
+exception: they are native to the main thread, the way git is to ordinary code, so planners write
+them directly.
+
+The third layer is deliberately left to environment providers: module systems, cluster
+schedulers, container runtimes. The harness does not model them. `project/env-check` is the seam
+where that context enters, running the capability gate scripts that report what this machine can
+do. When a provider supplies richer context, that is where it plugs in.
 
 Around both planes runs the rest of the design: a single DataLad provenance chain from raw data to
 published result, a versioned [project ledger](project-ledger.md) carrying products, obligations and

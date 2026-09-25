@@ -14,7 +14,7 @@
 
 ## 3. Docs and template
 
-- [ ] 3.1 `templates/skill/SKILL.md`: a doer request in intent form; convention comment states the rule and that DataLad is written directly
-- [ ] 3.2 `README.md` Axis 1: reword "never calls a CLI directly" to the enforced rule; note the binary set in the Contributing steps (a new toolbox adds its binary)
-- [ ] 3.3 `docs/motivation.md` Architecture: the three-layer finding, environment deferred to providers, `project/env-check` as the seam
-- [ ] 3.4 `python3 tests/lint-plugins.py --strict` and the selftest pass
+- [x] 3.1 `templates/skill/SKILL.md`: a doer request in intent form; convention comment states the rule and that DataLad is written directly
+- [x] 3.2 `README.md` Axis 1: reword "never calls a CLI directly" to the enforced rule; note the binary set in the Contributing steps (a new toolbox adds its binary)
+- [x] 3.3 `docs/motivation.md` Architecture: the three-layer finding, environment deferred to providers, `project/env-check` as the seam
+- [x] 3.4 `python3 tests/lint-plugins.py --strict` and the selftest pass
