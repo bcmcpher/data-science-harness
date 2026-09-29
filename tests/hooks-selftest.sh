@@ -11,6 +11,9 @@
 #                          DATALAD_AUTOSAVE=1 saves, DATALAD_AUTOSAVE=0 does nothing
 #   dsh-status.sh          silent outside a dataset and in a plain repo; status (and rules with
 #                          --with-rules) inside one; DSH_RULES_IN_CONFIG=1 suppresses the rules
+#                          the ledger line names overdue obligations (block and flow style, at most
+#                          three ids) and due-soon ones inside project.due_warn_days, bounds included
+#                          flow lists, bare `-` entries and comments with apostrophes included
 #   dsh-log.sh             save and run commits read (run lines hidden from git trailers), a
 #                          non-harness commit excluded, --legacy merges project.yaml log in order
 #   bin/install.sh         OpenCode dry-run lists the generated plugin and the instructions entry;
@@ -81,6 +84,34 @@ check "plain repo: silent"                 '[ -z "$(bash "$SCRIPTS/dsh-status.sh
 check "inside: status block"               'bash "$SCRIPTS/dsh-status.sh" "$DS" | grep -q "^- dataset: $DS"'
 check "--with-rules: rules first"          'bash "$SCRIPTS/dsh-status.sh" --with-rules "$DS" | head -1 | grep -q "^# DataLad rules"'
 check "DSH_RULES_IN_CONFIG=1: no rules"    '! DSH_RULES_IN_CONFIG=1 bash "$SCRIPTS/dsh-status.sh" --with-rules "$DS" | grep -q "DataLad rules"'
+
+# Ledger line: overdue obligations, and due-soon ones within project.due_warn_days.
+LD="$WORK/ledger"
+datalad create -c text2git "$LD" >/dev/null 2>&1
+ledger_line() { bash "$SCRIPTS/dsh-status.sh" "$LD" | sed -n 's/^- ledger: [^;]*; //p'; }
+day() { python3 -c 'import datetime as d, sys
+print(d.datetime.now(d.timezone.utc).date() + d.timedelta(days=int(sys.argv[1])))' "$1"; }
+printf 'project:\n  name: t\nobligations:\n  - id: lapsed\n    kind: ethics\n    due: 2000-01-01\n    status: pending\n  - id: future\n    kind: dmp\n    due: 2999-12-31\n    status: pending\n  - id: done\n    kind: milestone\n    due: 2000-01-01\n    status: met\n    resolved_by: abc1234   # status: pending\n  - id: undated\n    kind: other\n    status: pending\n' > "$LD/project.yaml"
+check "block style: one overdue"           '[ "$(ledger_line)" = "3 open obligations (1 overdue: lapsed)" ]'
+printf 'project: {name: t}\nobligations:\n  - { id: lapsed, kind: ethics, due: 2000-01-01, status: pending }\n  - { id: future, kind: dmp, due: "2999-12-31",\n      status: pending }\n  - { id: done, kind: milestone, due: 2000-01-01, status: met, resolved_by: abc1234 }\n  - { id: undated, kind: other, status: pending }\n' > "$LD/project.yaml"
+check "flow style: same line"              '[ "$(ledger_line)" = "3 open obligations (1 overdue: lapsed)" ]'
+printf 'project:\n  name: t\nobligations:\n' > "$LD/project.yaml"
+for i in 1 2 3 4; do printf '  - id: o%s\n    kind: other\n    due: 2000-01-0%s\n    status: pending\n' "$i" "$i" >> "$LD/project.yaml"; done
+check "four overdue: three ids and …"      '[ "$(ledger_line)" = "4 open obligations (4 overdue: o1, o2, o3, …)" ]'
+printf 'project:\n  name: t\nobligations:\n  - id: soon\n    kind: dmp\n    due: %s\n    status: pending\n  - id: undated\n    kind: other\n    status: pending\n' "$(day 1)" > "$LD/project.yaml"
+check "nothing overdue, no window: bare"   '[ "$(ledger_line)" = "2 open obligations" ]'
+printf 'project:\n  name: t\n  due_warn_days: 14   # two weeks\nobligations:\n  - id: lapsed\n    kind: ethics\n    due: 2000-01-01\n    status: pending\n  - { id: today, kind: dmp, due: "%s", status: pending }\n  - id: edge\n    kind: funder-report\n    due: %s\n    status: pending\n  - id: past-edge\n    kind: milestone\n    due: %s\n    status: pending\n' "$(day 0)" "$(day 14)" "$(day 15)" > "$LD/project.yaml"
+check "window 14d: today and day 14 soon"  '[ "$(ledger_line)" = "4 open obligations (1 overdue: lapsed; 2 due within 14d: today, edge)" ]'
+sed -i.bak 's/due_warn_days: 14.*/due_warn_days: two weeks/' "$LD/project.yaml"
+check "non-integer window: treated as off" '[ "$(ledger_line)" = "4 open obligations (1 overdue: lapsed)" ]'
+printf 'project:\n  name: t\nobligations:\n  - id: lapsed   # the REB'"'"'s ask\n    kind: ethics\n    description: funder'"'"'s report # not a key: status: met\n    due: 2000-01-01  # REB'"'"'s renewal\n    status: pending  # funder'"'"'s ask\n  - id: hash\n    kind: other\n    description: "issue #3, a quoted # is text"\n    status: pending\n' > "$LD/project.yaml"
+check "apostrophe in a comment: counted"   '[ "$(ledger_line)" = "2 open obligations (1 overdue: lapsed)" ]'
+printf 'project:\n  name: t\nobligations:\n  -\n    id: lapsed\n    kind: ethics\n    due: 2000-01-01\n    status: pending\n  -\n    id: undated\n    kind: other\n    status: pending\n' > "$LD/project.yaml"
+check "bare dash entries: counted"         '[ "$(ledger_line)" = "2 open obligations (1 overdue: lapsed)" ]'
+printf 'project: {name: t}\nobligations: [{id: lapsed, kind: ethics, due: 2000-01-01, status: pending}, {id: done, kind: dmp, due: 2000-01-01, status: met, resolved_by: x}]\ncontributors: []\n' > "$LD/project.yaml"
+check "one-line flow list: counted"        '[ "$(ledger_line)" = "1 open obligation (1 overdue: lapsed)" ]'
+printf 'project: {name: t}\nobligations: [   # flow list\n  {id: lapsed, kind: ethics, due: 2000-01-01, status: pending},\n  {id: split, kind: dmp, due: "2001-01-01",\n   description: "a } in text", status: pending},\n  {id: undated, kind: other, status: pending}\n]\ncontributors: []\n' > "$LD/project.yaml"
+check "multi-line flow list: counted"      '[ "$(ledger_line)" = "3 open obligations (2 overdue: lapsed, split)" ]'
 
 echo "# dsh-log.sh"
 L="$WORK/log"

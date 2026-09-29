@@ -40,8 +40,11 @@ reconstruct state. Every harness commit carries `DSH-*` lines naming the skill t
      propose/run-comparison→Analyze, checkpoint→Analyze, manage-product→Analyze,
      preregister/obligations/qc-review→Govern, dataset-release/publish/link-outputs→Disseminate,
      status-report/people/log-decision→Manage).
-   - **Manage & Comply** — any `pending` entries in the ledger `obligations[]` (highlight ones with
-     a `due` date that is near or past); route to `govern/obligations`.
+   - **Manage & Comply** — any `pending` entries in the ledger `obligations[]`, overdue first, then
+     due soon: an obligation is **overdue** when it is `pending` and its `due` is before today, and **due
+     soon** when it is `pending`, `project.due_warn_days` is set above 0, and its `due` falls
+     between today and today + that many days, inclusive. Take today from `date -u +%F`; never
+     assume it. Route to `govern/obligations`.
    - **Open threads** — active `cmp/*` branches; any uncommitted changes; the last thing done.
    - **STAMPED status at a glance** — is the tree clean/tracked (T), is a container recipe present
      (P/E), is there a sibling to push to (D)? Flag gaps briefly.

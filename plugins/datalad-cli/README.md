@@ -99,7 +99,7 @@ behaviour back, set `DATALAD_AUTOSAVE=1`.
 
 | Hook | Fires | Does | Never does | Controlled by |
 |---|---|---|---|---|
-| `dsh-status.sh` (SessionStart) | once when a session starts, resumes, clears or compacts | prints `rules/datalad.md` and a status block: dataset root, branch, clean or dirty counts, subdatasets, siblings ahead or behind, and the ledger stage and open obligations | touch the network (ahead/behind is as of the last fetch); change anything | — |
+| `dsh-status.sh` (SessionStart) | once when a session starts, resumes, clears or compacts | prints `rules/datalad.md` and a status block: dataset root, branch, clean or dirty counts, subdatasets, siblings ahead or behind, and the ledger stage and open obligations, naming overdue ones and, when `project.due_warn_days` is set, those due soon | touch the network (ahead/behind is as of the last fetch); change anything | — |
 | `dsh-guard.sh` (PreToolUse, Bash) | before every shell command | blocks `git commit` (use `datalad save -m`) and `git push` (use `datalad push --to`); warns on `git annex add`/`drop`/`unlock` and on a repeated `-m` to `datalad save`/`run` | block `git add`, quoted mentions such as `echo "git commit"`, or anything in a plain git repo | `DSH_GUARD=0` turns it off |
 | `datalad-checkpoint.sh` (Stop) | at the end of every turn | if the tree is dirty and this exact state was not already raised, asks the assistant once to save with a message stating what and why, or to tell you why not | commit anything (unless `DATALAD_AUTOSAVE=1`); repeat a reminder for unchanged state; re-fire on the turn it caused | `DATALAD_AUTOSAVE=1` saves silently as before; `DATALAD_AUTOSAVE=0` turns it off |
 

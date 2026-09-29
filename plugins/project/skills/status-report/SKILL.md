@@ -34,7 +34,11 @@ nothing, unless the user asks for a copy to keep — edits go to the ledger via 
    - **Overview** — study name/description, current stage (from the most recent `dsh-log` op),
      branch.
    - **Products** — each product: kind, status, comparisons, outputs, DOIs, relations.
-   - **Obligations** — pending (highlight due/overdue), met, waived.
+   - **Obligations** — pending, then met, then waived. Among pending, list overdue first, then due
+     soon, then the rest by date: an obligation is **overdue** when it is `pending` and its `due` is before today, and **due
+     soon** when it is `pending`, `project.due_warn_days` is set above 0, and its `due` falls
+     between today and today + that many days, inclusive. Take today from `date -u +%F`; never
+     assume it.
    - **People** — contributors with CRediT roles + ORCIDs.
    - **Recent activity** — the last several `dsh-log` records.
    Fill only from the ledger and the history; mark anything absent (e.g. "no DOI — unreleased"), do

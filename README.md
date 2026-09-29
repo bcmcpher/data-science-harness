@@ -651,7 +651,8 @@ has the full table.
 
 - **Session start** (`dsh-status.sh`): puts the DataLad rules and a status block in context:
   dataset, branch, dirty counts, subdatasets, siblings ahead or behind as of the last fetch, and
-  the ledger stage and open obligations. It never touches the network.
+  the ledger stage and open obligations, naming any overdue ones (and those due within
+  `project.due_warn_days`, when set). It never touches the network.
 - **Before a shell command** (`dsh-guard.sh`): blocks `git commit` and `git push` and names the
   DataLad command to use. It warns on `git annex add`/`drop`/`unlock` and on a repeated `-m`,
   which DataLad silently drops. `DSH_GUARD=0` turns it off.

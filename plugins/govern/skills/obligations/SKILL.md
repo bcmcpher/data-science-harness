@@ -25,8 +25,11 @@ science. You own the tracking judgment, and you save it yourself with `datalad s
 
 ## Steps
 1. **Read the current obligations** — from `project.yaml` `obligations[]`. Present a concise
-   surface: what is `pending` (highlight anything with a `due` date that is near or past), what is
-   `met`, what is `waived`. Group by `kind` (preregistration, confirmatory-comparison, dmp, ethics,
+   surface: what is `pending` (overdue first, then due soon, then the rest by date), what is
+   `met`, what is `waived`. An obligation is **overdue** when it is `pending` and its `due` is
+   before today, and **due soon** when it is `pending`, `project.due_warn_days` is set above 0,
+   and its `due` falls between today and today + that many days, inclusive. Take today from
+   `date -u +%F`; never assume it. Group by `kind` (preregistration, confirmatory-comparison, dmp, ethics,
    funder-report).
 2. **Act on the request**:
    - **Add** — append `{ id, kind, description, due?, status: pending, ref? }` (unique `id`).

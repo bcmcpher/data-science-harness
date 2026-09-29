@@ -17,6 +17,7 @@ project:            # header — set once by project/new-project
   created: 2026-07-20T14:30:00Z
   dataset_root: .
   stack: python     # python | R | other
+  due_warn_days: 14 # optional; report pending obligations due within 14 days (0/absent = off)
 
 products:           # named deliverables (Phase 2: analyze/manage-product, disseminate/*)
   - id: main-paper
@@ -84,6 +85,13 @@ yourself so the change is tracked.
 3. **Add / resolve an `obligations[]` entry** — add
    `{ id, kind, description, due?, status, ref?, resolved_by? }` when a commitment is made (e.g. a
    pre-registration); flip `status` to `met`/`waived` (never delete the entry) when it is discharged.
+
+   **Overdue and due soon have one definition.** An obligation is *overdue* when its `status` is
+   `pending` and its `due` is before today in UTC (`date -u +%F`); one due today is not overdue.
+   When `project.due_warn_days` is N > 0, a `pending` obligation whose `due` is between today and
+   today + N days, inclusive, is *due soon*. The window is off by default. The session status
+   block, `project/status-report`, the `coordinator` and `govern/obligations` all use these
+   definitions, listing overdue first, then due soon, then the other pending obligations.
 
    **Resolving means naming the evidence.** An obligation at `status: met` MUST carry `resolved_by`:
    a commit SHA (preferred, and the only form new skills write), a legacy `log:` entry timestamp,

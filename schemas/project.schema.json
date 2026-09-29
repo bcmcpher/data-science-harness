@@ -17,7 +17,8 @@
         "description": { "type": "string" },
         "created": { "type": "string", "format": "date-time" },
         "dataset_root": { "type": "string" },
-        "stack": { "type": "string", "enum": ["python", "R", "other"] }
+        "stack": { "type": "string", "enum": ["python", "R", "other"] },
+        "due_warn_days": { "type": "integer", "minimum": 0, "description": "Days ahead to report pending obligations as due soon, in the session status block and every obligations surface. 0 or absent: overdue only." }
       }
     },
     "products": {

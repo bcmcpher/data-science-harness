@@ -30,7 +30,7 @@ Skills that append obligations write whichever style the model produces, so both
 - Validating the ledger. `schemas/validate-ledger.py` does that; the hook reads what is there and
   ignores what it cannot parse.
 - Reminders, notifications, or anything that runs outside a session.
-- A warning window for obligations due soon (see Open Questions).
+- A per-obligation window. One window per project is enough until users ask for more.
 
 ## Decisions
 
@@ -77,6 +77,30 @@ pending items by date. They do not parse the status block's text.
 *Alternative: have the planners read the hook's output.* The coordinator and status-report already
 parse `project.yaml` themselves, and the hook's line is truncated at three ids by design.
 
+**D5. A due-soon window, opt-in through `project.due_warn_days`.** The key sits in the `project`
+header, an integer of 0 or more, and 0 or absent means off. When N > 0 the hook computes
+`cutoff` = today + N days in UTC and counts a `pending` obligation as due soon when
+`today <= due <= cutoff`, again as string comparisons. Overdue and due-soon are therefore disjoint,
+and an obligation due today is due soon, not overdue. The parenthetical lists the two groups in that
+order, separated by `; `, each only when non-empty, each with at most three ids and `…`:
+`(1 overdue: ethics-renewal; 2 due within 14d: funder-report, dmp-update)`.
+
+The hook reads the key with a short awk pass over the `project` section before the main scan. It
+then computes the cutoff with GNU `date -u -d "+N days" +%F`, falling back to BSD
+`date -u -v+Nd +%F`, then to `python3` with the standard library only. If all three fail, the window
+is skipped and the overdue report still prints. A value that is not a plain integer is treated as 0.
+
+The planner surfaces read the same key from `project.yaml` and apply the same rule.
+
+*Why the ledger and not an environment variable.* The right window depends on the project's
+obligations (a quarterly funder report and an annual ethics renewal want different numbers), the
+ledger is shared with collaborators through the dataset, and the schema validates it. An
+environment variable would give each user a different status block for the same ledger.
+
+*Why off by default.* Existing projects keep an unchanged status block, and the status block is
+loaded into every session. Decided with the user on 2026-09-29, replacing the earlier open question
+of whether to have a window at all.
+
 ## Risks / Trade-offs
 
 - [An unusual YAML layout is misread, for example an obligation entry written as a nested mapping
@@ -93,12 +117,9 @@ parse `project.yaml` themselves, and the hook's line is truncated at three ids b
 
 ## Migration Plan
 
-Additive output on one line of the status block. Rollback means reverting the awk scan. No ledger
-changes and no stored state.
+Additive output on one line of the status block. Rollback means reverting the awk scan and the
+schema key. Existing ledgers need no change: without `due_warn_days` the window is off.
 
 ## Open Questions
 
-- **Warn on obligations due within N days?** Default: **no, overdue only.** The status block is
-  loaded into every session and is meant to stay short, and a window needs a number that suits both
-  a funder report and an ethics renewal. `govern/obligations` and `status-report` already list
-  pending items by date on request. Revisit when users ask for it.
+_None._ The due-soon window was settled as D5.

@@ -36,11 +36,44 @@ touch the network.
 - **WHEN** every `pending` obligation is due today or later, or has no `due`
 - **THEN** the ledger line carries no overdue parenthetical
 
+### Requirement: The session status reports obligations due soon when a window is set
+
+When the `project` header of `project.yaml` sets `due_warn_days` to an integer N greater than 0,
+`dsh-status.sh` MUST count a `pending` obligation as due soon when its `due` is on or after today and
+on or before today + N days, both in UTC. When `due_warn_days` is absent, 0, or not a plain integer,
+the hook MUST NOT report anything as due soon.
+
+When one or more obligations are due soon, the parenthetical on the ledger line MUST include a group
+`<M> due within <N>d: <ids>`, with at most three ids followed by `…` when there are more. When both
+groups are present, the overdue group MUST come first and the two MUST be separated by `; `. When
+neither is present, the ledger line MUST carry no parenthetical.
+
+The hook MUST compute today + N days without the network, trying GNU `date`, then BSD `date`, then
+`python3` with the standard library. If none works, it MUST omit the due-soon group and still print
+the overdue report.
+
+#### Scenario: The window is unset
+
+- **WHEN** `project.yaml` has no `due_warn_days` and a `pending` obligation is due tomorrow
+- **THEN** the ledger line carries no parenthetical
+
+#### Scenario: An obligation falls inside the window
+
+- **WHEN** `due_warn_days` is 14, `funder-report` is `pending` and due in 10 days, and
+  `ethics-renewal` is `pending` and past its date
+- **THEN** the ledger line ends `(1 overdue: ethics-renewal; 1 due within 14d: funder-report)`
+
+#### Scenario: The window boundaries
+
+- **WHEN** `due_warn_days` is 14 and `pending` obligations are due today, in 14 days and in 15 days
+- **THEN** the first two are due soon and the third is not
+
 ### Requirement: The overdue report is covered by the hooks selftest
 
 `tests/hooks-selftest.sh` MUST exercise the overdue report with ledger fixtures covering a past-due
 `pending` obligation, a future-dated `pending` one, a `met` one with a past date and a `pending`
-one with no date, in both block and flow style.
+one with no date, in both block and flow style. It MUST also exercise the due-soon window unset,
+set, and at its boundaries: due today, due on the last day of the window and due the day after.
 
 #### Scenario: The date check is removed
 
