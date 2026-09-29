@@ -888,6 +888,10 @@ conda env create -f environment.yml && conda activate ds-harness-e2e
 bash tests/e2e-smoke.sh
 ```
 
+The e2e suite's Zenodo block runs against sandbox.zenodo.org only when `DSH_ZENODO_SANDBOX_TOKEN` is
+set; [`docs/testing/archive-sandbox.md`](docs/testing/archive-sandbox.md) covers the token, what a
+pass shows, and the last run.
+
 Each check exits **2** when its own dependency is absent, so it degrades to a skip rather than a
 failure. [`.github/workflows/ci.yml`](.github/workflows/ci.yml) installs from the manifests and
 treats a 2 as an environment error, since the lock file should have supplied the dependency.

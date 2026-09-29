@@ -69,8 +69,11 @@ through the backend that owns the **source** DOI:
    that immutable state, you do not create or move tags.
 4. **Deposit and read the identifier** — follow the backend skill's steps to deposit, then read back
    the assigned DOI from the response field that skill names. Show the command/endpoint before
-   executing anything that publishes. For `relate`, follow the owning skill's **relate** step, which
-   reads the current record, merges, and confirms before writing or republishing.
+   executing anything that publishes. A Zenodo deposit of a product whose `dois` already hold a
+   Zenodo DOI follows the `zenodo` skill's new-version branch, so the release joins the same
+   concept DOI rather than starting an unrelated record. For `relate`, follow the owning skill's
+   **relate** step, which reads the current record, merges, and confirms before writing or
+   republishing.
 5. **Report** a structured result:
    ```
    op:        mint-doi | lookup-doi | deposit | relate | lookup-relations
