@@ -111,4 +111,21 @@ A findable test DOI would exercise `publish`, but it is permanent, so make it op
 
 ## Last run
 
-Not yet run.
+**2026-10-01** — `bash tests/e2e-smoke.sh` with `DSH_ZENODO_SANDBOX_TOKEN` set: **149 passed, 0
+failed**. The token appeared nowhere in the output.
+
+- Record `10.5072/zenodo.612395`, concept DOI `10.5072/zenodo.612394`.
+- Relate added `isSupplementTo 10.21105/joss.03262` once, kept the earlier `isDocumentedBy`
+  entry once, and the record kept its DOI.
+- New version `10.5072/zenodo.612396`, same concept DOI. The draft carried the previous file
+  (`deposit.txt`) forward.
+- Forced failure (bucket URL broken after create): the trap printed `cleanup: deleted unpublished
+  sandbox deposition 612385`, and a `GET` on that deposition then returned 404.
+
+The first live attempt failed at the relate republish, with HTTP 400 on `pids.doi`: "The prefix
+'10.5072' is managed by Zenodo. Please supply an external DOI…". Writing the read-back metadata
+unchanged sends the minted `doi` back, and Zenodo reads a supplied `doi` as an external one. The
+`zenodo` skill's step 9 and the test now drop `doi` and `prereserve_doi` before the `PUT`. The
+offline suite could not have caught this.
+
+Production Zenodo, OSF and DataCite remain unexercised.

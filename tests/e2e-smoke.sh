@@ -558,6 +558,9 @@ PY
   python3 - "$WORKDIR/zcur.json" "$WORKDIR/zput.json" <<'PY'
 import json, sys
 meta = json.load(open(sys.argv[1]))["metadata"]
+# Sending back the minted doi makes Zenodo treat it as external and reject the republish (400).
+for k in ("doi", "prereserve_doi"):
+    meta.pop(k, None)
 rels = meta.get("related_identifiers") or []
 new = {"identifier": "10.21105/joss.03262", "relation": "isSupplementTo", "resource_type": "publication-article"}
 def same(a, b):
@@ -580,6 +583,8 @@ PY
   NKEEP=$(zj "$WORKDIR/zafter.json" 'sum(1 for r in d["metadata"].get("related_identifiers", []) if "neurodatascience/data-science-harness" in r.get("identifier", "") and r.get("relation") == "isDocumentedBy")')
   assert "relate added the new relation exactly once, as isSupplementTo" "[ $NJOSS -eq 1 ]"
   assert "relate kept the earlier relation exactly once"                 "[ $NKEEP -eq 1 ]"
+  ZDOI_AFTER=$(zj "$WORKDIR/zafter.json" 'd.get("doi")')
+  assert "relate kept the record's DOI"                                  '[ "$ZDOI_AFTER" = "$ZDOI" ]'
 
   # mirrors zenodo skill step 6 (deposit, new-version branch): actions/newversion, links.latest_draft
   step "sandbox new version: create the draft" \

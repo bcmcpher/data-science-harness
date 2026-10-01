@@ -19,7 +19,7 @@
 - [x] 3.3 Assert that the publish response has `doi` starting with `10.5072/` and has a `conceptdoi`
 - [x] 3.4 Relate (skill step 9): `actions/edit`, GET, merge `isSupplementTo 10.21105/joss.03262` twice, PUT, publish, GET. Assert that both entries are present exactly once, with the relation spelled `isSupplementTo`
 - [x] 3.5 New version (task 1.1): `actions/newversion`, read `links.latest_draft`, upload a changed file under a new name, PUT metadata, publish. Assert a `10.5072/` `doi` that differs from the first, and a `conceptdoi` equal to the first
-- [ ] 3.6 Check the failure path by hand: with a token set, force a failing step after create, and confirm the draft is gone from the sandbox account and the token appears nowhere in the output
+- [x] 3.6 Check the failure path by hand: with a token set, force a failing step after create, and confirm the draft is gone from the sandbox account and the token appears nowhere in the output
 - [x] 3.7 Update the header comment of `e2e-smoke.sh` to list the archive blocks and their gates
 
 ## 4. Documentation
@@ -37,7 +37,7 @@
 
 ## 5. Record the result (after the user's run)
 
-- [ ] 5.1 Record in "Last run": the date, the pass/fail count, the two sandbox DOIs and the concept DOI, and whether the new-version draft carried the previous files
-- [ ] 5.2 If the run passed, narrow the caveats in `README.md` (lines 253-258 and the Status line) and `docs/motivation.md` (the capability-plane row). They should say that the Zenodo deposit path has run against the sandbox, and that production Zenodo, OSF and DataCite remain unexercised
-- [ ] 5.3 If it failed, fix the skill or the test (keep the D1 step comments in sync), then re-run before 5.2
-- [ ] 5.4 `openspec validate --all --strict` passes
+- [x] 5.1 Record in "Last run": the date, the pass/fail count, the two sandbox DOIs and the concept DOI, and whether the new-version draft carried the previous files
+- [x] 5.2 If the run passed, narrow the caveats in `README.md` (lines 253-258 and the Status line) and `docs/motivation.md` (the capability-plane row). They should say that the Zenodo deposit path has run against the sandbox, and that production Zenodo, OSF and DataCite remain unexercised
+- [x] 5.3 If it failed, fix the skill or the test (keep the D1 step comments in sync), then re-run before 5.2
+- [x] 5.4 `openspec validate --all --strict` passes

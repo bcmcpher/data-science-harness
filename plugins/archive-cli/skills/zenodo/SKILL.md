@@ -117,7 +117,10 @@ equivalents are listed under **Reference** so a migration changes this skill and
    ```
    Merge the new entries into the existing `metadata.related_identifiers` (do not drop existing ones,
    do not duplicate an identical one), `PUT` the full metadata as in step 7, confirm as in step 8,
-   then `actions/publish`. To abandon an edit, `POST .../actions/discard`. Each entry is:
+   then `actions/publish`. Before the `PUT`, delete `doi` and `prereserve_doi` from the metadata
+   you read back: Zenodo takes a supplied `doi` as an external DOI and rejects its own prefix, so
+   the republish fails with HTTP 400 on `pids.doi`. The record keeps its DOI without them. To
+   abandon an edit, `POST .../actions/discard`. Each entry is:
    ```json
    {"identifier": "10.x/y", "relation": "isSupplementTo", "resource_type": "dataset"}
    ```

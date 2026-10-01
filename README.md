@@ -2,7 +2,7 @@
 
 A community-driven, harness-agnostic collection of AI assistant configurations for academic data science work — skills, agents, commands, hooks, MCP configs, and planning templates. The content is harness-neutral Markdown; `bin/install.sh` installs to **Claude Code and OpenCode today**, and Cursor, GitHub Copilot, Windsurf and Gemini CLI are the harnesses the format is designed to reach next (see [Install](#install)).
 
-> **Status:** both planes are built — 37 planner skills over 21 plugins / 59 skills / 8 agents, specified by 22 specs in [`openspec/specs/`](openspec/specs). **Every capability now has a toolbox.** What that does not mean: **most paths have never been run against their real tool** — deposits, document builds, fetches and bundle emission are each gated, the gates are tested, and what sits behind them is not. Read that narrowly: it is a claim about deposits, document builds, fetches and bundle emission. `datalad` is a hard precondition of the e2e suite and is exercised against the real tool unconditionally, and six other capabilities have real-tool paths behind gates. What is distinctive about `containers` is that its whole Docker → OCI → `.sif` path was run end to end here — and, ironically, that it is the one real path CI cannot run, because apptainer is deliberately not installed there. The [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
+> **Status:** both planes are built — 37 planner skills over 21 plugins / 59 skills / 8 agents, specified by 22 specs in [`openspec/specs/`](openspec/specs). **Every capability now has a toolbox.** What that does not mean: **most paths have never been run against their real tool** — deposits, document builds, fetches and bundle emission are each gated, the gates are tested, and what sits behind them is not. The exception among deposits is Zenodo, whose deposit, relate and new-version path has run against the Zenodo sandbox (production Zenodo, OSF and DataCite have not). Read that narrowly: it is a claim about deposits, document builds, fetches and bundle emission. `datalad` is a hard precondition of the e2e suite and is exercised against the real tool unconditionally, and six other capabilities have real-tool paths behind gates. What is distinctive about `containers` is that its whole Docker → OCI → `.sif` path was run end to end here — and, ironically, that it is the one real path CI cannot run, because apptainer is deliberately not installed there. The [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
 
 ---
 
@@ -252,7 +252,9 @@ both produce containers that run, produce numbers, and do not rebuild.
 
 Unevenness in skill *count* is no longer the main gap, though. The sharper one is that **most of
 these paths have never run live.** The archive skills were written against the real OSF, Zenodo and
-DataCite APIs, but no deposit has been made through them. The same holds for MyST and Jupyter Book
+DataCite APIs. Only the Zenodo path has run, against sandbox.zenodo.org: deposit, publish, relate and
+new version ([last run](docs/testing/archive-sandbox.md#last-run)). Production Zenodo, OSF and
+DataCite have taken no deposit through them. The same holds for MyST and Jupyter Book
 builds, `repo2data` fetches, MCP bundle emission, and every annotate backend: each is gated, each
 gate is tested, and what sits behind the gate is not. A green test suite here is evidence about the
 gates, not about the tools.
