@@ -6,9 +6,9 @@
 
 ## 2. bin/test-envs
 
-- [ ] 2.1 `bin/test-envs sync [tool]`: `uv sync --locked --project tests/envs/<tool>`, then print `<tool>: <runtime --version>` from the env's own binary; all tools under `tests/envs/` when none is named
-- [ ] 2.2 `bin/test-envs check [tool]`: one line per env, `ok <version>` | `missing` | `stale` (via `uv sync --locked --check`); exit 0 all ok, 1 otherwise, 2 unknown tool; never modifies an env
-- [ ] 2.3 Exit 2 with a message when `uv` is not on `PATH`
+- [x] 2.1 `bin/test-envs sync [tool]`: `uv sync --locked --project tests/envs/<tool>`, then print `<tool>: <runtime --version>` from the env's own binary; all tools under `tests/envs/` when none is named
+- [x] 2.2 `bin/test-envs check [tool]`: one line per env, `ok <version>` | `missing` | `stale` (via `uv sync --locked --check`); exit 0 all ok, 1 otherwise, 2 unknown tool; never modifies an env
+- [x] 2.3 Exit 2 with a message when `uv` is not on `PATH`
 
 ## 3. e2e helper and fixtures
 

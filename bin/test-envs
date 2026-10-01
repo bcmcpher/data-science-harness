@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# Build and inspect the per-tool live test environments under tests/envs/.
+#
+# Each tests/envs/<tool>/ is a uv project that pins one wrapped tool (nipoppy, bagel, ...) with a
+# committed uv.lock. tests/e2e-smoke.sh runs that tool for real when its env is present and in
+# step with the lock, and skips the section otherwise. These envs are not check dependencies and
+# not harness dependencies; see tests/envs/<tool>/pyproject.toml.
+
+set -euo pipefail
+
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+ENVS="$ROOT/tests/envs"
+
+usage() {
+  cat <<'USAGE'
+Usage: bin/test-envs sync|check [tool]
+
+  sync [tool]    uv sync --locked each env, then print `<tool>: <version>` from the env itself
+  check [tool]   print `<tool>: ok <version>`, `<tool>: missing` or `<tool>: stale`; changes nothing
+
+With no tool named, act on every directory under tests/envs/.
+Exit: 0 all ok, 1 a sync failed or an env is missing/stale, 2 usage error or uv not found.
+USAGE
+}
+
+die_usage() { printf 'ERROR: %s\n' "$*" >&2; usage >&2; exit 2; }
+
+# The tool's version as the env itself reports it: its CLI's --version when it has one, else the
+# installed distribution's metadata. Runtime, not the lock, because that is what the doers record.
+tool_version() {
+  local tool=$1 bin="$ENVS/$1/.venv/bin" out
+  # CLIs disagree on the shape (`bagel 0.11.6`, `nipoppy, version 0.4.7`), so keep the number only.
+  if [ -x "$bin/$tool" ] && out=$("$bin/$tool" --version 2>/dev/null </dev/null) \
+     && out=$(printf '%s\n' "$out" | grep -oE '[0-9]+\.[0-9]+[0-9A-Za-z.+-]*' | head -n1) && [ -n "$out" ]; then
+    printf '%s\n' "$out"
+    return
+  fi
+  "$bin/python" -c 'import importlib.metadata as m, sys; print(m.version(sys.argv[1]))' "$tool" 2>/dev/null \
+    || printf 'unknown\n'
+}
+
+[ $# -ge 1 ] || die_usage "no command"
+cmd=$1; shift
+case "$cmd" in
+  -h|--help) usage; exit 0 ;;
+  sync|check) ;;
+  *) die_usage "unknown command: $cmd" ;;
+esac
+[ $# -le 1 ] || die_usage "at most one tool"
+
+command -v uv >/dev/null 2>&1 || { printf 'ERROR: uv not found on PATH (https://docs.astral.sh/uv/)\n' >&2; exit 2; }
+
+if [ $# -eq 1 ]; then
+  [ -f "$ENVS/$1/pyproject.toml" ] || die_usage "unknown tool: $1 (no tests/envs/$1/pyproject.toml)"
+  tools=("$1")
+else
+  tools=()
+  for d in "$ENVS"/*/; do
+    [ -f "$d/pyproject.toml" ] && tools+=("$(basename "$d")")
+  done
+fi
+
+rc=0
+for tool in "${tools[@]}"; do
+  proj="$ENVS/$tool"
+  if [ "$cmd" = sync ]; then
+    if uv sync --locked --quiet --project "$proj"; then
+      printf '%s: %s\n' "$tool" "$(tool_version "$tool")"
+    else
+      printf '%s: sync failed\n' "$tool"; rc=1
+    fi
+  else
+    if [ ! -x "$proj/.venv/bin/python" ]; then
+      printf '%s: missing\n' "$tool"; rc=1
+    elif uv sync --locked --check --quiet --project "$proj" >/dev/null 2>&1; then
+      printf '%s: ok %s\n' "$tool" "$(tool_version "$tool")"
+    else
+      printf '%s: stale\n' "$tool"; rc=1
+    fi
+  fi
+done
+exit $rc
