@@ -50,6 +50,18 @@ assert_grep() { if grep -qE "$2" "$3" 2>/dev/null; then ok "$1"; else bad "$1  [
 # passes the `import yaml` gate on the blocks below) produced a wall of spurious FAILs.
 skip() { printf '  SKIP: %s\n' "$1"; }
 assert_ledger() { if [ "$2" -eq 2 ]; then skip "$1 — ledger validator dependency absent"; else assert "$1" "[ $2 -eq 0 ]"; fi; }
+# tool_env_ready <name> — true when tests/envs/<name> is synced and matches its lock. Otherwise it
+# prints the skip reason: a missing or stale env is a setup state, not a harness defect.
+tool_env_ready() {
+  local state
+  state=$("$REPO/bin/test-envs" check "$1" 2>&1) && return 0
+  skip "$1 env ${state#"$1": } — run bin/test-envs sync $1"
+  return 1
+}
+# tool_env <name> <cmd...> — run a command with the env's bin/ first on PATH, in a subshell so the
+# change does not reach later sections. Not activation: the gate scripts find the tool, and the
+# env's python3, through PATH exactly as a user's install would be found.
+tool_env() { local name=$1; shift; ( PATH="$REPO/tests/envs/$name/.venv/bin:$PATH"; "$@" ); }
 # dsh <op> <stage> <subject> [extra DSH line]... — a harness commit message: one string, subject,
 # blank line, DSH lines. Passed as a single -m, because DataLad keeps only the last of several.
 dsh() { local op=$1 stage=$2 subj=$3; shift 3; printf '%s\n\nDSH-Op: %s\nDSH-Stage: %s' "$subj" "$op" "$stage"; for l in "$@"; do printf '\n%s' "$l"; done; }

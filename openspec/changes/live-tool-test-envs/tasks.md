@@ -12,11 +12,11 @@
 
 ## 3. e2e helper and fixtures
 
-- [ ] 3.1 Add `tool_env <name> <cmd…>` to the helpers block of `tests/e2e-smoke.sh` (beside `ok`/`bad`/`assert`/`skip`): subshell, `tests/envs/<name>/.venv/bin` prepended to `PATH`; a companion `tool_env_ready <name>` that calls `bin/test-envs check <name>` and prints the skip reason
-- [ ] 3.2 `tests/fixtures/live/nipoppy/manifest.tsv`: one participant, one visit/session, columns as `nipoppy init`'s template manifest has them
-- [ ] 3.3 `tests/fixtures/live/bids/`: `dataset_description.json`, `participants.tsv`, `sub-01/anat/sub-01_T1w.json`; a stdlib-only writer for `sub-01_T1w.nii.gz` run at test time
-- [ ] 3.4 `tests/fixtures/live/reproschema/`: minimal protocol → one activity → one item, from the ReproSchema examples; source recorded
-- [ ] 3.5 `tests/fixtures/live/bagel/participants.{tsv,json}` and a dataset description: copied from Neurobagel's published example data with source and licence recorded in a README beside them; no hand-written term identifiers
+- [x] 3.1 Add `tool_env <name> <cmd…>` to the helpers block of `tests/e2e-smoke.sh` (beside `ok`/`bad`/`assert`/`skip`): subshell, `tests/envs/<name>/.venv/bin` prepended to `PATH`; a companion `tool_env_ready <name>` that calls `bin/test-envs check <name>` and prints the skip reason
+- [x] 3.2 `tests/fixtures/live/nipoppy/manifest.tsv`: one participant, one visit/session, columns as `nipoppy init`'s template manifest has them
+- [x] 3.3 `tests/fixtures/live/bids/`: `dataset_description.json`, `participants.tsv`, `sub-01/anat/sub-01_T1w.json`; a stdlib-only writer for `sub-01_T1w.nii.gz` run at test time
+- [x] 3.4 `tests/fixtures/live/reproschema/`: minimal protocol → one activity → one item, from the ReproSchema examples; source recorded
+- [x] 3.5 `tests/fixtures/live/bagel/participants.{tsv,json}` and a dataset description: copied from Neurobagel's published example data with source and licence recorded in a README beside them; no hand-written term identifiers
 
 ## 4. Live e2e sections
 

@@ -1,0 +1,7 @@
+{
+  "Name": "data-science-harness live tool fixture",
+  "BIDSVersion": "1.10.0",
+  "DatasetType": "raw",
+  "License": "CC0",
+  "Authors": ["Harness, Test"]
+}
