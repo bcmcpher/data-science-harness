@@ -56,6 +56,14 @@ committed `uv.lock` pins the rest. `bin/test-envs sync` always passes `--locked`
 re-resolves. A version bump is `uv lock --project tests/envs/<tool> --upgrade-package <pkg>`
 together with an edit to the `==`: one reviewable diff that then drives the refinement loop.
 
+Pins as locked on 2026-10-01: `nipoppy==0.4.7`, `bagel==0.11.6`, `pynidm==4.5.5`,
+`reproschema==1.1.0`. nipoppy moved on from the 0.4.5 the Context probe used, so every nipoppy row
+there is re-checked against 0.4.7 in task 5.2. PyPI has no `bagel-cli`; `bagel` is the Neurobagel
+CLI. One floor departs from the tool's own: pynidm declares `>=3.8`, but at that floor uv forks the
+resolution and picks `prov` 2.x for 3.8-3.9, which has no `graph` extra (266 packages, with
+warnings). The repository's own floor, `>=3.10`, leaves one resolution with `prov` 3.2.2 (153
+packages).
+
 *Alternative: dependency groups in the root `pyproject.toml` (`test-nipoppy`, …).* Rejected. One
 `uv.lock` resolves all groups together, so one tool's pin can force another's downgrade, and a bump
 to `bagel` rewrites the lint's lock file.

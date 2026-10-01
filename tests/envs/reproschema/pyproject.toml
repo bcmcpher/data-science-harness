@@ -1,0 +1,19 @@
+# Live tool test environment: reproschema.
+#
+# SCOPE: installs the real `reproschema` so tests/e2e-smoke.sh can run the command lines its toolbox
+# skill teaches against the tool itself. It is not a check dependency (see the root
+# pyproject.toml) and not a harness dependency: a user installing plugins needs none of this.
+#
+#   bin/test-envs sync reproschema     # uv sync --locked --project tests/envs/reproschema
+#
+# The `==` pin is the version under test. A bump is `uv lock --project tests/envs/reproschema
+# --upgrade-package reproschema` together with an edit to the pin, and re-runs the refinement loop.
+
+[project]
+name = "dsh-test-env-reproschema"
+version = "0.0.0"
+requires-python = ">=3.10"
+dependencies = ["reproschema==1.1.0"]
+
+[tool.uv]
+package = false

@@ -1,8 +1,8 @@
 ## 1. Per-tool environments
 
-- [ ] 1.1 Create `tests/envs/{nipoppy,bagel,pynidm,reproschema}/pyproject.toml`: `[tool.uv] package = false`, one direct dependency pinned `==` to the current PyPI release (confirm the Neurobagel package name is `bagel` on PyPI), a `requires-python` floor from the tool, and a header comment stating scope (live tool tests only; not a check dependency; not a harness dependency)
-- [ ] 1.2 `uv lock --project tests/envs/<tool>` for each; commit the four `uv.lock` files
-- [ ] 1.3 Confirm `git check-ignore tests/envs/nipoppy/.venv` matches the existing `.venv/` rule; add nothing to `.gitignore` if it does
+- [x] 1.1 Create `tests/envs/{nipoppy,bagel,pynidm,reproschema}/pyproject.toml`: `[tool.uv] package = false`, one direct dependency pinned `==` to the current PyPI release (confirm the Neurobagel package name is `bagel` on PyPI), a `requires-python` floor from the tool, and a header comment stating scope (live tool tests only; not a check dependency; not a harness dependency)
+- [x] 1.2 `uv lock --project tests/envs/<tool>` for each; commit the four `uv.lock` files
+- [x] 1.3 Confirm `git check-ignore tests/envs/nipoppy/.venv` matches the existing `.venv/` rule; add nothing to `.gitignore` if it does
 
 ## 2. bin/test-envs
 
