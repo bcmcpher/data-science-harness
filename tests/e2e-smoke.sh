@@ -22,6 +22,13 @@
 # from the local Docker `hello-world:latest` image (via `docker save` -> docker-archive://,
 # because apptainer 1.1.x speaks too old a Docker API to read the daemon directly).
 #
+# The archive section always asserts the offline readiness gate for zenodo and osf, and prints
+# SKIP lines for the OSF and DataCite live deposits, which have no test account and must never
+# reach production. The Zenodo sandbox cycle (create, upload, metadata, publish, relate, new
+# version) is GATED on DSH_ZENODO_SANDBOX_TOKEN and curl, talks only to sandbox.zenodo.org, never
+# reads ZENODO_TOKEN, and deletes its unpublished draft if a step fails. Each run leaves two
+# published sandbox records. See docs/testing/archive-sandbox.md.
+#
 # Requirements: git (with user.name/user.email set — DataLad needs an identity and `push`
 # fails without one), python3, and a DataLad whose git-annex is >= 10.20230126.
 #
@@ -48,7 +55,30 @@ assert_ledger() { if [ "$2" -eq 2 ]; then skip "$1 — ledger validator dependen
 dsh() { local op=$1 stage=$2 subj=$3; shift 3; printf '%s\n\nDSH-Op: %s\nDSH-Stage: %s' "$subj" "$op" "$stage"; for l in "$@"; do printf '\n%s' "$l"; done; }
 
 WORKDIR="${1:-$(mktemp -d "${TMPDIR:-/tmp}/dsh-e2e.XXXXXX")}"
-cleanup() { chmod -R u+w "$WORKDIR" 2>/dev/null || true; rm -rf "$WORKDIR"; }
+# The Zenodo sandbox block records what it would leave behind if it died: an unpublished deposition
+# (ZCLEAN_DELETE) or a published record open for edit (ZCLEAN_DISCARD). zenodo_cleanup removes
+# either before $WORKDIR, which holds the token's header file, is deleted. It ignores errors and
+# never prints the token. Published records cannot be deleted and are left in place.
+ZCLEAN_DELETE=""; ZCLEAN_DISCARD=""
+zenodo_cleanup() {
+  { [ -n "${ZAUTH:-}" ] && [ -f "$ZAUTH" ]; } || return 0
+  if [ -n "$ZCLEAN_DELETE" ]; then
+    if curl -fsS -X DELETE -H @"$ZAUTH" -o /dev/null "$ZAPI/deposit/depositions/$ZCLEAN_DELETE" >/dev/null 2>&1; then
+      echo "  cleanup: deleted unpublished sandbox deposition $ZCLEAN_DELETE" >&2
+    else
+      echo "  cleanup: could not delete sandbox deposition $ZCLEAN_DELETE; remove it by hand" >&2
+    fi
+  fi
+  if [ -n "$ZCLEAN_DISCARD" ]; then
+    if curl -fsS -X POST -H @"$ZAUTH" -o /dev/null "$ZAPI/deposit/depositions/$ZCLEAN_DISCARD/actions/discard" >/dev/null 2>&1; then
+      echo "  cleanup: discarded the open edit of sandbox record $ZCLEAN_DISCARD" >&2
+    else
+      echo "  cleanup: could not discard the edit of sandbox record $ZCLEAN_DISCARD; discard it by hand" >&2
+    fi
+  fi
+  return 0
+}
+cleanup() { zenodo_cleanup; chmod -R u+w "$WORKDIR" 2>/dev/null || true; rm -rf "$WORKDIR"; }
 trap cleanup EXIT
 mkdir -p "$WORKDIR"
 REPO="$(cd "$(dirname "$0")/.." && pwd)"   # repo root, for schemas/ + examples/
@@ -425,44 +455,169 @@ assert "readiness never prints the credential value" '! grep -q dsh-sentinel-sec
 BRC=$(rc_of bash "$READY" figshare)
 assert "unknown backend is a usage error (exit 2)" "[ $BRC -eq 2 ]"
 
-# The credentialed branch publishes a real record, so it runs only against the Zenodo sandbox and
-# only when DSH_ZENODO_SANDBOX_TOKEN is set. Sandbox DOIs carry the 10.5072 test prefix and resolve
-# nowhere public, so the assertion checks the prefix rather than resolution. The token goes through a
-# header file so a failing `step` cannot print it in its command echo.
+# OSF has its own logic: the datalad-osf extension, plus OSF_TOKEN or both OSF_USERNAME and
+# OSF_PASSWORD. Whether the extension is importable decides what a sentinel token reaches.
+NOOSF=(env -u OSF_TOKEN -u OSF_USERNAME -u OSF_PASSWORD)
+ORC=$(rc_of "${NOOSF[@]}" bash "$READY" osf)
+assert "osf readiness exits 1 without credentials" "[ $ORC -eq 1 ]"
+"${NOOSF[@]}" bash "$READY" osf > "$WORKDIR/ready-osf.txt" 2>&1 || true
+assert_grep "osf readiness reports result: unminted" "^result: unminted$"  "$WORKDIR/ready-osf.txt"
+assert_grep "osf readiness names OSF_TOKEN"          "^missing: OSF_TOKEN$" "$WORKDIR/ready-osf.txt"
+"${NOOSF[@]}" OSF_USERNAME=dsh-sentinel-user bash "$READY" osf > "$WORKDIR/ready-osf-user.txt" 2>&1 || true
+assert_grep "osf username without password still names OSF_TOKEN" "^missing: OSF_TOKEN$" "$WORKDIR/ready-osf-user.txt"
+ORC=$(rc_of "${NOOSF[@]}" OSF_TOKEN=dsh-sentinel-secret bash "$READY" osf)
+"${NOOSF[@]}" OSF_TOKEN=dsh-sentinel-secret bash "$READY" osf > "$WORKDIR/ready-osf-tok.txt" 2>&1 || true
+assert "osf readiness never prints the credential value" '! grep -q dsh-sentinel-secret "$WORKDIR/ready-osf-tok.txt"'
+if python3 -c 'import datalad_osf' 2>/dev/null; then
+  assert "osf readiness exits 0 with a token and datalad-osf present" "[ $ORC -eq 0 ]"
+else
+  assert "osf readiness exits 1 with a token but no datalad-osf" "[ $ORC -eq 1 ]"
+  assert_grep "osf readiness names the missing extension" "^missing: datalad-osf extension$" "$WORKDIR/ready-osf-tok.txt"
+  assert "osf readiness does not ask for a token it has" '! grep -q "^missing: OSF_TOKEN$" "$WORKDIR/ready-osf-tok.txt"'
+fi
+
+# Live deposits that are deliberately not run. These do not look at credentials: an OSF or DataCite
+# credential in the environment is a production one, and nothing here may publish to production.
+# docs/testing/archive-sandbox.md says what each would need.
+skip "OSF live deposit — no test account; not exercised by this suite"
+skip "DataCite live deposit — no test account; not exercised by this suite"
+
+# The credentialed branch publishes real records, so it runs only against the Zenodo sandbox and
+# only when DSH_ZENODO_SANDBOX_TOKEN is set; ZENODO_TOKEN, which may be a production token, is never
+# read. Sandbox DOIs carry the 10.5072 test prefix and resolve nowhere public, so the assertions
+# check the prefix rather than resolution. The token goes through a header file so a failing `step`
+# cannot print it in its command echo. Each step names the zenodo skill step it mirrors
+# (plugins/archive-cli/skills/zenodo/SKILL.md). Every run leaves two published sandbox records.
 if [ -z "${DSH_ZENODO_SANDBOX_TOKEN:-}" ]; then
   echo "  SKIP: Zenodo sandbox deposit (set DSH_ZENODO_SANDBOX_TOKEN to run it)"
 elif ! command -v curl >/dev/null; then
   echo "  SKIP: Zenodo sandbox deposit — curl not on PATH"
 else
+  echo "  Zenodo sandbox cycle: create, upload, metadata, publish, relate, new version"
   ZAPI=https://sandbox.zenodo.org/api
   ZAUTH="$WORKDIR/zenodo-auth.header"
   ( umask 077; printf 'Authorization: Bearer %s\n' "$DSH_ZENODO_SANDBOX_TOKEN" > "$ZAUTH" )
-  step "sandbox: create deposition" \
-    curl -fsS -X POST -H @"$ZAUTH" -H 'Content-Type: application/json' -d '{}' \
-         -o "$WORKDIR/zdep.json" "$ZAPI/deposit/depositions"
-  ZID=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["id"])' "$WORKDIR/zdep.json")
-  ZBUCKET=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["links"]["bucket"])' "$WORKDIR/zdep.json")
-  printf 'data-science-harness e2e sandbox deposit\n' > "$WORKDIR/deposit.txt"
-  step "sandbox: upload file to bucket" \
-    curl -fsS -X PUT -H @"$ZAUTH" --upload-file "$WORKDIR/deposit.txt" -o /dev/null "$ZBUCKET/deposit.txt"
-  python3 - "$WORKDIR/zmeta.json" <<'PY'
+  # zj <file> <python expression over d> — one field of a saved JSON response.
+  zj() { python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); v=eval(sys.argv[2]); print("" if v is None else v)' "$1" "$2"; }
+  # zmeta <out> <title> <version> <related_identifiers JSON file> — the full metadata (skill step 7).
+  zmeta() {
+    python3 - "$@" <<'PY'
 import json, sys
+out, title, version, rel = sys.argv[1:5]
 json.dump({"metadata": {
     "upload_type": "dataset",
-    "title": "data-science-harness e2e sandbox deposit",
+    "title": title,
     "creators": [{"name": "Harness, Test"}],
     "description": "Created by tests/e2e-smoke.sh against the Zenodo sandbox.",
     "access_right": "open",
     "license": "cc-by-4.0",
-}}, open(sys.argv[1], "w"))
+    "version": version,
+    "related_identifiers": json.load(open(rel)),
+}}, open(out, "w"))
 PY
+  }
+  ZTITLE="data-science-harness e2e sandbox deposit $(date -u +%FT%TZ)"
+  # The earlier relation that relate must keep. Zenodo spells relation in lowerCamelCase.
+  printf '[{"identifier": "https://github.com/neurodatascience/data-science-harness", "relation": "isDocumentedBy", "resource_type": "software"}]\n' \
+    > "$WORKDIR/zrel0.json"
+
+  # mirrors zenodo skill step 6 (deposit): create the deposition
+  step "sandbox: create deposition" \
+    curl -fsS -X POST -H @"$ZAUTH" -H 'Content-Type: application/json' -d '{}' \
+         -o "$WORKDIR/zdep.json" "$ZAPI/deposit/depositions"
+  ZID=$(zj "$WORKDIR/zdep.json" 'd["id"]')
+  ZCLEAN_DELETE=$ZID
+  ZBUCKET=$(zj "$WORKDIR/zdep.json" 'd["links"]["bucket"]')
+  # mirrors zenodo skill step 6 (deposit): upload through the bucket
+  printf 'data-science-harness e2e sandbox deposit, version 1\n' > "$WORKDIR/deposit.txt"
+  step "sandbox: upload file to bucket" \
+    curl -fsS -X PUT -H @"$ZAUTH" --upload-file "$WORKDIR/deposit.txt" -o /dev/null "$ZBUCKET/deposit.txt"
+  # mirrors zenodo skill step 7 (deposit): set the full metadata
+  zmeta "$WORKDIR/zmeta.json" "$ZTITLE" v0.1.0 "$WORKDIR/zrel0.json"
   step "sandbox: set metadata" \
     curl -fsS -X PUT -H @"$ZAUTH" -H 'Content-Type: application/json' --data @"$WORKDIR/zmeta.json" \
          -o /dev/null "$ZAPI/deposit/depositions/$ZID"
+  # mirrors zenodo skill step 8 (deposit): publish, then read doi and conceptdoi from the response
   step "sandbox: publish" \
     curl -fsS -X POST -H @"$ZAUTH" -o "$WORKDIR/zpub.json" "$ZAPI/deposit/depositions/$ZID/actions/publish"
-  ZDOI=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("doi", ""))' "$WORKDIR/zpub.json")
+  ZCLEAN_DELETE=""
+  ZDOI=$(zj "$WORKDIR/zpub.json" 'd.get("doi")')
+  ZCONCEPT=$(zj "$WORKDIR/zpub.json" 'd.get("conceptdoi")')
+  echo "  sandbox record $ZID: doi $ZDOI, concept doi $ZCONCEPT"
   assert "sandbox publish returned a test-prefix DOI (10.5072)" '[[ "$ZDOI" == 10.5072/* ]]'
+  assert "sandbox publish returned a concept DOI"               '[ -n "$ZCONCEPT" ]'
+
+  # mirrors zenodo skill step 9 (relate): edit, read, merge, write, republish, read back
+  step "sandbox relate: open the published record for edit" \
+    curl -fsS -X POST -H @"$ZAUTH" -o /dev/null "$ZAPI/deposit/depositions/$ZID/actions/edit"
+  ZCLEAN_DISCARD=$ZID
+  step "sandbox relate: read the current record" \
+    curl -fsS -H @"$ZAUTH" -o "$WORKDIR/zcur.json" "$ZAPI/deposit/depositions/$ZID"
+  # The skill's merge rule: keep existing entries and do not duplicate an identical one. Merging the
+  # same new entry twice must still leave it once.
+  python3 - "$WORKDIR/zcur.json" "$WORKDIR/zput.json" <<'PY'
+import json, sys
+meta = json.load(open(sys.argv[1]))["metadata"]
+# Sending back the minted doi makes Zenodo treat it as external and reject the republish (400).
+for k in ("doi", "prereserve_doi"):
+    meta.pop(k, None)
+rels = meta.get("related_identifiers") or []
+new = {"identifier": "10.21105/joss.03262", "relation": "isSupplementTo", "resource_type": "publication-article"}
+def same(a, b):
+    return a.get("identifier", "").lower() == b["identifier"].lower() and a.get("relation") == b["relation"]
+for _ in range(2):
+    if not any(same(r, new) for r in rels):
+        rels.append(dict(new))
+meta["related_identifiers"] = rels
+json.dump({"metadata": meta}, open(sys.argv[2], "w"))
+PY
+  step "sandbox relate: write the merged metadata" \
+    curl -fsS -X PUT -H @"$ZAUTH" -H 'Content-Type: application/json' --data @"$WORKDIR/zput.json" \
+         -o /dev/null "$ZAPI/deposit/depositions/$ZID"
+  step "sandbox relate: republish" \
+    curl -fsS -X POST -H @"$ZAUTH" -o /dev/null "$ZAPI/deposit/depositions/$ZID/actions/publish"
+  ZCLEAN_DISCARD=""
+  step "sandbox relate: read the record back" \
+    curl -fsS -H @"$ZAUTH" -o "$WORKDIR/zafter.json" "$ZAPI/deposit/depositions/$ZID"
+  NJOSS=$(zj "$WORKDIR/zafter.json" 'sum(1 for r in d["metadata"].get("related_identifiers", []) if r.get("identifier", "").lower().endswith("10.21105/joss.03262") and r.get("relation") == "isSupplementTo")')
+  NKEEP=$(zj "$WORKDIR/zafter.json" 'sum(1 for r in d["metadata"].get("related_identifiers", []) if "neurodatascience/data-science-harness" in r.get("identifier", "") and r.get("relation") == "isDocumentedBy")')
+  assert "relate added the new relation exactly once, as isSupplementTo" "[ $NJOSS -eq 1 ]"
+  assert "relate kept the earlier relation exactly once"                 "[ $NKEEP -eq 1 ]"
+  ZDOI_AFTER=$(zj "$WORKDIR/zafter.json" 'd.get("doi")')
+  assert "relate kept the record's DOI"                                  '[ "$ZDOI_AFTER" = "$ZDOI" ]'
+
+  # mirrors zenodo skill step 6 (deposit, new-version branch): actions/newversion, links.latest_draft
+  step "sandbox new version: create the draft" \
+    curl -fsS -X POST -H @"$ZAUTH" -o "$WORKDIR/znv.json" "$ZAPI/deposit/depositions/$ZID/actions/newversion"
+  ZDRAFT_URL=$(zj "$WORKDIR/znv.json" 'd["links"]["latest_draft"]')
+  step "sandbox new version: read the draft" \
+    curl -fsS -H @"$ZAUTH" -o "$WORKDIR/zdraft.json" "$ZDRAFT_URL"
+  ZID2=$(zj "$WORKDIR/zdraft.json" 'd["id"]')
+  ZCLEAN_DELETE=$ZID2
+  ZBUCKET2=$(zj "$WORKDIR/zdraft.json" 'd["links"]["bucket"]')
+  ZCARRIED=$(zj "$WORKDIR/zdraft.json" '",".join(f.get("filename") or f.get("key", "") for f in d.get("files") or []) or "none"')
+  echo "  new-version draft $ZID2 carried files: $ZCARRIED"
+  assert "new version is a different deposition" '[ "$ZID2" != "$ZID" ]'
+  # A changed file under a new name, so publish succeeds whether or not the old file is carried over.
+  printf 'data-science-harness e2e sandbox deposit, version 2\n' > "$WORKDIR/deposit-v2.txt"
+  step "sandbox new version: upload the changed file" \
+    curl -fsS -X PUT -H @"$ZAUTH" --upload-file "$WORKDIR/deposit-v2.txt" -o /dev/null "$ZBUCKET2/deposit-v2.txt"
+  # mirrors zenodo skill step 7: the full metadata, with version set to the new tag
+  zj "$WORKDIR/zafter.json" '__import__("json").dumps(d["metadata"].get("related_identifiers", []))' > "$WORKDIR/zrel1.json"
+  zmeta "$WORKDIR/zmeta2.json" "$ZTITLE" v0.2.0 "$WORKDIR/zrel1.json"
+  step "sandbox new version: set metadata" \
+    curl -fsS -X PUT -H @"$ZAUTH" -H 'Content-Type: application/json' --data @"$WORKDIR/zmeta2.json" \
+         -o /dev/null "$ZAPI/deposit/depositions/$ZID2"
+  # mirrors zenodo skill step 8: publish
+  step "sandbox new version: publish" \
+    curl -fsS -X POST -H @"$ZAUTH" -o "$WORKDIR/zpub2.json" "$ZAPI/deposit/depositions/$ZID2/actions/publish"
+  ZCLEAN_DELETE=""
+  ZDOI2=$(zj "$WORKDIR/zpub2.json" 'd.get("doi")')
+  ZCONCEPT2=$(zj "$WORKDIR/zpub2.json" 'd.get("conceptdoi")')
+  echo "  sandbox record $ZID2: doi $ZDOI2, concept doi $ZCONCEPT2"
+  assert "new version returned a test-prefix DOI (10.5072)" '[[ "$ZDOI2" == 10.5072/* ]]'
+  assert "new version has its own DOI"                      '[ -n "$ZDOI2" ] && [ "$ZDOI2" != "$ZDOI" ]'
+  assert "new version shares the concept DOI"               '[ -n "$ZCONCEPT2" ] && [ "$ZCONCEPT2" = "$ZCONCEPT" ]'
 fi
 
 # =========================================================== link-outputs (Phase 2 capstone)

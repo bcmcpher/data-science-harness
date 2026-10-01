@@ -19,8 +19,10 @@ Even a passing run of that block would leave most of the Zenodo skill untested:
   (the `datalad-osf` extension, plus `OSF_TOKEN` or `OSF_USERNAME` and `OSF_PASSWORD`). Only the
   Zenodo gate and the unknown-backend usage error are asserted (lines 410-426).
 
-The user has a Zenodo sandbox account and no OSF test or DataCite test account. The Zenodo path is
-therefore the one that can be exercised now.
+The user has a Zenodo sandbox account. Their OSF account is pending verification, and the OSF test
+server accepts no anonymous writes. They have no DataCite test account, which DataCite issues free to
+integration developers on request (design D5). The Zenodo path is therefore the one that can be
+exercised now.
 
 ## What Changes
 
@@ -43,7 +45,7 @@ therefore the one that can be exercised now.
   the credential value is never printed. Whether a sentinel token reaches `result: ready` depends on
   whether `datalad_osf` is importable, and the assertion branches on that.
 - **OSF and DataCite live blocks are named and skipped** with the stated reason (no test account),
-  so the log shows what was not run.
+  so the log shows what was not run. The doc records how each would be enabled.
 - **`docs/testing/archive-sandbox.md`**: how to get a sandbox.zenodo.org token with the
   `deposit:write` and `deposit:actions` scopes, export `DSH_ZENODO_SANDBOX_TOKEN`, and run the
   e2e suite in the conda `datalad` env. It also says what a pass proves and what it does not.

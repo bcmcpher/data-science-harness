@@ -42,7 +42,8 @@ equivalents are listed under **Reference** so a migration changes this skill and
 
 3. **Determine the operation** — from `$ARGUMENTS` or context:
    - **check** (default): step 1 only.
-   - **deposit**: steps 4-8.
+   - **deposit**: steps 4-8. If the product's `dois` already hold a Zenodo DOI, step 6 takes its
+     new-version branch.
    - **relate**: step 9.
    - **lookup**: step 10.
 
@@ -69,6 +70,24 @@ equivalents are listed under **Reference** so a migration changes this skill and
    ```
    Ignore `metadata.prereserve_doi` in the response: it is always present, and its `10.5281` prefix
    is wrong on the sandbox. The DOI is read after publishing.
+
+   **New version of a deposited product.** When the product's `dois` already hold a Zenodo DOI
+   (`10.5281/zenodo.*`, or `10.5072/zenodo.*` on the sandbox), do not create a deposition. A new
+   deposition would get an unrelated record and a new concept DOI. Create a new version of the
+   latest published record instead:
+   ```bash
+   curl -fsS -X POST -H @"$ZAUTH" \
+        "$ZENODO_API/deposit/depositions/<latest record id>/actions/newversion" > newversion.json
+   # the new draft is at links.latest_draft; GET it and read its `id`, `links.bucket` and `files`
+   curl -fsS -H @"$ZAUTH" "<links.latest_draft>" > deposition.json
+   curl -fsS -X PUT -H @"$ZAUTH" --upload-file <archive> "<links.bucket>/<filename>"
+   ```
+   The draft carries the previous version's files. Delete each one the new archive replaces with
+   `DELETE <files[].links.self>`. Then continue at step 7 with the draft's `id`: send the full
+   metadata, with `version` set to the new tag, and publish with the same confirmation as step 8.
+   The response's `doi` is new and its `conceptdoi` is unchanged. Append the new `doi` to the
+   product's `dois`. If you abandon the draft before publishing, delete it with
+   `DELETE $ZENODO_API/deposit/depositions/<draft id>`.
 
 7. **Set metadata** — `PUT` replaces the whole metadata block, so send the complete object:
    ```bash
@@ -98,7 +117,10 @@ equivalents are listed under **Reference** so a migration changes this skill and
    ```
    Merge the new entries into the existing `metadata.related_identifiers` (do not drop existing ones,
    do not duplicate an identical one), `PUT` the full metadata as in step 7, confirm as in step 8,
-   then `actions/publish`. To abandon an edit, `POST .../actions/discard`. Each entry is:
+   then `actions/publish`. Before the `PUT`, delete `doi` and `prereserve_doi` from the metadata
+   you read back: Zenodo takes a supplied `doi` as an external DOI and rejects its own prefix, so
+   the republish fails with HTTP 400 on `pids.doi`. The record keeps its DOI without them. To
+   abandon an edit, `POST .../actions/discard`. Each entry is:
    ```json
    {"identifier": "10.x/y", "relation": "isSupplementTo", "resource_type": "dataset"}
    ```
@@ -140,3 +162,5 @@ inverses.
   command line, a saved file inside the dataset, or a report.
 - On an HTTP error, surface Zenodo's message and stop. Do not retry a publish that may have
   succeeded; read the deposition's state first.
+- `tests/e2e-smoke.sh` mirrors these steps against the sandbox, and each test step names the
+  step number it mirrors. A change to a step here changes the matching test lines too.

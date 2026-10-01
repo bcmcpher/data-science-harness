@@ -94,6 +94,21 @@ not see those failures, and per-step handling would repeat itself at every call.
 credentials. Even with OSF credentials set, the block must not run against production. The skill
 says `datalad-osf` has not been verified against `api.test.osf.io`.
 
+Access was checked on 2026-09-29, before implementation:
+
+- **OSF test server.** `https://api.test.osf.io/v2/` answers anonymous reads, but an anonymous
+  `POST /v2/nodes/` returns 401. test.osf.io accounts are separate from production ones, so an OSF
+  live block needs a verified test.osf.io account and a token from it. The user's OSF account is
+  pending verification. Nothing can be written anonymously, so there is no anonymous live test.
+- **DataCite test API.** DataCite's test-accounts policy offers free test accounts to developers
+  building DOI registration integrations, on request to `support@datacite.org`. No paid membership
+  is needed. An account issued to a prospective member lasts six months. Test credentials and the
+  test prefix differ from production. Only a *draft* DOI can be deleted: registered and findable
+  DOIs are permanent, even on the test instance.
+
+Both live blocks stay skips in this change. `docs/testing/archive-sandbox.md` records the targeted
+follow-up for each.
+
 ## Risks / Trade-offs
 
 - [The test drifts from the skill] → D1's step comments; tasks add a line to the skill's
@@ -117,11 +132,12 @@ made, so no existing record is affected.
 
 ## Open Questions
 
-- **Is the new-version skill step in scope?** Default: **yes (D2).** Otherwise the test covers
-  create through relate only, and the gap is recorded as a follow-up.
-- **Where does the run's result live?** Default: in `docs/testing/archive-sandbox.md` under "Last
-  run" (date, pass count, the two sandbox DOIs), with the README and motivation caveats narrowed to
+All three were settled by the user on 2026-09-29, with the defaults:
+
+- **Is the new-version skill step in scope?** **Yes (D2).**
+- **Where does the run's result live?** In `docs/testing/archive-sandbox.md` under "Last run"
+  (date, pass count, the two sandbox DOIs), with the README and motivation caveats narrowed to
   point at it.
-- **Should the sandbox block run in CI from a repository secret?** Default: **no**, for now. It
-  publishes records on every run, and `workflow_dispatch` runs are rare. Revisit once a manual run
-  has passed.
+- **Should the sandbox block run in CI from a repository secret?** **No**, for now. It publishes
+  records on every run, and `workflow_dispatch` runs are rare. Revisit once a manual run has
+  passed.
