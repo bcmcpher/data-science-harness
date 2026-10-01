@@ -20,13 +20,13 @@
 
 ## 4. Live e2e sections
 
-- [ ] 4.1 nipoppy (gated on `tool_env_ready nipoppy`): `init --dataset` in a fresh dir; assert the files the version actually writes; install the fixture manifest; `track-curation`; assert the curation status file exists at the path the tool uses; `status` exits 0
-- [ ] 4.2 nipoppy compute (additionally gated on apptainer and `DSH_NIPOPPY_PIPELINE=<bundle dir>` with its image present): `bidsify` or `process --simulate` with explicit `--pipeline`, `--pipeline-version`, `--pipeline-step`; assert exit 0 and that no output directory was populated. Unverified: whether `--simulate` needs the image file to exist
-- [ ] 4.3 bagel (gated on `tool_env_ready bagel` and `DSH_NET=1`, D7): `pheno` on the annotated fixture produces a JSONLD file; `pheno` on the e2e's unannotated dictionary fails, and the assertion checks the error text names the annotation problem, not an unknown option
-- [ ] 4.4 pynidm (gated on `tool_env_ready pynidm`): `bidsmri2nidm -no_concepts` on the BIDS fixture writes a non-empty Turtle file; confirm it does not block on stdin (run with `</dev/null` and a timeout)
-- [ ] 4.5 reproschema (gated on `tool_env_ready reproschema` and `DSH_NET=1`, D7): `validate` on the fixture exits 0; `validate` on a copy with a required field removed exits non-zero
-- [ ] 4.6 Every section also runs the relevant `check-backends.sh` / gate inside `tool_env` and asserts `result: available`, so the gate and the tool agree
-- [ ] 4.7 With no env synced, the full e2e still passes and prints one `SKIP: run bin/test-envs sync <name>` per tool
+- [x] 4.1 nipoppy (gated on `tool_env_ready nipoppy`): `init --dataset` in a fresh dir; assert the files the version actually writes; install the fixture manifest; `track-curation`; assert the curation status file exists at the path the tool uses; `status` exits 0
+- [x] 4.2 nipoppy compute (gated on apptainer/singularity on PATH): `process --simulate` with explicit `--pipeline`, `--pipeline-version`, `--participant-id`, `--session-id`; exit 0, "Ran for 1 out of 1", nothing written under `derivatives/`. Done self-contained instead of via `DSH_NIPOPPY_PIPELINE`: the bundle is the template `nipoppy pipeline create --type processing` writes. Resolved: `--simulate` needs apptainer on PATH and a file at the container path (an empty placeholder suffices), and the participant must be `in_bids`; `pipeline install` exits non-zero when it cannot pull the image but still installs the bundle
+- [x] 4.3 bagel (gated on `tool_env_ready bagel` and `DSH_NET=1`, D7): `pheno` on the annotated fixture produces a JSONLD file; `pheno` on the e2e's unannotated dictionary fails, and the assertion checks the error text names the annotation problem, not an unknown option
+- [x] 4.4 pynidm (gated on `tool_env_ready pynidm`): `bidsmri2nidm -no_concepts` on the BIDS fixture writes a non-empty Turtle file; confirm it does not block on stdin (run with `</dev/null` and a timeout)
+- [x] 4.5 reproschema (gated on `tool_env_ready reproschema` and `DSH_NET=1`, D7): `validate` on the fixture exits 0; `validate` on a copy with a wrongly typed value (`responseOptions.minValue` an object) exits non-zero. Changed from "a required field removed": the 1.1.0 models have no required fields, so every dropped field still conforms
+- [x] 4.6 Every section also runs the relevant `check-backends.sh` / gate inside `tool_env` and asserts `result: available`, so the gate and the tool agree
+- [x] 4.7 With no env synced, the full e2e still passes and prints one `SKIP: run bin/test-envs sync <name>` per tool
 
 ## 5. Refinement loop
 
