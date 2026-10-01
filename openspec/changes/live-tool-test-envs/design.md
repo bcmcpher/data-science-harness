@@ -118,6 +118,27 @@ the skill, its reference and the doer, in this change. Each one is logged below 
 version it was checked against. A mismatch left unfixed would be a known-wrong instruction in a
 toolbox, which is worse than an untested one.
 
+**D7. Network-bound tools are gated on `DSH_NET=1`, introduced here.** Running the fixtures with no
+network (`unshare -rn`, loopback up) on 2026-10-01 showed that two of the tools cannot work offline:
+
+| Tool@version | Offline | Why |
+|---|---|---|
+| pynidm 4.5.5 `bidsmri2nidm -no_concepts` | runs | — |
+| bagel 0.11.6 `pheno` | fails: `'Neurobagel' is not one of .` | It fetches `config_namespace_map.json` from GitHub. Its fallback, `bagel/communities/`, is a git submodule that is not in the PyPI wheel. |
+| reproschema 1.1.0 `validate` | hangs until the timeout | It fetches the ReproSchema schema from `raw.githubusercontent.com`. |
+
+The bagel and reproschema sections therefore also require `DSH_NET=1`, and without it they print
+`SKIP: … needs network — set DSH_NET=1`. nipoppy and pynidm run whenever their env is ready. Every
+live call runs under `timeout`, so an outage fails fast instead of hanging. `repronim-containers`
+reuses this gate rather than introducing it. This revises the Non-Goal above: there is still no
+fetch in the default run.
+
+*Alternative: treat a synced env as consent to network.* Rejected. The default run should behave
+the same on a plane as on a desk.
+*Alternative: vendor the upstream configs and contexts into the fixtures.* Rejected. bagel has no
+flag for a local config, so this would mean writing into the env's site-packages, and the test
+would then check the vendored copy rather than what a user's install does.
+
 ## Refinements found
 
 _Filled in during implementation (task 5). One row per fix._

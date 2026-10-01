@@ -22,9 +22,9 @@
 
 - [ ] 4.1 nipoppy (gated on `tool_env_ready nipoppy`): `init --dataset` in a fresh dir; assert the files the version actually writes; install the fixture manifest; `track-curation`; assert the curation status file exists at the path the tool uses; `status` exits 0
 - [ ] 4.2 nipoppy compute (additionally gated on apptainer and `DSH_NIPOPPY_PIPELINE=<bundle dir>` with its image present): `bidsify` or `process --simulate` with explicit `--pipeline`, `--pipeline-version`, `--pipeline-step`; assert exit 0 and that no output directory was populated. Unverified: whether `--simulate` needs the image file to exist
-- [ ] 4.3 bagel (gated on `tool_env_ready bagel`): `pheno` on the annotated fixture produces a JSONLD file; `pheno` on the e2e's unannotated dictionary fails, and the assertion checks the error text names the annotation problem, not an unknown option
-- [ ] 4.4 pynidm (gated on `tool_env_ready pynidm`): `bidsmri2nidm` on the BIDS fixture writes a non-empty Turtle file; confirm it does not block on stdin (run with `</dev/null` and a timeout)
-- [ ] 4.5 reproschema (gated on `tool_env_ready reproschema`): `validate` on the fixture exits 0; `validate` on a copy with a required field removed exits non-zero
+- [ ] 4.3 bagel (gated on `tool_env_ready bagel` and `DSH_NET=1`, D7): `pheno` on the annotated fixture produces a JSONLD file; `pheno` on the e2e's unannotated dictionary fails, and the assertion checks the error text names the annotation problem, not an unknown option
+- [ ] 4.4 pynidm (gated on `tool_env_ready pynidm`): `bidsmri2nidm -no_concepts` on the BIDS fixture writes a non-empty Turtle file; confirm it does not block on stdin (run with `</dev/null` and a timeout)
+- [ ] 4.5 reproschema (gated on `tool_env_ready reproschema` and `DSH_NET=1`, D7): `validate` on the fixture exits 0; `validate` on a copy with a required field removed exits non-zero
 - [ ] 4.6 Every section also runs the relevant `check-backends.sh` / gate inside `tool_env` and asserts `result: available`, so the gate and the tool agree
 - [ ] 4.7 With no env synced, the full e2e still passes and prints one `SKIP: run bin/test-envs sync <name>` per tool
 
