@@ -1,0 +1,25 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Data Science Harness (DSH)
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Brent
+    family-names: McPherson
+    email: bcmcpher@gmail.com
+    affiliation: McGill University
+    orcid: 'https://orcid.org/0000-0001-8378-8136'
+repository-code: 'https://github.com/bcmcpher/data-science-harness'
+abstract: >-
+  The goal is provide skills and configuration for coding
+  harnesses to better facilitate data science coding
+  projects.
+keywords:
+  - large language models
+  - coding harness
+license: MIT
+commit: pre-version
