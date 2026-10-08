@@ -10,6 +10,7 @@
 #   pyproject.toml + uv.lock          the Python check scripts
 #   package.json + package-lock.json  the Node CLIs (openspec, mystmd)
 #   environment.yml                   the end-to-end stack (deliberately unlocked; see the file)
+#   tests/envs/*/pyproject.toml + uv.lock   one env per wrapped tool, for the e2e live sections
 #
 # tests/e2e-smoke.sh is NOT on the push trigger: it needs DataLad, git-annex, and apptainer.
 # It runs on manual dispatch.
@@ -142,6 +143,17 @@ jobs:
           git config --global user.name  "data-science-harness CI"
           git config --global user.email "ci@data-science-harness.invalid"
 
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Sync the wrapped-tool test envs
+        # nipoppy, bagel, pynidm, reproschema, each from its own uv.lock. With an empty uv cache all
+        # four took ~15 s and ~820 MB (measured locally 2026-10-08, not on a runner), so the live
+        # sections run here rather than skip. A failed sync is a warning, not a job failure: that
+        # tool's section then skips (missing env), and the DataLad smoke test still runs.
+        run: bin/test-envs sync || echo "::warning::bin/test-envs sync failed for at least one tool; its e2e section will skip"
+
       - name: Smoke test
         # The container block self-skips when datalad-container or apptainer is absent; apptainer
         # is a system package outside conda's reach and is deliberately not installed here.
@@ -149,6 +161,8 @@ jobs:
         # The script now reports its own failures — `step` prints the failing command and its
         # output, and an ERR trap catches anything unwrapped. The `bash -x` re-run stays as a last
         # resort for a failure neither of those localises.
+        env:
+          DSH_NET: "1"   # the runner has network; run bagel pheno and reproschema validate too
         run: |
           if ! bash tests/e2e-smoke.sh; then
             echo "::group::re-running under bash -x to locate the aborting command"

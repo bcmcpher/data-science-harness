@@ -509,7 +509,7 @@ data-science-harness/
 | **BIDS** | Brain Imaging Data Structure — canonical neuroimaging dataset format | capability · `bids` | `npm install -g bids-validator` |
 | **Nipoppy** | Standardized dataset organization + pipeline running & tracking; spans curate → analyze → QC | capability · `nipoppy` | `pip install nipoppy` |
 | **Apptainer / Docker** | Portable, ephemeral computational environments | capability · `containers` | container runtime |
-| **Neurobagel / bagel-cli** | Annotate phenotypic variables with controlled terms; push to graph | capability · `annotate` | `pip install bagel-cli` |
+| **Neurobagel / bagel-cli** | Annotate phenotypic variables with controlled terms; push to graph | capability · `annotate` | `pip install bagel` |
 | **SNOMED CT** | Clinical terminology — normalize variable names to standard codes | capability · `annotate` | SNOMED CT API key or local OWL |
 | **ReproSchema** | Standardized representation of behavioral assessments / questionnaires | capability · `annotate` | `pip install reproschema` |
 | **NeuroSynth Compose / NiMARE** *(proposed)* | Reproducible coordinate-based meta-analysis of a topic | workflow · `analyze` | web platform; `pip install nimare` |
@@ -555,7 +555,7 @@ data-science-harness/
 ```json
 "requires": {
   "system":    ["git", "git-annex", "datalad"],          // OS / non-language tools
-  "python":    ["bagel-cli", "pynidm", "reproschema"],   // pip-installable
+  "python":    ["bagel", "pynidm", "reproschema"],       // pip-installable
   "npm":       ["bids-validator"],                       // Node tools
   "reference": ["stamped", "bids", "snomed-ct"]          // no install — references/ only
 }
@@ -871,6 +871,7 @@ to ask that of users and not of ourselves.
 | Python | `pyproject.toml` | `uv.lock` | the four check scripts |
 | Node | `package.json` | `package-lock.json` | `openspec validate`, the `paper/` build |
 | e2e stack | `environment.yml` | *deliberately not* — see the file | `tests/e2e-smoke.sh` |
+| Wrapped tools | `tests/envs/<tool>/pyproject.toml` | `tests/envs/<tool>/uv.lock` | the e2e live sections for nipoppy, bagel, pynidm, reproschema |
 
 ```bash
 # Python checks
@@ -889,6 +890,21 @@ npm run paper:check       # build paper/ and fail on any unresolved citation
 conda env create -f environment.yml && conda activate ds-harness-e2e
 bash tests/e2e-smoke.sh
 ```
+
+The e2e suite runs each wrapped tool for real only when its env under `tests/envs/` is present and
+in step with its lock; otherwise that section skips with the reason (`missing` or `stale — run
+bin/test-envs sync <tool>`). Build them with:
+
+```bash
+bin/test-envs sync            # all four; or name one: bin/test-envs sync nipoppy
+bin/test-envs check           # ok <version> | missing | stale, changes nothing
+DSH_NET=1 bash tests/e2e-smoke.sh   # also run the network-bound steps (bagel pheno, reproschema validate)
+```
+
+Each env enables one live section: nipoppy (`init`, `track-curation`, `status`, and
+`process --simulate` when apptainer is on PATH), bagel (`pheno`, accept and reject), pynidm
+(`bidsmri2nidm`), reproschema (`validate`, accept and reject). These envs are test fixtures, not
+harness or check dependencies.
 
 The e2e suite's Zenodo block runs against sandbox.zenodo.org only when `DSH_ZENODO_SANDBOX_TOKEN` is
 set; [`docs/testing/archive-sandbox.md`](docs/testing/archive-sandbox.md) covers the token, what a

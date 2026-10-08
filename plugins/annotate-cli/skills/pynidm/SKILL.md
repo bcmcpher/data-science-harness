@@ -50,9 +50,12 @@ against is specific: these identifiers are short, structured, and completely unv
 
 2. **Confirm the command surface before using it** — the flags below are the expected shape, not a
    promise about the installed version. PyNIDM's converters use single-dash long options, which is
-   unusual enough to be worth checking rather than assuming. Record the version for the report:
+   unusual enough to be worth checking rather than assuming. Record the version for the report.
+   `pynidm` has no `--version` option (it exits 2 with `No such option '--version'`); the version is
+   a subcommand, with the package metadata as the fallback when only the library is importable:
    ```bash
-   pynidm --version
+   pynidm version            # prints "PyNIDM Version: <x.y.z>"
+   python -c 'import importlib.metadata as m; print(m.version("pynidm"))'
    pynidm --help
    csv2nidm --help
    bidsmri2nidm --help
@@ -66,24 +69,40 @@ against is specific: these identifiers are short, structured, and completely unv
    - **annotate**: step 6 — resolve terms for columns that have none. Interactive; hands off.
    - **query**: step 7 — read an existing NIDM document.
 
-4. **Convert a phenotypic table** — with an existing term mapping. `-json_map` is what makes this
-   unattended: it supplies the column-to-term mapping so nothing has to be looked up:
+4. **Convert a phenotypic table** — with an existing term mapping. `-json_map` plus `-no_concepts`
+   is what makes this unattended: the map supplies the column-to-term mapping, and `-no_concepts`
+   skips the concept search that would otherwise run for every column. A BIDS `participants.json`
+   sidecar is accepted as the `-json_map`. Close stdin so a prompt fails fast instead of hanging:
    ```bash
-   csv2nidm -csv participants.tsv -json_map <mapping.json> -out <out.ttl>
+   csv2nidm -csv participants.tsv -json_map <mapping.json> -no_concepts -out <out.ttl> </dev/null
    ```
-   Without `-json_map` the command drops into the interactive annotation of step 6. **Never run it
+   Without `-no_concepts`, pynidm 4.5.5 does not reach a prompt at all: it fails with `TypeError:
+   map_variables_to_terms() got an unexpected keyword argument 'dataset_identifier'`. Without
+   `-json_map` the command drops into the interactive annotation of step 6. **Never run it
    that way from here** — a tool waiting on stdin in a non-interactive shell hangs until it is
    killed, and a killed converter leaves a partial document. If no mapping exists, go to step 6.
 
 5. **Convert a BIDS tree** — the imaging half: acquisitions, sessions, and participants as NIDM
    provenance:
    ```bash
-   bidsmri2nidm -d <bids dir> -o <out.ttl>
+   bidsmri2nidm -d <bids dir> -o <out.ttl> -no_concepts </dev/null
    ```
-   Check `--help` for whether the installed version wants `-jsonld`, a `-json_map`, or a
-   `-bidsignore` flag for your tree, and report the exact invocation you ran.
+   Two conditions keep this unattended, and each prompt reads stdin when it is missing:
+   - **`-no_concepts`.** Without it, every phenotype column goes through the interactive concept
+     search (`Please select an option ... from above`) even when the sidecar describes it.
+   - **A `participants.json` sidecar describing every `participants.tsv` column** (at least a
+     `Description`). Without one, `-no_concepts` still prompts for a label per column (`Please
+     enter a full name to associate with the term [<column>]`). If the sidecar is missing, stop and
+     say so; writing it is the data dictionary's job, not this skill's.
 
-6. **Resolve new terms — hand this to the user.** Interactive annotation needs both an InterLex
+   With stdin closed, a missing condition exits 1 with `EOFError: EOF when reading a line` rather
+   than hanging. Pass `-o` explicitly: the default writes `nidm.ttl` into the BIDS directory itself.
+   The other flags are `-jsonld` (JSON-LD instead of Turtle), `-json_map` (a variable-term map),
+   `-bidsignore` (add the NIDM files to `.bidsignore`), `-per_subject` (one `sub-<id>/nidm.ttl` per
+   subject) and `-log <dir>`. Report the exact invocation you ran.
+
+6. **Resolve new terms — hand this to the user.** This is the converters run *without*
+   `-no_concepts`, in the user's own terminal. Interactive annotation needs both an InterLex
    API key (`INTERLEX_API_KEY`, or the `-ilxkey` flag) and a person to choose among the search hits.
    Confirm the key is *present* without printing it, then stop and return the command:
    ```bash
@@ -98,11 +117,20 @@ against is specific: these identifiers are short, structured, and completely unv
    already says rather than guessing:
    ```bash
    pynidm query --help
-   pynidm query -nl <nidm.ttl> -u <query or uri>
+   pynidm query -nl <nidm.ttl> -p              # participants
+   pynidm query -nl <nidm.ttl> -de             # data elements
+   pynidm query -nl <nidm.ttl> -gf age,sex     # values for named fields
+   pynidm query -nl <nidm.ttl> -q <query.sparql>
+   pynidm query -nl <nidm.ttl> -u /projects    # REST-style URI
    ```
-   Follow `--help` for this one especially: the query subcommand's options vary more across versions
-   than the converters'. If you cannot construct a query the installed version accepts, say so
-   rather than reporting an empty result — an empty result reads as "the dataset says nothing".
+   `-nl` takes a comma-separated list (files, directories searched for `**/nidm.ttl`, or URLs), and
+   exactly one query type is required: `-q`, `-p`, `-i`, `-iv`, `-de`, `-debv`, `-bv`, `-gf` or
+   `-u`. `-o <csv>` writes the result to a file. Follow `--help` for this one especially: the query
+   subcommand's options vary more across versions than the converters'. If you cannot construct a
+   query the installed version accepts, say so rather than reporting an empty result — an empty
+   result reads as "the dataset says nothing". That applies to a valid query too: on a
+   `bidsmri2nidm -no_concepts` document, `-de` returns an empty table even though the sidecar
+   described the columns, so check a second query type (`-gf`) before concluding a variable is absent.
 
 8. **Report** — the version you ran, the exact invocation, the files written (uncommitted), and
    per-column state split into: mapped (term identifier plus the mapping file it came from),

@@ -21,7 +21,8 @@ Both commands accept:
 ## `nipoppy track-processing`
 
 Record per-participant pipeline completion status into the processing status file
-(`tabular/bagel.tsv`). Run after `nipoppy process` to update tracking.
+(`derivatives/processing_status.tsv` in the 0.4.7 default layout; formerly `tabular/bagel.tsv`).
+Run after `nipoppy process` to update tracking.
 
 ### Synopsis
 
@@ -35,17 +36,18 @@ nipoppy track-processing [OPTIONS]
 |--------|---------|-------------|
 | `--n-jobs N` | 1 | Number of parallel workers to use when checking outputs. |
 
-### Bagel file schema (`bagel.tsv`)
+### Processing status file schema (`processing_status.tsv`)
 
 | Column | Values | Description |
 |--------|--------|-------------|
 | `participant_id` | string | Subject ID |
-| `session` | string | Session label |
+| `bids_participant_id` | string | BIDS subject ID (`sub-…`) used by the pipeline |
+| `session_id` | string | Session label |
+| `bids_session_id` | string | BIDS session ID (`ses-…`) |
 | `pipeline_name` | string | Pipeline identifier (e.g., `fmriprep`) |
 | `pipeline_version` | string | Pipeline version string |
 | `pipeline_step` | string | Step label |
 | `status` | `SUCCESS`/`FAIL`/`INCOMPLETE`/`UNAVAILABLE` | Completion status |
-| `bids_id` | string | BIDS subject ID used by the pipeline |
 
 ### Status values
 

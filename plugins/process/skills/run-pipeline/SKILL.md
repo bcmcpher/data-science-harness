@@ -21,11 +21,11 @@ the way you would run git.
 > Design note: nipoppy alone does not record provenance and datalad does not know pipeline
 > mechanics — so this planner joins them. The nipoppy command is always executed *through*
 > `datalad run`; a bare nipoppy process run is never the final step. (The container image itself is
-> pinned by nipoppy's `config.json` + Boutiques descriptor, so datalad's own `container-run`
+> pinned by the installed pipeline's `config.json` + Boutiques descriptor, so datalad's own `container-run`
 > image-capture is not needed here — nipoppy owns that layer.)
 
 ## When to use
-- A nipoppy dataset (`config.json` + `manifest.tsv`) exists with BIDS data ready, and the user
+- A nipoppy dataset (`global_config.json` + `manifest.tsv`) exists with BIDS data ready, and the user
   wants to run a processing pipeline.
 - Do NOT use to create/curate the dataset (that is nipoppy `init`/`bidsify` — a future `curate`
   planner) or to run a bespoke analysis script (that is `analyze/run-comparison`).
@@ -35,7 +35,7 @@ the way you would run git.
    pipeline step and the participant and session scope, from the user. If the pipeline or version
    is unspecified, ask (never guess a version).
 2. **Validate + construct (nipoppy doer)** — delegate:
-   > "Validate this nipoppy dataset (config.json, manifest.tsv, Linux+Apptainer, pipeline version
+   > "Validate this nipoppy dataset (global_config.json, manifest.tsv, Linux+Apptainer, pipeline version
    > matches a pulled image). Construct the process command for pipeline <X> at version <V>, step
    > <S> if given, scoped to participants <P> and sessions <S> if given. Preview it with a
    > simulated run, and return the exact command plus the inputs it reads and outputs it writes."
@@ -55,17 +55,20 @@ the way you would run git.
    ```bash
    datalad run -m "$(printf '<pipeline> <version> on <scope>\n\nDSH-Op: run-pipeline\nDSH-Stage: process\nDSH-Binding: <binding from step 2>')" \
      -i <inputs from step 2> \
-     -o <outputs from step 2, e.g. derivatives/<pipeline>, proc/logs/<pipeline>> \
+     -o <outputs from step 2, e.g. derivatives/<pipeline>, logs/process/<pipeline>-<version>> \
      "<the nipoppy process command>"
    ```
    Use exactly one `-m`. On failure, relay the error and the nipoppy log path; nothing was
    committed. Stop.
 5. **Record completion (nipoppy doer, then save yourself)** — after a successful run:
-   > nipoppy doer: "Update the processing status for <pipeline> in `tabular/bagel.tsv`."
+   > nipoppy doer: "Update the processing status for <pipeline> in `derivatives/processing_status.tsv`."
    Then save what it wrote:
    ```bash
-   datalad save -m "$(printf 'track-processing: <pipeline> <version>\n\nDSH-Op: run-pipeline\nDSH-Stage: process\nDSH-Binding: <binding>')" tabular/bagel.tsv
+   datalad save -m "$(printf 'track-processing: <pipeline> <version>\n\nDSH-Op: run-pipeline\nDSH-Stage: process\nDSH-Binding: <binding>')" \
+     derivatives/processing_status.tsv derivatives/.processing_statuses logs/track_processing
    ```
+   `processing_status.tsv` is a symlink to a timestamped copy in `.processing_statuses/`; save
+   both, or the commit records a dangling link.
 6. **Report** — the pipeline/version/scope, the provenance commit, output derivatives, updated
    bagel status, and that the run is replayable with `datalad rerun`. Suggest the next step
    (IDP extraction through the nipoppy doer, or `analyze/propose-comparison`).
@@ -76,7 +79,7 @@ the way you would run git.
 - Require a meaningful `-m` message that names the pipeline, version, and scope; never a placeholder,
   and never more than one `-m` (DataLad keeps only the last).
 - Declare inputs/outputs from the nipoppy doer's report — do not invent paths. Prefer the pipeline's
-  own `derivatives/<pipeline>` and `proc/logs/<pipeline>` as `-o`; leave `scratch/` untracked.
+  own `derivatives/<pipeline>` and `logs/process/<pipeline>-<version>` as `-o`; leave `scratch/` untracked.
 - Do not diagnose or "fix" the pipeline's science — if a container errors on its own logic, surface
   the nipoppy log to the user; the harness owns provenance, not the pipeline internals.
 - Record activity in the commit's `DSH-*` lines, never in `project.yaml` `log`. Note a failed run to

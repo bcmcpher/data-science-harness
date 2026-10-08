@@ -51,13 +51,16 @@ is wrong, and will produce codes that only look right.
    - **check** (default): step 1 only.
    - **coverage**: steps 4-5 — report annotation state, write nothing.
    - **pheno**: steps 4-6 — the phenotypic table into a graph file.
-   - **bids**: step 7 — merge imaging availability into an existing graph file.
+   - **bids**: step 7 — tabulate the BIDS tree, then merge imaging availability into an existing
+     graph file.
    - **derivatives**: step 8 — merge processing status into an existing graph file.
 
-4. **Locate and read the inputs** — a phenotypic TSV and its data dictionary, conventionally
-   `participants.tsv` and `participants.json` at the dataset root:
+4. **Locate and read the inputs** — a phenotypic TSV, its data dictionary, and a dataset
+   description, conventionally `participants.tsv`, `participants.json` and
+   `dataset_description.json` at the dataset root. `bagel pheno` requires all three; a BIDS
+   `dataset_description.json` can be reused as-is:
    ```bash
-   ls participants.tsv participants.json
+   ls participants.tsv participants.json dataset_description.json
    head -2 participants.tsv
    ```
    Every column in the TSV should have a key in the dictionary. Columns present in one and not the
@@ -87,27 +90,40 @@ is wrong, and will produce codes that only look right.
    memory to make this output look better.
 
 6. **Convert the phenotypic table** — only once the dictionary carries the annotations you intend to
-   ship. `--name` is the dataset label that will appear in query results:
+   ship. The dataset label that appears in query results comes from the `Name` field of the
+   `--dataset-description` file; there is no `--name` flag. `--output` is a single `.jsonld` file:
    ```bash
    bagel pheno \
      --pheno participants.tsv \
      --dictionary participants.json \
-     --name "<dataset name>" \
-     --output <output-dir-or-file>
+     --dataset-description dataset_description.json \
+     --output pheno.jsonld
    ```
-   `bagel` validates the annotations here and fails on a term it does not recognize. **That failure
-   is the tool working.** Report it; do not edit the term until it passes.
+   `bagel` validates the annotations here and fails on a term it does not recognize, or on a
+   dictionary with no Neurobagel annotations at all. **That failure is the tool working.** Report
+   it; do not edit the term until it passes.
+
+   `bagel pheno` needs network access: it fetches its vocabulary configurations at start-up. Offline
+   it fails before reading any input, with `BadParameter: 'Neurobagel' is not one of .` — report
+   that as "network unavailable", not as an annotation failure. An existing output file makes it
+   exit 1 unless you pass `--overwrite`; do not add `--overwrite` without saying you replaced a
+   file.
 
 7. **Merge imaging availability** — adds which sessions/modalities exist in the BIDS tree to the
-   graph file `bagel pheno` produced:
+   graph file `bagel pheno` produced. `bagel bids` does not read a BIDS directory; it reads a table
+   of image files, which `bagel bids2tsv` builds first:
    ```bash
-   bagel bids --jsonld-path <pheno output> --bids-dir <bids dir> --output <output>
+   bagel bids2tsv --bids-dir <bids dir> --output bids.tsv
+   bagel bids --jsonld-path pheno.jsonld --bids-table bids.tsv --output bids.jsonld
    ```
+   `bids2tsv` validates the BIDS layout and fails if `dataset_description.json` lacks
+   `BIDSVersion`. Subject and session IDs in the table must match the phenotypic table's: pass
+   `--strip-id-prefixes` to `bids2tsv` when `participants.tsv` holds `01` rather than `sub-01`.
 
 8. **Merge processing status** — adds derivative/pipeline completeness from a Nipoppy-style
    processing-status table:
    ```bash
-   bagel derivatives --tabular <processing_status.tsv> --jsonld-path <pheno output> --output <output>
+   bagel derivatives --tabular <processing_status.tsv> --jsonld-path pheno.jsonld --output derivatives.jsonld
    ```
 
 9. **Report** — the version you ran, the exact invocation, the files written (uncommitted), and the

@@ -10,7 +10,8 @@
 #
 # This checks presence only. It never contacts the network and never prints a credential's value, so
 # a present-but-invalid key passes here and fails at the tool, where the doer reports
-# `result: failed`.
+# `result: failed`. Likewise `bagel pheno` fetches its vocab configs at start-up, so an installed
+# bagel passes here and still fails offline.
 #
 # "unavailable" is not "no term matched". The doer must report the two differently: an uninstalled
 # backend means the question was never asked. That distinction is the point of this script — a
@@ -39,7 +40,7 @@ case "$backend" in
   bagel)
     if ! command -v bagel >/dev/null 2>&1; then
       missing+=("bagel executable")
-      enable+=("pip install bagel-cli (provides the 'bagel' command), or run the neurobagel/bagelcli container")
+      enable+=("pip install bagel (provides the 'bagel' command), or run the neurobagel/bagelcli container")
     fi
     ;;
   pynidm)

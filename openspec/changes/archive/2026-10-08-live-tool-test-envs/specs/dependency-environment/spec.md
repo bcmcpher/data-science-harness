@@ -27,7 +27,9 @@ check scripts, and they are not something a consumer of the harness installs.
 `bin/test-envs sync [tool]` MUST install each environment with `uv sync --locked`, and MUST print
 each tool's runtime version. `bin/test-envs check [tool]` MUST report each environment as `ok`,
 `missing` or `stale` without modifying it. It MUST exit 0 only when every named environment is
-`ok`, and MUST exit 2 for an unknown tool. The e2e MUST NOT install or re-resolve an environment.
+`ok`, and MUST exit 2 for an unknown tool. `check --quiet` MUST report the same states without
+launching any tool's CLI, and the e2e gate MUST use it. The e2e MUST NOT install or re-resolve an
+environment.
 
 #### Scenario: The lock moved since the last sync
 
@@ -38,7 +40,7 @@ each tool's runtime version. `bin/test-envs check [tool]` MUST report each envir
 
 - **WHEN** `tests/e2e-smoke.sh` reaches a live section whose environment is missing or stale
 - **THEN** the section prints `SKIP:` with the `bin/test-envs sync <tool>` command, and the run
-  continues
+  continues (bagel alone may instead run an install found on `PATH`; see the annotate spec)
 
 ### Requirement: The setup documentation covers the test environments
 

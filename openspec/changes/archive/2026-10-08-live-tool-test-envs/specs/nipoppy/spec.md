@@ -6,8 +6,9 @@
 `track-curation` and `status` from the `tests/envs/nipoppy` environment on a fixture dataset, and
 MUST assert the files the installed version actually writes. It MUST run whenever that environment
 is present and in sync with its lock, and MUST otherwise skip, naming `bin/test-envs sync nipoppy`.
-A dataset-mutating command (`bidsify`, `process`) MUST be exercised only with `--simulate`, and
-only when apptainer and a pipeline bundle are available.
+A dataset-mutating command (`bidsify`, `process`) MUST be exercised only with `--simulate`, on the
+template bundle `nipoppy pipeline create` writes, and only when apptainer is on `PATH`; `--simulate`
+runs nothing but still requires both.
 
 #### Scenario: The environment is synced
 
@@ -22,8 +23,8 @@ only when apptainer and a pipeline bundle are available.
 
 ### Requirement: The nipoppy toolbox agrees with the tested version
 
-The file names, directory layout, subcommands and flags that `plugins/nipoppy-cli/` and the nipoppy
-doer state MUST match the version pinned in `tests/envs/nipoppy`. When the live section shows a
+The nipoppy toolbox and doer MUST state the file names, directory layout, subcommands and flags of
+the version pinned in `tests/envs/nipoppy`. When the live section shows a
 disagreement, the skill, its reference and the doer MUST be corrected in the same change that
 observes it.
 

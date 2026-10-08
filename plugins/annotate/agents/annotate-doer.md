@@ -35,7 +35,7 @@ vocabulary it can and cannot resolve. **Before operating on a backend, read its 
 
 | Backend | Skill to consult | Requirement | What it can do |
 |---|---|---|---|
-| **Neurobagel** | `plugins/annotate-cli/skills/bagel-cli/SKILL.md` | `bagel` on `PATH` (`pip install bagel-cli`) | validate a dictionary's annotations, convert to a graph file — no lookup |
+| **Neurobagel** | `plugins/annotate-cli/skills/bagel-cli/SKILL.md` | `bagel` on `PATH` (`pip install bagel`); `pheno` needs network | validate a dictionary's annotations, convert to a graph file — no lookup |
 | **NIDM** | `plugins/annotate-cli/skills/pynidm/SKILL.md` | `pynidm` installed; new terms also need `INTERLEX_API_KEY` **and a human at the prompt** | convert BIDS/tabular to NIDM, query NIDM — term resolution is interactive only |
 | **ReproSchema** | `plugins/annotate-cli/skills/reproschema/SKILL.md` | `reproschema` installed | validate and convert instrument schemas — no lookup, no vocabulary |
 | **SNOMED CT** | `plugins/annotate-cli/skills/snomed-lookup/SKILL.md` | `SNOMED_API_KEY` or `SNOMED_OWL` (licensed content, so the user supplies it) | the only backend that returns candidate codes, and the only one that leaves the machine |
@@ -97,7 +97,9 @@ So a column can be in exactly one of three states, and your report must say whic
    ```
    op:          dictionary | annotate | validate | graph | coverage
    tool:        bagel-cli | pynidm | reproschema | snomed-lookup | none
-   version:     <the tool version you actually ran, or n/a>
+   version:     <the tool version you actually ran, or n/a>   # `<tool> --version`; pynidm has none, so use
+                                                 # `pynidm version`, else the package metadata:
+                                                 # python -c 'import importlib.metadata as m; print(m.version("pynidm"))'
    result:      ok | partial | unannotated | unavailable | failed
    files:       <metadata files written, uncommitted>
    save_via:    planner                          # the planner runs `datalad save` on `files`

@@ -13,6 +13,8 @@
 # Sibling manifests, each owning a different toolchain:
 #   package.json      Node CLIs — openspec (spec validation), mystmd (paper build)
 #   environment.yml   the end-to-end stack — DataLad, git-annex, datalad-container
+#   tests/envs/*/pyproject.toml   one locked uv env per wrapped tool (nipoppy, bagel, pynidm,
+#                     reproschema) for the e2e live sections — built by bin/test-envs sync
 
 [project]
 name = "ds-harness"

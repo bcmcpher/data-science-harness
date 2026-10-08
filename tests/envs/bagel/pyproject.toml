@@ -1,0 +1,19 @@
+# Live tool test environment: bagel.
+#
+# SCOPE: installs the real `bagel` so tests/e2e-smoke.sh can run the command lines its toolbox
+# skill teaches against the tool itself. It is not a check dependency (see the root
+# pyproject.toml) and not a harness dependency: a user installing plugins needs none of this.
+#
+#   bin/test-envs sync bagel     # uv sync --locked --project tests/envs/bagel
+#
+# The `==` pin is the version under test. A bump is `uv lock --project tests/envs/bagel
+# --upgrade-package bagel` together with an edit to the pin, and re-runs the refinement loop.
+
+[project]
+name = "dsh-test-env-bagel"
+version = "0.0.0"
+requires-python = ">=3.11,<3.15"
+dependencies = ["bagel==0.11.6"]
+
+[tool.uv]
+package = false
