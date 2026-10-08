@@ -26,7 +26,7 @@ is separated from the computations rather than folded in with them.
 
 1. **Establish what already exists before creating anything.**
    ```bash
-   ls <path>/config.json <path>/manifest.tsv 2>/dev/null
+   ls <path>/global_config.json <path>/manifest.tsv 2>/dev/null
    ```
    `init` against a directory that is already a nipoppy dataset is not a refresh. If the dataset
    exists, report it and stop — the request was probably `/nipoppy-query` or a pipeline install.

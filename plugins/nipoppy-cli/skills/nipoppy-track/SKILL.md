@@ -14,8 +14,9 @@ allowed-tools: Read, Bash, Grep, Glob
 
 # Skill: nipoppy-track
 
-Refresh the derived status files — `tabular/curation_status.tsv` and `tabular/bagel.tsv` — that
-every other nipoppy answer is read from.
+Refresh the derived status files — `sourcedata/imaging/curation_status.tsv` and
+`derivatives/processing_status.tsv` (nipoppy 0.4.7 default layout) — that every other nipoppy
+answer is read from.
 
 **These commands read the dataset and write a file.** That is why they are neither a query nor a
 computation: they can be run directly, because they derive their output from what is already there
@@ -24,7 +25,7 @@ and the change has to be saved or it will be swept into an unrelated commit.
 
 ## Steps
 
-1. **Confirm the dataset state.** `config.json` and `manifest.tsv` must exist. A tracking run
+1. **Confirm the dataset state.** `global_config.json` and `manifest.tsv` must exist. A tracking run
    against an uninitialized dataset is an error, not an empty result.
 
 2. **Read `${CLAUDE_PLUGIN_ROOT}/../references/curation-commands.md`** for `track-curation` and
@@ -43,14 +44,14 @@ and the change has to be saved or it will be swept into an unrelated commit.
    nipoppy track-curation --dataset <path>
    nipoppy track-processing --dataset <path> --pipeline <name> --pipeline-version <version>
    ```
-   `track-processing` without an explicit pipeline and version may fan out across every configured
-   pipeline. Name both.
+   `track-processing` requires `--pipeline`; without `--pipeline-version` it silently tracks the
+   latest installed version. Name both.
 
 5. **Report the files that changed and hand the save back.** The planner owns `datalad save`.
    This is a checkpoint, not a run record: the status file is derived from data that is already
    tracked, so it does not need `datalad run` — it needs a commit that says what it is.
    ```bash
-   git -C <dataset> status --porcelain tabular/
+   git -C <dataset> status --porcelain sourcedata/imaging/ derivatives/processing_status.tsv logs/
    ```
 
 6. **Report.**
@@ -72,7 +73,7 @@ and the change has to be saved or it will be swept into an unrelated commit.
 - **Never let the status file reach a commit unannounced.** Report what changed and hand the save
   back. A derived status file swept into an unrelated commit is how a dataset's history stops
   explaining itself.
-- **Never edit `curation_status.tsv` or `bagel.tsv` by hand**, and never correct a row that looks
+- **Never edit `curation_status.tsv` or `processing_status.tsv` by hand**, and never correct a row that looks
   wrong. They are derived; if they are wrong, the input or the command is wrong.
 - **Never edit `manifest.tsv`** to make a tracking run come out differently. The manifest is the
   registry the dataset is checked against, not a knob.

@@ -57,7 +57,7 @@ reconstruct state. Every harness commit carries `DSH-*` lines naming the skill t
      - raw DICOMs staged in a nipoppy dataset but no `bids/` yet → `curate/raw-to-bids`
      - BIDS data present but thin metadata (no data dictionary / sparse dataset_description) →
        `curate/annotate`
-     - nipoppy dataset (config.json + BIDS) with no pipeline derivatives yet → `process/run-pipeline`
+     - nipoppy dataset (global_config.json + BIDS) with no pipeline derivatives yet → `process/run-pipeline`
      - on `main`, project scaffolded, no comparisons yet → `analyze/propose-comparison`
      - comparisons recorded but not grouped into any product yet → `analyze/manage-product`
      - BIDS data present but unvalidated, or before a release → `govern/qc-review`

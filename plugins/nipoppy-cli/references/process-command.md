@@ -43,7 +43,7 @@ nipoppy process [OPTIONS]
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--keep-workdir` | off | Keep the pipeline working directory upon success (default: deleted unless a run failed). Useful for debugging. |
-| `--simulate` | off | Print the Boutiques/Apptainer invocation without executing. |
+| `--simulate` | off | Print the Boutiques/Apptainer invocation without executing. Still needs Apptainer on PATH, the image file at `CONTAINER_INFO.FILE`, and participant-sessions that are `in_bids`; with none eligible it prints nothing to preview. |
 | `--verbose` / `-v` | off | Show DEBUG messages. |
 | `--dry-run` | off | Print commands but do not execute them. |
 | `--layout FILE` | default | Path to a custom layout specification file. |
@@ -73,7 +73,7 @@ sbatch --array=1-$(wc -l < /tmp/fmriprep_pairs.tsv) run_array.sh
 ## Example invocations
 
 ```bash
-# Dry-run fMRIPrep on all participants
+# Preview the fMRIPrep invocation without running it
 nipoppy process --pipeline fmriprep --simulate
 
 # Run fMRIPrep on all participants
@@ -92,4 +92,4 @@ nipoppy process --pipeline fmriprep --write-subcohort /tmp/pairs.tsv
 ## Next step
 
 After `process` completes, run `nipoppy track-processing` to record completion
-status in `tabular/bagel.tsv`.
+status in `derivatives/processing_status.tsv`.

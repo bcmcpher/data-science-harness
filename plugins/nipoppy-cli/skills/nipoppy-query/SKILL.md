@@ -26,7 +26,7 @@ read-only verbs apart means a read never has to be reasoned about as though it m
 
 1. **Confirm the dataset is a nipoppy dataset before reading it.**
    ```bash
-   ls <dataset>/config.json <dataset>/manifest.tsv 2>/dev/null
+   ls <dataset>/global_config.json <dataset>/manifest.tsv 2>/dev/null
    ```
    A directory without them is not initialized, and `status` against it reports an error rather than
    an empty dataset. Say which of the two is missing — `init` is the answer, and it is
@@ -53,7 +53,7 @@ read-only verbs apart means a read never has to be reasoned about as though it m
 5. **Report.**
    ```
    op:       nipoppy-<status|pipeline-search|pipeline-list>
-   dataset:  <path, and whether config.json + manifest.tsv are present>
+   dataset:  <path, and whether global_config.json + manifest.tsv are present>
    version:  <nipoppy --version>
    result:   ok | failed | not-initialized
    summary:  <counts as reported, per stage — never inferred from the filesystem>

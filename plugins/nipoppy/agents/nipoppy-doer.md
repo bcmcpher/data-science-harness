@@ -54,10 +54,10 @@ you believe it falls into, and why, and ask the planner before executing anythin
    do **not** guess a pipeline name/version.
 2. **Read the class's skill** from the table above, and the reference it names, and follow their
    options and constraints exactly.
-3. **Validate dataset state** — confirm `config.json` and `manifest.tsv` exist for any
+3. **Validate dataset state** — confirm `global_config.json` and `manifest.tsv` exist for any
    command beyond `init` (per the class skill's first step). For `bidsify`/`process`/`extract`, confirm the
-   platform is **Linux + Apptainer** (`apptainer --version`) and the pipeline version in
-   `config.json` matches a pulled container image; if not, report the gap and stop.
+   platform is **Linux + Apptainer** (`apptainer --version`) and the image at the
+   pipeline's `CONTAINER_INFO.FILE` (`pipelines/<type>/<name>-<version>/config.json`) exists; if not, report the gap and stop.
 4. **Preview mutating commands** — construct the command and run it with `--simulate` (or
    `--dry-run`) first to surface the Boutiques/Apptainer invocation. Never run a live mutating
    command bare — hand it to the planner, which runs it under `datalad run`.
@@ -68,11 +68,11 @@ you believe it falls into, and why, and ask the planner before executing anythin
    command:     <exact nipoppy command constructed>
    run_via:     <direct | datalad-run>          # mutating -> datalad-run, executed by the planner
    save_via:    <planner, for bookkeeping ops that wrote files | none>
-   inputs:      <-i paths for the datalad run, if mutating>   # e.g. bids, config.json
-   outputs:     <-o paths for the datalad run, if mutating>   # e.g. derivatives/<pipeline>, logs
+   inputs:      <-i paths for the datalad run, if mutating>   # e.g. bids, global_config.json, pipelines/<type>/<name>-<version>
+   outputs:     <-o paths for the datalad run, if mutating>   # e.g. derivatives/<pipeline>, logs/<workflow>
    result:      <ok|failed|constructed>          # 'constructed' = ready but not executed here
    changed:     <files written, for bookkeeping ops>
-   binding:     nipoppy/<pipeline or nipoppy>@<version>   # from config.json / `nipoppy --version`
+   binding:     nipoppy/<pipeline or nipoppy>@<version>   # pipeline version from its install dir name / `nipoppy --version`
    notes:       <state checks, platform warnings, next nipoppy step>
    ```
    The planner copies `binding` into a `DSH-Binding:` line on the commit it makes.
@@ -83,12 +83,15 @@ you believe it falls into, and why, and ask the planner before executing anythin
   nipoppy commands are invoked *with* datalad.
 - Never run a live pipeline command without a prior `--simulate`/`--dry-run` and confirmation that
   live execution is intended (per the nipoppy-cli safety constraint).
-- Always verify `config.json` + `manifest.tsv` before any command other than `init`.
+- Always verify `global_config.json` + `manifest.tsv` before any command other than `init`.
 - Always warn that `bidsify`/`process`/`extract` require Linux + Apptainer; stop if unavailable.
-- Never edit `manifest.tsv` by hand — instruct the planner/user to use nipoppy's manifest workflow.
+- Never edit `manifest.tsv` yourself — nipoppy has no command that writes it; the user populates it,
+  and you report what is missing.
 - Always pass `--pipeline`, `--pipeline-version`, and `--pipeline-step` explicitly for `process`
-  and `extract` — omitting them may fan out across all configured pipelines unexpectedly.
+  and `extract` — `--pipeline` is required, and the other two silently default to the latest
+  installed version and the first step, which the run record would then not name.
 - Do not make research-process decisions (which pipeline to run, whether results are good) — that
   is the planner's job. You construct, validate, and report.
-- On failure, surface the error and the relevant log path (`<dataset>/proc/logs/<pipeline>/...` or
-  `<dataset>/logs/<pipeline>/<version>/`), and return `result: failed` with a suggested fix.
+- On failure, surface the error and the relevant log path (`<dataset>/logs/<workflow>/<pipeline>-<version>/`,
+  e.g. `logs/process/fmriprep-23.1.3/`; older releases used `proc/logs/`),
+  and return `result: failed` with a suggested fix.

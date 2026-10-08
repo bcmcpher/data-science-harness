@@ -30,14 +30,14 @@
 
 ## 5. Refinement loop
 
-- [ ] 5.1 Run each live section; for each disagreement with a toolbox skill or reference, fix the skill/reference and the doer (and `check-backends.sh` `enable:` lines for package names), then add a row to design.md "Refinements found" with `tool@version`, the old text, the observed behaviour, and the files changed
-- [ ] 5.2 Confirm or correct the pre-recorded findings in design.md Context: `global_config.json` vs `config.json`; nipoppy layout paths (`tabular/`, `proc/logs/`); `track-curation` filters; `status --verbose`; the bagel package name; `pheno --name` vs `--dataset-description`; `bids --bids-dir` vs `--bids-table`
-- [ ] 5.3 Verify the unverified subcommands (pynidm `bidsmri2nidm` flags, `pynidm query`; reproschema `validate`, `convert`, `redcap2reproschema`, `reproschema2redcap`) against `--help` in the locked envs
-- [ ] 5.4 Settle the `DSH-Binding` open question and apply it to the doers' `binding:` lines if it changes them
+- [x] 5.1 Run each live section; for each disagreement with a toolbox skill or reference, fix the skill/reference and the doer (and `check-backends.sh` `enable:` lines for package names), then add a row to design.md "Refinements found" with `tool@version`, the old text, the observed behaviour, and the files changed
+- [x] 5.2 Confirm or correct the pre-recorded findings in design.md Context: `global_config.json` vs `config.json`; nipoppy layout paths (`tabular/`, `proc/logs/`); `track-curation` filters; `status --verbose`; the bagel package name; `pheno --name` vs `--dataset-description`; `bids --bids-dir` vs `--bids-table`
+- [x] 5.3 Verify the unverified subcommands (pynidm `bidsmri2nidm` flags, `pynidm query`; reproschema `validate`, `convert`, `redcap2reproschema`, `reproschema2redcap`) against `--help` in the locked envs
+- [x] 5.4 Settle the `DSH-Binding` open question and apply it to the doers' `binding:` lines if it changes them
 
 ## 6. Docs, manifests, checks
 
-- [ ] 6.1 `README.md` setup section: `bin/test-envs sync` and what each env enables; the e2e skips per tool without them
-- [ ] 6.2 Sibling-manifest comments in `pyproject.toml` and `environment.yml` name `tests/envs/*/pyproject.toml`
-- [ ] 6.3 Measure `bin/test-envs sync` time on a clean runner; add it to the dispatch-only e2e job in `.github/workflows/ci.yml` if acceptable, else record why not in the workflow header
-- [ ] 6.4 `python3 tests/lint-plugins.py --strict`, the selftest, `bash tests/e2e-smoke.sh` (with and without envs), and `openspec validate live-tool-test-envs --strict` pass
+- [x] 6.1 `README.md` setup section: `bin/test-envs sync` and what each env enables; the e2e skips per tool without them
+- [x] 6.2 Sibling-manifest comments in `pyproject.toml` and `environment.yml` name `tests/envs/*/pyproject.toml`
+- [x] 6.3 Measure `bin/test-envs sync` time on a clean runner; add it to the dispatch-only e2e job in `.github/workflows/ci.yml` if acceptable, else record why not in the workflow header
+- [x] 6.4 `python3 tests/lint-plugins.py --strict`, the selftest, `bash tests/e2e-smoke.sh` (with and without envs), and `openspec validate live-tool-test-envs --strict` pass

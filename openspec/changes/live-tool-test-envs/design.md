@@ -141,10 +141,35 @@ would then check the vendored copy rather than what a user's install does.
 
 ## Refinements found
 
-_Filled in during implementation (task 5). One row per fix._
+_Filled in during task 5, 2026-10-08, from live runs and `--help` in the locked envs._
 
 | Tool@version | What the skill said | What the tool does | Files changed |
 |---|---|---|---|
+| nipoppy@0.4.7 | dataset config is `config.json` | `global_config.json`; `~/.nipoppy/config.json` is user-level; pipelines have their own `pipelines/<type>/<name>-<version>/config.json` | nipoppy-cli references + skills, `nipoppy-doer.md` |
+| nipoppy@0.4.7 | config keys `DATASET_NAME`, `VISITS`, `SESSIONS`, `BIDS_CONVERTER`, `PROC_PIPELINES`, `CONTAINER` | keys `SUBSTITUTIONS`, `DICOM_DIR_PARTICIPANT_FIRST`, `CONTAINER_CONFIG`, `HPC_PREAMBLE`, `PIPELINE_VARIABLES`, `CUSTOM`, `SCHEMA_VERSION`; image from pipeline `CONTAINER_INFO.FILE` | `workflow-overview.md`, `setup-commands.md`, `bids-commands.md`, `nipoppy-compute`, doer |
+| nipoppy@0.4.7 | layout has `proc/logs/`; status files in `tabular/` | no `proc/`; `init` writes `.nipoppy/`, `logs/`, `pipelines/{bidsification,processing,extraction}/`, `containers/`, `code/hpc/`, `scratch/`, `sourcedata/{imaging,tabular}/`, `tabular/assessments/`; `tabular/` is phenotypic only | `setup-commands.md`, `workflow-overview.md` |
+| nipoppy@0.4.7 | curation status `tabular/curation_status.tsv` (`has_*_data` columns), made by `init` | `sourcedata/imaging/curation_status.tsv`, columns `participant_id`…`in_pre_reorg`, `in_post_reorg`, `in_bids`; first `track-curation` creates it | `curation-commands.md`, `bids-commands.md`, `nipoppy-track` |
+| nipoppy@0.4.7 | processing status `tabular/bagel.tsv` | `derivatives/processing_status.tsv` with `pipeline_name`, `pipeline_version`, `pipeline_step`, `status` | `track-extract-commands.md`, `process-command.md`, `setup-commands.md`, `workflow-overview.md`, `nipoppy-track`, nipoppy-cli `README.md` |
+| nipoppy@0.4.7 | `track-curation --participant-id/--session-id` | no filters: `--dataset`, `--empty`, `--regenerate`, `--layout`, `--dry-run`, `-v` | `curation-commands.md` |
+| nipoppy@0.4.7 | `status --verbose` gives per-participant detail | `--verbose` is DEBUG logging; output is always aggregate counts | `setup-commands.md` |
+| nipoppy@0.4.7 | `reorg --participant-id/--session-id/--simulate`, `--layout` a heuristic | `reorg` takes `--copy-files`, `--check-dicoms`, `--dry-run`, `--layout` (JSON spec); mapping via `DICOM_DIR_*` in `global_config.json` | `curation-commands.md` |
+| nipoppy@0.4.7 | `nipoppy init <path>` | positional path is a usage error; `init --dataset <path>` | `setup-commands.md` |
+| nipoppy@0.4.7 | `--simulate` only prints | still needs apptainer, the image file, and eligible rows (`in_bids` for process) | `process-command.md`, `bids-commands.md`, `workflow-overview.md`, `nipoppy-compute` |
+| nipoppy@0.4.7 | logs under `proc/logs/<pipeline>/` | `logs/<workflow>/<name>-<version>/`; `logs/track_curation/` | doer, `nipoppy-compute`, `nipoppy-track` |
+| nipoppy@0.4.7 | omitting `--pipeline` may fan out | `--pipeline` required; version defaults to latest installed, step to first | doer, `nipoppy-track` |
+| nipoppy@0.4.7 | doer: use nipoppy's manifest workflow; manifest columns `visit`/`session` | no command writes the manifest; columns `visit_id`/`session_id`, `datatype` a list | doer, `workflow-overview.md` |
+| bagel@0.11.6 | `pip install bagel-cli` | PyPI package is `bagel` | `check-backends.sh`, `annotate-doer.md` |
+| bagel@0.11.6 | `pheno --name <dataset name>` | no `--name`; `--dataset-description/-m <json>` required, label from its `Name` | bagel-cli `SKILL.md` |
+| bagel@0.11.6 | `pheno --output <dir-or-file>`; silent on network | one `.jsonld` file, exits 1 if present without `--overwrite`; fetches vocab configs at start-up, fails offline | bagel-cli `SKILL.md`, `check-backends.sh` header, doer |
+| bagel@0.11.6 | `bids --bids-dir <dir>` | `bids --bids-table <tsv>` from `bids2tsv --bids-dir`; needs `BIDSVersion`; `--strip-id-prefixes` | bagel-cli `SKILL.md` |
+| pynidm@4.5.5 | `pynidm --version` | no such option (exit 2); `pynidm version` subcommand or package metadata | pynidm `SKILL.md`, `annotate-doer.md` |
+| pynidm@4.5.5 | `csv2nidm` runs unattended | crashes (`TypeError … dataset_identifier`) without `-no_concepts` | pynidm `SKILL.md` |
+| pynidm@4.5.5 | `bidsmri2nidm -d -o` runs unattended | prompts on stdin without `-no_concepts`, and per column without a `participants.json` sidecar; `EOFError` with stdin closed | pynidm `SKILL.md` |
+| pynidm@4.5.5 | `pynidm query -nl <ttl> -u <query or uri>` | `-nl` is a comma list; exactly one of `-q -p -i -iv -de -debv -bv -gf -u`; `-u` is REST-style; `-de` empty on `-no_concepts` output | pynidm `SKILL.md` |
+| reproschema@1.1.0 | `validate`, no hang warning | an `@id`/file-name mismatch leaves the local server running and never exits; wrap in `timeout` | reproschema `SKILL.md` |
+| reproschema@1.1.0 | validation failure means the tool worked | models have no required fields; only wrong types and `@id` mismatches fail | reproschema `SKILL.md` |
+| reproschema@1.1.0 | `convert --format <from --help>` | `jsonld`, `n-triples` (default), `turtle`; one document to stdout | reproschema `SKILL.md` |
+| reproschema@1.1.0 | `redcap2reproschema` may want a YAML config; `reproschema2redcap <file>` | YAML is a required positional (`protocol_name`, `protocol_display_name`, `source_version`); output `<out>/<protocol_name>/` without `.jsonld`; `reproschema2redcap` takes the protocol dir; round trip is exact | reproschema `SKILL.md` |
 
 ## Risks / Trade-offs
 
@@ -170,6 +195,11 @@ state. Skill fixes stand on their own, because each is a correction.
   report (`binding: nipoppy/…@<version>` "from config.json / `nipoppy --version`"). It is also the
   only source a user's own install has. In a harness test the two should agree, and `bin/test-envs
   sync` prints the runtime value so a disagreement is visible.
+  **Settled (task 5.4): runtime `--version`, falling back to the package metadata
+  (`importlib.metadata.version`) when the CLI has no `--version`.** Of the four, only pynidm 4.5.5
+  lacks it (its `pynidm version` subcommand prints the version instead); reproschema 1.1.0 has it,
+  contrary to an earlier note. `bin/test-envs` already falls back; the annotate doer's `version:`
+  line now says so.
 - **When an env exists but is stale, does the e2e fail or skip?** **Default: skip**, with the
   reason from `bin/test-envs check` (`SKIP: nipoppy env stale — run bin/test-envs sync nipoppy`). A
   stale env means the lock moved and the developer has not re-synced. That is a setup state, not
@@ -177,3 +207,5 @@ state. Skill fixes stand on their own, because each is a correction.
   next e2e run until they re-sync.
 - Whether the dispatch-only e2e CI job should run `bin/test-envs sync` for all four tools, given
   runner time. Task 6.3 measures the time and decides.
+  **Settled (task 6.3): yes.** With an empty uv cache all four synced in ~15 s (~820 MB), measured
+  locally 2026-10-08. The e2e job runs `bin/test-envs sync` and sets `DSH_NET=1`.

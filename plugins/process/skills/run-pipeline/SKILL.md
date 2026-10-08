@@ -21,11 +21,11 @@ the way you would run git.
 > Design note: nipoppy alone does not record provenance and datalad does not know pipeline
 > mechanics — so this planner joins them. The nipoppy command is always executed *through*
 > `datalad run`; a bare nipoppy process run is never the final step. (The container image itself is
-> pinned by nipoppy's `config.json` + Boutiques descriptor, so datalad's own `container-run`
+> pinned by the installed pipeline's `config.json` + Boutiques descriptor, so datalad's own `container-run`
 > image-capture is not needed here — nipoppy owns that layer.)
 
 ## When to use
-- A nipoppy dataset (`config.json` + `manifest.tsv`) exists with BIDS data ready, and the user
+- A nipoppy dataset (`global_config.json` + `manifest.tsv`) exists with BIDS data ready, and the user
   wants to run a processing pipeline.
 - Do NOT use to create/curate the dataset (that is nipoppy `init`/`bidsify` — a future `curate`
   planner) or to run a bespoke analysis script (that is `analyze/run-comparison`).
@@ -35,7 +35,7 @@ the way you would run git.
    pipeline step and the participant and session scope, from the user. If the pipeline or version
    is unspecified, ask (never guess a version).
 2. **Validate + construct (nipoppy doer)** — delegate:
-   > "Validate this nipoppy dataset (config.json, manifest.tsv, Linux+Apptainer, pipeline version
+   > "Validate this nipoppy dataset (global_config.json, manifest.tsv, Linux+Apptainer, pipeline version
    > matches a pulled image). Construct the process command for pipeline <X> at version <V>, step
    > <S> if given, scoped to participants <P> and sessions <S> if given. Preview it with a
    > simulated run, and return the exact command plus the inputs it reads and outputs it writes."
@@ -61,10 +61,10 @@ the way you would run git.
    Use exactly one `-m`. On failure, relay the error and the nipoppy log path; nothing was
    committed. Stop.
 5. **Record completion (nipoppy doer, then save yourself)** — after a successful run:
-   > nipoppy doer: "Update the processing status for <pipeline> in `tabular/bagel.tsv`."
+   > nipoppy doer: "Update the processing status for <pipeline> in `derivatives/processing_status.tsv`."
    Then save what it wrote:
    ```bash
-   datalad save -m "$(printf 'track-processing: <pipeline> <version>\n\nDSH-Op: run-pipeline\nDSH-Stage: process\nDSH-Binding: <binding>')" tabular/bagel.tsv
+   datalad save -m "$(printf 'track-processing: <pipeline> <version>\n\nDSH-Op: run-pipeline\nDSH-Stage: process\nDSH-Binding: <binding>')" derivatives/processing_status.tsv
    ```
 6. **Report** — the pipeline/version/scope, the provenance commit, output derivatives, updated
    bagel status, and that the run is replayable with `datalad rerun`. Suggest the next step

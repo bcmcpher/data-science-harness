@@ -24,7 +24,7 @@ with provenance. You never construct the converter command yourself.
 > `config.json` + Boutiques, so datalad's own `container-run` image-capture is not needed here.
 
 ## When to use
-- A nipoppy dataset (`config.json` + `manifest.tsv`) has raw DICOMs staged (post-reorg) and needs
+- A nipoppy dataset (`global_config.json` + `manifest.tsv`) has raw DICOMs staged (post-reorg) and needs
   BIDS conversion.
 - Do NOT use to run a processing pipeline (`process/run-pipeline`), to add descriptive metadata to
   an already-BIDS dataset (`curate/annotate`), or to initialize a project (`project/new-project`).
@@ -34,7 +34,7 @@ with provenance. You never construct the converter command yourself.
    and any participant and session scope from the user. Raw data must be staged where
    nipoppy expects it (post-reorg); if it is not, direct the user to nipoppy `reorg` first.
 2. **Validate + construct (nipoppy doer)** — delegate:
-   > "Validate this nipoppy dataset (config.json, manifest.tsv, Linux+Apptainer, converter version
+   > "Validate this nipoppy dataset (global_config.json, manifest.tsv, Linux+Apptainer, converter version
    > matches a pulled image). Construct the bidsify command for converter <X> at version <V>,
    > scoped to participants <P> and sessions <S> if given. Preview it with a simulated run, and
    > return the exact command plus the inputs it reads (sourcedata/post-reorg) and outputs it
@@ -52,11 +52,11 @@ with provenance. You never construct the converter command yourself.
    Copy `binding` from the nipoppy doer's step-2 result into `DSH-Binding`. On failure, relay the
    error and the nipoppy log path; nothing was committed. Stop.
 5. **Update curation status and record it, in one step** — after success, delegate the update:
-   > nipoppy doer: "Update the curation status in `tabular/curation_status.tsv` after bidsify."
+   > nipoppy doer: "Update the curation status in `sourcedata/imaging/curation_status.tsv` after bidsify."
 
    Then save it yourself, naming the converter and scope:
    ```bash
-   datalad save -m "$(printf 'track-curation: post-bidsify <converter> on <scope>\n\nDSH-Op: raw-to-bids\nDSH-Stage: curate')" tabular/curation_status.tsv
+   datalad save -m "$(printf 'track-curation: post-bidsify <converter> on <scope>\n\nDSH-Op: raw-to-bids\nDSH-Stage: curate')" sourcedata/imaging/curation_status.tsv
    ```
 6. **Report** — the converter/scope, the provenance commit, the `bids/` output, and the next step:
    `curate/annotate` to enrich metadata, or `process/run-pipeline` to process the BIDS data.

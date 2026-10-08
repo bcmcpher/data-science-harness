@@ -47,6 +47,6 @@ Shared by all four skills, at `references/`:
 | `curation-commands.md` | `track-curation` and `reorg` — options, DICOM checks, curation status schema |
 | `bids-commands.md` | `bidsify` — dcm2bids, HeuDiConv, BIDScoin options and Boutiques context |
 | `process-command.md` | `process` — options, HPC submission, subcohort workflow |
-| `track-extract-commands.md` | `track-processing` and `extract` — bagel schema, IDP extraction |
+| `track-extract-commands.md` | `track-processing` and `extract` — processing-status schema, IDP extraction |
 | `pipeline-catalog-commands.md` | `pipeline search`, `install`, `list` |
 | `pipeline-authoring-commands.md` | `pipeline create`, `validate`, `upload` |

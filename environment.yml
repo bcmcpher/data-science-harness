@@ -22,6 +22,8 @@
 # Sibling manifests, each owning a different toolchain:
 #   pyproject.toml    the four Python check scripts (locked: uv.lock)
 #   package.json      Node CLIs — openspec, mystmd (locked: package-lock.json)
+#   tests/envs/*/pyproject.toml   one uv env per wrapped tool, for the e2e live sections
+#                     (locked: tests/envs/*/uv.lock; built by bin/test-envs sync)
 
 name: ds-harness-e2e
 

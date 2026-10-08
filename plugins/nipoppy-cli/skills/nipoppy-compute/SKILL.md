@@ -40,8 +40,9 @@ The command is constructed, simulated, and returned; the planner runs it under `
    ```bash
    apptainer --version && nipoppy --version
    ```
-   `bidsify`, `process` and `extract` need Linux and Apptainer, and the pipeline version in
-   `config.json` must match a pulled container image. A missing image is a clean stop with
+   `bidsify`, `process` and `extract` need Linux and Apptainer, and the image named by
+   `CONTAINER_INFO.FILE` in `pipelines/<type>/<name>-<version>/config.json` (default
+   `containers/<name>_<version>.sif`) must exist on disk. A missing image is a clean stop with
    the pull command named — never a fallback to a host installation of the tool, which would produce
    derivatives from a different version of the software than the config claims.
 
@@ -49,15 +50,18 @@ The command is constructed, simulated, and returned; the planner runs it under `
    ```bash
    nipoppy process --dataset <path> --pipeline <name> --pipeline-version <v> --simulate
    ```
-   This surfaces the Boutiques/Apptainer invocation that would run. `--simulate` and `--dry-run`
-   availability varies by command; the reference says which applies.
+   This surfaces the Boutiques/Apptainer invocation that would run. `--simulate` is not
+   container-free: it still needs Apptainer, the image file, and eligible participant-sessions
+   (`in_bids` for `process`, `in_post_reorg` for `bidsify`), so an empty preview usually means no
+   eligible rows — check `track-curation` first. `reorg` has only `--dry-run`; the reference says
+   which applies.
 
 5. **Declare the inputs and outputs the run needs.** This is the part that cannot be recovered
    afterwards: the planner's `datalad run` needs `-i` and `-o` paths to record, and a run whose outputs are
    under-declared saves an incomplete result.
    ```
-   inputs:  bids/, config.json, the container image
-   outputs: derivatives/<pipeline>/<version>/, logs/
+   inputs:  bids/, global_config.json, pipelines/<type>/<name>-<version>/, the container image
+   outputs: derivatives/<pipeline>/<version>/, logs/<workflow>/<name>-<version>/
    ```
 
 6. **Hand it back. Do not run it.**
@@ -87,7 +91,7 @@ The command is constructed, simulated, and returned; the planner runs it under `
   environment is the claim; a run outside it produces derivatives the config misdescribes.
 - **Never under-declare outputs to make a run tidier.** An output produced but not declared is
   untracked, and the next `datalad run` will report a dirty tree that nobody can attribute.
-- **Never edit `manifest.tsv` or `config.json`** to make a command succeed. Both are the
+- **Never edit `manifest.tsv` or `global_config.json`** to make a command succeed. Both are the
   dataset's declarations, and changing them to fit a command inverts which one is authoritative.
 - **Never report a completed pipeline as good results.** Exit 0 means the container ran. Whether the
   outputs are usable is `govern/qc-review`'s question.

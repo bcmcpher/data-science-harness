@@ -871,6 +871,7 @@ to ask that of users and not of ourselves.
 | Python | `pyproject.toml` | `uv.lock` | the four check scripts |
 | Node | `package.json` | `package-lock.json` | `openspec validate`, the `paper/` build |
 | e2e stack | `environment.yml` | *deliberately not* — see the file | `tests/e2e-smoke.sh` |
+| Wrapped tools | `tests/envs/<tool>/pyproject.toml` | `tests/envs/<tool>/uv.lock` | the e2e live sections for nipoppy, bagel, pynidm, reproschema |
 
 ```bash
 # Python checks
@@ -889,6 +890,21 @@ npm run paper:check       # build paper/ and fail on any unresolved citation
 conda env create -f environment.yml && conda activate ds-harness-e2e
 bash tests/e2e-smoke.sh
 ```
+
+The e2e suite runs each wrapped tool for real only when its env under `tests/envs/` is present and
+in step with its lock; otherwise that section skips with the reason (`missing` or `stale — run
+bin/test-envs sync <tool>`). Build them with:
+
+```bash
+bin/test-envs sync            # all four; or name one: bin/test-envs sync nipoppy
+bin/test-envs check           # ok <version> | missing | stale, changes nothing
+DSH_NET=1 bash tests/e2e-smoke.sh   # also run the network-bound steps (bagel pheno, reproschema validate)
+```
+
+Each env enables one live section: nipoppy (`init`, `track-curation`, `status`, and
+`process --simulate` when apptainer is on PATH), bagel (`pheno`, accept and reject), pynidm
+(`bidsmri2nidm`), reproschema (`validate`, accept and reject). These envs are test fixtures, not
+harness or check dependencies.
 
 The e2e suite's Zenodo block runs against sandbox.zenodo.org only when `DSH_ZENODO_SANDBOX_TOKEN` is
 set; [`docs/testing/archive-sandbox.md`](docs/testing/archive-sandbox.md) covers the token, what a

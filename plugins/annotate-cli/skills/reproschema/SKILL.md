@@ -63,35 +63,51 @@ REDCap dictionary the user supplied — never from recall.
 4. **Validate a schema** — run this first on anything you did not just generate, and again on
    anything you did:
    ```bash
-   reproschema validate <path to schema dir or file>
+   timeout 120 reproschema validate <path to schema dir or file>
    ```
+   Always run it under `timeout`. `validate` starts a local HTTP server to resolve relative
+   references, and some failures leave that server running so the command never exits — an
+   `@id` that does not match its file's name is one (`Document …/wrong.jsonld does not match the
+   schema name item1.jsonld`). Exit 124 means it hung: report the last error in the log, and check
+   that each document's `@id` equals its own file name. Any `reproschema` command that resolves
+   remote contexts also needs the network; an unreachable fetch retries rather than fails.
+
    A validation failure is the tool working. Report the error text and fix the schema's structure —
    never change an item's wording or response codes to make validation pass, because those are the
-   instrument's content, not its structure.
+   instrument's content, not its structure. A pass is also weaker than it sounds: the models have
+   no required fields, so a schema with a dropped field still conforms. What validation catches is
+   a value of the wrong type and an `@id`/file-name mismatch.
 
 5. **Convert a schema** — between serializations, for a consumer that wants RDF rather than JSON-LD:
    ```bash
    reproschema convert --help
-   reproschema convert <path> --format <format from --help>
+   timeout 120 reproschema convert --format <jsonld|n-triples|turtle> <file> > <output file>
    ```
-   Take the format names from `--help`; do not guess one.
+   The formats are `jsonld`, `n-triples` (the default) and `turtle`; check `--help` if the version
+   differs. It takes one document and writes to stdout, so redirect it — no file is written for you.
 
 6. **Convert a REDCap data dictionary into a protocol** — the realistic path into ReproSchema for a
    study that already collected data, because the REDCap dictionary is a record of the instrument as
    it was actually administered:
    ```bash
    reproschema redcap2reproschema --help
-   reproschema redcap2reproschema <redcap_data_dictionary.csv> <protocol config>
+   timeout 300 reproschema redcap2reproschema <redcap_data_dictionary.csv> <protocol.yaml> --output-path <dir>
    ```
-   Check `--help` for whether the installed version wants a YAML config alongside the CSV. Then
-   validate the result with step 4 before reporting it.
+   The YAML config is required and must have `protocol_name`, `protocol_display_name` and
+   `source_version` (older configs' `redcap_version` is accepted for the last); ask the user for
+   these rather than inventing a version. The CSV must have the REDCap columns `Variable / Field
+   Name`, `Form Name`, `Field Type`, `Field Label` and `Choices, Calculations, OR Slider Labels`.
+   The protocol lands in `<dir>/<protocol_name with spaces as _>/`, one `activities/<form>/` per
+   form, and the files carry no `.jsonld` extension. Then validate that protocol directory with
+   step 4 before reporting it.
 
 7. **Convert a protocol into a REDCap data dictionary** — the reverse, for deploying an existing
    instrument into a REDCap project:
    ```bash
    reproschema reproschema2redcap --help
-   reproschema reproschema2redcap <input> <output csv>
+   timeout 300 reproschema reproschema2redcap <protocol dir> <output csv>
    ```
+   The input is the protocol directory (the one holding `activities/`), not a single file.
 
 8. **Relate the schema to the dataset's columns, without editing either.** This is the step that
    makes the work useful to `curate/annotate`: say which `participants.tsv` columns correspond to
