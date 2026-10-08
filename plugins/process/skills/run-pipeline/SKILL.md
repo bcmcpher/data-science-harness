@@ -55,7 +55,7 @@ the way you would run git.
    ```bash
    datalad run -m "$(printf '<pipeline> <version> on <scope>\n\nDSH-Op: run-pipeline\nDSH-Stage: process\nDSH-Binding: <binding from step 2>')" \
      -i <inputs from step 2> \
-     -o <outputs from step 2, e.g. derivatives/<pipeline>, proc/logs/<pipeline>> \
+     -o <outputs from step 2, e.g. derivatives/<pipeline>, logs/process/<pipeline>-<version>> \
      "<the nipoppy process command>"
    ```
    Use exactly one `-m`. On failure, relay the error and the nipoppy log path; nothing was
@@ -64,8 +64,11 @@ the way you would run git.
    > nipoppy doer: "Update the processing status for <pipeline> in `derivatives/processing_status.tsv`."
    Then save what it wrote:
    ```bash
-   datalad save -m "$(printf 'track-processing: <pipeline> <version>\n\nDSH-Op: run-pipeline\nDSH-Stage: process\nDSH-Binding: <binding>')" derivatives/processing_status.tsv
+   datalad save -m "$(printf 'track-processing: <pipeline> <version>\n\nDSH-Op: run-pipeline\nDSH-Stage: process\nDSH-Binding: <binding>')" \
+     derivatives/processing_status.tsv derivatives/.processing_statuses logs/track_processing
    ```
+   `processing_status.tsv` is a symlink to a timestamped copy in `.processing_statuses/`; save
+   both, or the commit records a dangling link.
 6. **Report** — the pipeline/version/scope, the provenance commit, output derivatives, updated
    bagel status, and that the run is replayable with `datalad rerun`. Suggest the next step
    (IDP extraction through the nipoppy doer, or `analyze/propose-comparison`).
@@ -76,7 +79,7 @@ the way you would run git.
 - Require a meaningful `-m` message that names the pipeline, version, and scope; never a placeholder,
   and never more than one `-m` (DataLad keeps only the last).
 - Declare inputs/outputs from the nipoppy doer's report — do not invent paths. Prefer the pipeline's
-  own `derivatives/<pipeline>` and `proc/logs/<pipeline>` as `-o`; leave `scratch/` untracked.
+  own `derivatives/<pipeline>` and `logs/process/<pipeline>-<version>` as `-o`; leave `scratch/` untracked.
 - Do not diagnose or "fix" the pipeline's science — if a container errors on its own logic, surface
   the nipoppy log to the user; the harness owns provenance, not the pipeline internals.
 - Record activity in the commit's `DSH-*` lines, never in `project.yaml` `log`. Note a failed run to

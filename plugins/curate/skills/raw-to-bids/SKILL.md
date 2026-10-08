@@ -56,8 +56,11 @@ with provenance. You never construct the converter command yourself.
 
    Then save it yourself, naming the converter and scope:
    ```bash
-   datalad save -m "$(printf 'track-curation: post-bidsify <converter> on <scope>\n\nDSH-Op: raw-to-bids\nDSH-Stage: curate')" sourcedata/imaging/curation_status.tsv
+   datalad save -m "$(printf 'track-curation: post-bidsify <converter> on <scope>\n\nDSH-Op: raw-to-bids\nDSH-Stage: curate')" \
+     sourcedata/imaging/curation_status.tsv sourcedata/imaging/.curation_statuses logs/track_curation
    ```
+   `curation_status.tsv` is a symlink to a timestamped copy in `.curation_statuses/`; save both,
+   or the commit records a dangling link.
 6. **Report** — the converter/scope, the provenance commit, the `bids/` output, and the next step:
    `curate/annotate` to enrich metadata, or `process/run-pipeline` to process the BIDS data.
    Suggest `govern/qc-review` (bids-validator) to confirm BIDS validity.

@@ -509,7 +509,7 @@ data-science-harness/
 | **BIDS** | Brain Imaging Data Structure — canonical neuroimaging dataset format | capability · `bids` | `npm install -g bids-validator` |
 | **Nipoppy** | Standardized dataset organization + pipeline running & tracking; spans curate → analyze → QC | capability · `nipoppy` | `pip install nipoppy` |
 | **Apptainer / Docker** | Portable, ephemeral computational environments | capability · `containers` | container runtime |
-| **Neurobagel / bagel-cli** | Annotate phenotypic variables with controlled terms; push to graph | capability · `annotate` | `pip install bagel-cli` |
+| **Neurobagel / bagel-cli** | Annotate phenotypic variables with controlled terms; push to graph | capability · `annotate` | `pip install bagel` |
 | **SNOMED CT** | Clinical terminology — normalize variable names to standard codes | capability · `annotate` | SNOMED CT API key or local OWL |
 | **ReproSchema** | Standardized representation of behavioral assessments / questionnaires | capability · `annotate` | `pip install reproschema` |
 | **NeuroSynth Compose / NiMARE** *(proposed)* | Reproducible coordinate-based meta-analysis of a topic | workflow · `analyze` | web platform; `pip install nimare` |
@@ -555,7 +555,7 @@ data-science-harness/
 ```json
 "requires": {
   "system":    ["git", "git-annex", "datalad"],          // OS / non-language tools
-  "python":    ["bagel-cli", "pynidm", "reproschema"],   // pip-installable
+  "python":    ["bagel", "pynidm", "reproschema"],       // pip-installable
   "npm":       ["bids-validator"],                       // Node tools
   "reference": ["stamped", "bids", "snomed-ct"]          // no install — references/ only
 }

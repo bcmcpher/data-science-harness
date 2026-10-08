@@ -10,7 +10,9 @@
 - `reproschema validate` on a minimal protocol fixture.
 
 Each check MUST run whenever its environment is present and in sync with its lock. Otherwise it MUST
-skip, naming `bin/test-envs sync <tool>`. `bagel pheno` and `reproschema validate` cannot run
+skip, naming `bin/test-envs sync <tool>`, with one exception: when the bagel environment is not
+ready but a `bagel` command is on `PATH`, the bagel check MUST run that install instead and print a
+`NOTE:` line naming its path. `bagel pheno` and `reproschema validate` cannot run
 offline, so those two MUST also skip unless `DSH_NET=1`, saying so, and every live call MUST run
 under a timeout. Inside each environment, the backend's
 `check-backends.sh` answer MUST be `available`.
@@ -28,9 +30,15 @@ under a timeout. Inside each environment, the backend's
 
 #### Scenario: No environments are synced
 
-- **WHEN** none of the annotate environments exist
+- **WHEN** none of the annotate environments exist and no `bagel` is on `PATH`
 - **THEN** each live check prints one `SKIP:` line with its sync command, and the rest of the
   annotate section still passes
+
+#### Scenario: bagel installed outside the harness
+
+- **WHEN** `tests/envs/bagel` is missing, `bagel` is on `PATH`, and `DSH_NET=1`
+- **THEN** the bagel check prints a `NOTE:` line naming that `bagel`, asserts it reports a version,
+  and runs the same accept and reject assertions against it
 
 ### Requirement: A refusal is asserted for its reason, not only its exit code
 

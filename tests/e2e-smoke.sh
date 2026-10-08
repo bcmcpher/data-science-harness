@@ -50,18 +50,32 @@ assert_grep() { if grep -qE "$2" "$3" 2>/dev/null; then ok "$1"; else bad "$1  [
 # passes the `import yaml` gate on the blocks below) produced a wall of spurious FAILs.
 skip() { printf '  SKIP: %s\n' "$1"; }
 assert_ledger() { if [ "$2" -eq 2 ]; then skip "$1 — ledger validator dependency absent"; else assert "$1" "[ $2 -eq 0 ]"; fi; }
-# tool_env_ready <name> — true when tests/envs/<name> is synced and matches its lock. Otherwise it
-# prints the skip reason: a missing or stale env is a setup state, not a harness defect.
+# tool_env_ready <name> [path-cmd] — true when tests/envs/<name> is synced and matches its lock.
+# With path-cmd, an install already on PATH stands in when the env is not ready (tool_env then
+# runs it as found). Otherwise it prints the skip reason: a missing or stale env is a setup state,
+# not a harness defect.
+ENVS_READY=" "
 tool_env_ready() {
   local state
-  state=$("$REPO/bin/test-envs" check "$1" 2>&1) && return 0
+  if state=$("$REPO/bin/test-envs" check --quiet "$1" 2>&1); then ENVS_READY+="$1 "; return 0; fi
+  if [ -n "${2:-}" ] && command -v "$2" >/dev/null 2>&1; then
+    printf '  NOTE: %s env %s; using %s from PATH (%s)\n' "$1" "${state#"$1": }" "$2" "$(command -v "$2")"
+    return 0
+  fi
   skip "$1 env ${state#"$1": } — run bin/test-envs sync $1"
   return 1
 }
 # tool_env <name> <cmd...> — run a command with the env's bin/ first on PATH, in a subshell so the
 # change does not reach later sections. Not activation: the gate scripts find the tool, and the
-# env's python3, through PATH exactly as a user's install would be found.
-tool_env() { local name=$1; shift; ( PATH="$REPO/tests/envs/$name/.venv/bin:$PATH"; "$@" ); }
+# env's python3, through PATH exactly as a user's install would be found. When the env was not
+# ready (tool_env_ready fell back to PATH), PATH is left alone.
+tool_env() {
+  local name=$1; shift
+  case "$ENVS_READY" in
+    *" $name "*) ( PATH="$REPO/tests/envs/$name/.venv/bin:$PATH"; "$@" ) ;;
+    *) ( "$@" ) ;;
+  esac
+}
 # dsh <op> <stage> <subject> [extra DSH line]... — a harness commit message: one string, subject,
 # blank line, DSH lines. Passed as a single -m, because DataLad keeps only the last of several.
 dsh() { local op=$1 stage=$2 subj=$3; shift 3; printf '%s\n\nDSH-Op: %s\nDSH-Stage: %s' "$subj" "$op" "$stage"; for l in "$@"; do printf '\n%s' "$l"; done; }
@@ -139,7 +153,7 @@ trap 'on_err $LINENO' ERR
 # unreachable.
 rc_of() {
   local rc=0
-  "$@" >/dev/null 2>&1 || rc=$?
+  "$@" >/dev/null 2>&1 </dev/null || rc=$?
   printf '%s' "$rc"
 }
 
@@ -371,7 +385,8 @@ PY
   ORC2=$(rc_of python3 "$REPO/schemas/validate-ledger.py" project.yaml)
   assert_ledger "ledger valid after resolving obligation to met" "$ORC2"
   assert_grep "obligation resolved forward to met"        "status: met" "project.yaml"
-  assert_grep "resolution names the recorded action"      "resolved_by: $OBSHA" "project.yaml"
+  # An all-digit short SHA (~4% of commits) is dumped quoted, so it would be read as a number.
+  assert_grep "resolution names the recorded action"      "resolved_by: '?$OBSHA'?" "project.yaml"
   # The schema forbids `met` without `resolved_by` — a status flip that records nothing is the
   # failure the obligations registry exists to prevent. Prove the constraint bites instead of
   # trusting it: strip the field in a throwaway copy and require a rejection.
@@ -1057,8 +1072,15 @@ net_ready() { [ "${DSH_NET:-}" = 1 ] && return 0; skip "$1 needs network — set
 # nipoppy owns its layout, and how it nests in a superdataset is curate's concern (design D5).
 if tool_env_ready nipoppy; then
   NPDS="$WORKDIR/nipoppy-ds"
+  rm -rf "$NPDS" "$WORKDIR/np-bundle"   # a reused workdir (tests/e2e-smoke.sh <dir>) may hold a past run
   NIRC=$(rc_of tool_env nipoppy timeout $LT nipoppy init --dataset "$NPDS")
   assert "nipoppy init exits 0" "[ $NIRC -eq 0 ]"
+fi
+# Every later step needs the dataset init made; without it they would abort the whole run under
+# set -e rather than fail one assertion.
+if [ -n "${NIRC:-}" ] && [ "$NIRC" -ne 0 ]; then
+  skip "nipoppy track-curation, status, process --simulate — init failed"
+elif [ -n "${NIRC:-}" ]; then
   for f in global_config.json manifest.tsv .nipoppy pipelines tabular logs bids derivatives sourcedata/imaging; do
     assert "nipoppy init wrote $f" "[ -e '$NPDS/$f' ]"
   done
@@ -1078,8 +1100,9 @@ if tool_env_ready nipoppy; then
   if [ -z "$CR_RUNTIME" ]; then
     skip "nipoppy process --simulate — no apptainer/singularity runtime on PATH"
   else
-    tool_env nipoppy timeout $LT nipoppy pipeline create --type processing "$WORKDIR/np-bundle" >/dev/null 2>&1 || true
-    sed -i 's/"tool name"/"dshtemplate"/' "$WORKDIR/np-bundle/config.json"
+    tool_env nipoppy timeout $LT nipoppy pipeline create --type processing "$WORKDIR/np-bundle" >/dev/null 2>&1 </dev/null || true
+    assert "nipoppy pipeline create wrote a bundle config" '[ -f "$WORKDIR/np-bundle/config.json" ]'
+    sed -i 's/"tool name"/"dshtemplate"/' "$WORKDIR/np-bundle/config.json" 2>/dev/null || true
     NVRC=$(rc_of tool_env nipoppy timeout $LT nipoppy pipeline validate "$WORKDIR/np-bundle")
     assert "nipoppy pipeline validate accepts the template bundle" "[ $NVRC -eq 0 ]"
     # install exits non-zero when it cannot pull the placeholder image URI, but copies the bundle;
@@ -1087,17 +1110,17 @@ if tool_env_ready nipoppy; then
     tool_env nipoppy timeout $LT nipoppy pipeline install --dataset "$NPDS" "$WORKDIR/np-bundle" -y >/dev/null 2>&1 || true
     tool_env nipoppy timeout $LT nipoppy pipeline list --dataset "$NPDS" > "$WORKDIR/np-list.txt" 2>&1 || true
     assert_grep "the template pipeline is installed" "dshtemplate \(v0\.1\.0\)" "$WORKDIR/np-list.txt"
-    mkdir -p "$NPDS/bids/sub-01/ses-BL/anat"
-    python3 "$LIVE/write-nifti.py" "$NPDS/bids/sub-01/ses-BL/anat/sub-01_ses-BL_T1w.nii.gz"
+    mkdir -p "$NPDS/bids/sub-01/ses-BL/anat" "$NPDS/containers"
+    python3 "$LIVE/write-nifti.py" "$NPDS/bids/sub-01/ses-BL/anat/sub-01_ses-BL_T1w.nii.gz" || true
     tool_env nipoppy timeout $LT nipoppy track-curation --dataset "$NPDS" --regenerate >/dev/null 2>&1 || true
     : > "$NPDS/containers/dshtemplate_v0.1.0.sif"
-    find "$NPDS/derivatives" -type f | sort > "$WORKDIR/np-deriv-before.txt"
+    { find "$NPDS/derivatives" -type f 2>/dev/null || true; } | sort > "$WORKDIR/np-deriv-before.txt"
     tool_env nipoppy timeout $LT nipoppy process --dataset "$NPDS" --pipeline dshtemplate \
       --pipeline-version v0.1.0 --participant-id 01 --session-id BL --simulate \
       > "$WORKDIR/np-simulate.txt" 2>&1 </dev/null && NPRC=0 || NPRC=$?
     assert "nipoppy process --simulate exits 0" "[ $NPRC -eq 0 ]"
     assert_grep "simulate ran the one participant-session" "Ran for 1 out of 1" "$WORKDIR/np-simulate.txt"
-    find "$NPDS/derivatives" -type f | sort > "$WORKDIR/np-deriv-after.txt"
+    { find "$NPDS/derivatives" -type f 2>/dev/null || true; } | sort > "$WORKDIR/np-deriv-after.txt"
     assert "simulate wrote nothing under derivatives/" "cmp -s '$WORKDIR/np-deriv-before.txt' '$WORKDIR/np-deriv-after.txt'"
   fi
 fi
@@ -1107,6 +1130,7 @@ fi
 if tool_env_ready pynidm; then
   PYRC=$(rc_of tool_env pynidm bash "$BACKENDS" pynidm)
   assert "check-backends sees pynidm through the env's PATH" "[ $PYRC -eq 0 ]"
+  rm -rf "$WORKDIR/nidm-bids" "$WORKDIR/nidm.ttl"
   cp -r "$LIVE/bids" "$WORKDIR/nidm-bids"
   python3 "$LIVE/write-nifti.py" "$WORKDIR/nidm-bids/sub-01/anat/sub-01_T1w.nii.gz"
   tool_env pynidm timeout $LT bidsmri2nidm -d "$WORKDIR/nidm-bids" -o "$WORKDIR/nidm.ttl" -no_concepts \
@@ -1119,9 +1143,14 @@ fi
 # --- bagel: pheno on Neurobagel's annotated example, and refusal of an unannotated dictionary
 # (annotate-cli bagel-cli). The refusal must be for the right reason: the error names the missing
 # annotations, not an option bagel does not have.
-if tool_env_ready bagel && net_ready "bagel pheno"; then
+# Unlike the others, a bagel already on PATH (a pip install or the neurobagel container wrapper)
+# stands in for a missing env, as before the envs existed.
+if tool_env_ready bagel bagel && net_ready "bagel pheno"; then
   BGRC=$(rc_of tool_env bagel bash "$BACKENDS" bagel)
   assert "check-backends sees bagel through the env's PATH" "[ $BGRC -eq 0 ]"
+  tool_env bagel timeout $LT bagel --version > "$WORKDIR/bagel-version.txt" 2>&1 </dev/null || true
+  assert_grep "bagel reports a version" "[0-9]+\.[0-9]+" "$WORKDIR/bagel-version.txt"
+  rm -f "$WORKDIR/pheno.jsonld" "$WORKDIR/pheno-bad.jsonld"
   tool_env bagel timeout $LT bagel pheno --pheno "$LIVE/bagel/participants.tsv" \
     --dictionary "$LIVE/bagel/participants.json" --dataset-description "$LIVE/bagel/dataset_description.json" \
     --output "$WORKDIR/pheno.jsonld" > "$WORKDIR/bagel-ok.log" 2>&1 </dev/null && BKRC=0 || BKRC=$?
@@ -1142,8 +1171,12 @@ fi
 if tool_env_ready reproschema && net_ready "reproschema validate"; then
   RSRC=$(rc_of tool_env reproschema bash "$BACKENDS" reproschema)
   assert "check-backends sees reproschema through the env's PATH" "[ $RSRC -eq 0 ]"
+  rm -rf "$WORKDIR/rs-ok" "$WORKDIR/rs-bad"
   cp -r "$LIVE/reproschema" "$WORKDIR/rs-ok"
   RVRC=$(cd "$WORKDIR/rs-ok" && rc_of tool_env reproschema timeout $LT reproschema validate data)
+  # 124 is the timeout firing: a hang (an unreachable context fetch, or an @id mismatch leaving the
+  # local server up), not a verdict on the fixture.
+  assert "reproschema validate finishes within ${LT}s (124 = hung)" "[ $RVRC -ne 124 ]"
   assert "reproschema validate accepts the fixture protocol" "[ $RVRC -eq 0 ]"
   cp -r "$LIVE/reproschema" "$WORKDIR/rs-bad"
   python3 - "$WORKDIR/rs-bad/data/activities/items/item1.jsonld" <<'PY'
