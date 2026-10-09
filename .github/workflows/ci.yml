@@ -162,7 +162,7 @@ jobs:
         # output, and an ERR trap catches anything unwrapped. The `bash -x` re-run stays as a last
         # resort for a failure neither of those localises.
         env:
-          DSH_NET: "1"   # the runner has network; run bagel pheno and reproschema validate too
+          DSH_NET: "1"   # the runner has network; run bagel pheno, reproschema validate and the ReproNim catalog clone too
         run: |
           if ! bash tests/e2e-smoke.sh; then
             echo "::group::re-running under bash -x to locate the aborting command"

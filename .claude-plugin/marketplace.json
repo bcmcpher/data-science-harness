@@ -51,7 +51,7 @@
     {
       "name": "containers-cli",
       "source": "./plugins/containers-cli",
-      "description": "Containers skill toolbox, split by job rather than by binary: dockerfile translates a declared environment into a Dockerfile and refuses when what it declares would not rebuild, oci-build builds it with Podman or Docker and says which ran and whether it was rootless, apptainer converts the result to the .sif a cluster runs. Two pins it will not waive: an unpinned manifest and a mutable image tag both yield containers that run and do not rebuild."
+      "description": "Containers skill toolbox, split by job rather than by binary: dockerfile translates a declared environment into a Dockerfile and refuses when what it declares would not rebuild, neurodocker generates a pinned recipe for named software, repronim-containers finds a ready-built image in ReproNim/containers, oci-build builds it with Podman or Docker and says which ran and whether it was rootless, apptainer converts the result to the .sif a cluster runs. Two pins it will not waive: an unpinned manifest and a mutable image tag both yield containers that run and do not rebuild."
     },
     {
       "name": "bids",

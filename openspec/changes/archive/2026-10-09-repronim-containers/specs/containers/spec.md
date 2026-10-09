@@ -49,6 +49,16 @@ images run through the dataset's registered `scripts/singularity_cmd` call forma
 the `REPRONIM_USE_DOCKER` fallback. It MUST NOT report an image whose content has not been fetched
 as available to run.
 
+A catalog lookup without an installed subdataset MUST read a temporary metadata-only clone placed
+outside the dataset, and MUST remove that clone when the lookup ends, whether it succeeds or
+fails. The lookup MUST NOT fetch annex content.
+
+#### Scenario: Lookup leaves nothing behind
+
+- **WHEN** the lookup runs on a dataset with no installed ReproNim subdataset, and then exits
+  successfully or with an error
+- **THEN** the temporary clone is gone, and no image content was downloaded
+
 #### Scenario: Using a matched image
 
 - **WHEN** the caller chooses a ReproNim image
@@ -70,7 +80,8 @@ without an OCI digest. Moving the subdataset to a newer commit MUST be reported 
 
 The offline runtime check MUST answer `neurodocker`. It MUST report available when the binary is on
 `PATH` or when a local `repronim/neurodocker` image exists, and unavailable otherwise, with how to
-enable it. `neurodocker` MUST be in the lint's set of peripheral binaries, so that planners state
+enable it. The check MUST inspect only local images, and MUST NOT pull `repronim/neurodocker`.
+`neurodocker` MUST be in the lint's set of peripheral binaries, so that planners state
 intent rather than Neurodocker command lines.
 
 #### Scenario: A planner quotes neurodocker
@@ -82,3 +93,9 @@ intent rather than Neurodocker command lines.
 
 - **WHEN** `check-runtimes.sh neurodocker` runs on a host without either form
 - **THEN** it exits 1 with `missing:` and `enable:` lines
+
+#### Scenario: Only the image form is present
+
+- **WHEN** `check-runtimes.sh neurodocker` runs on a host with no binary and no local
+  `repronim/neurodocker` image, but with network access
+- **THEN** it reports unavailable, and no image is pulled

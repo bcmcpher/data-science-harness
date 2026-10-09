@@ -2,7 +2,7 @@
 #
 # check-runtimes.sh — offline presence check for one container runtime.
 #
-# Usage: check-runtimes.sh <docker|podman|apptainer|oci|digest>
+# Usage: check-runtimes.sh <docker|podman|apptainer|oci|digest|neurodocker>
 #
 # Prints `result: available`, or `result: unavailable` followed by what is missing and how to enable
 # it. Exit codes: 0 = available, 1 = not available, 2 = usage error / unknown tool.
@@ -32,11 +32,15 @@
 # is the check that tells a skill whether it can do anything about that. Note that resolution also
 # needs a reachable registry, which this gate deliberately does not test — it is an offline check,
 # and the skill reports an unresolved pin at the point of use.
+#
+# `neurodocker` is a recipe generator, not a runtime. It is available as the pip binary on PATH, or
+# as a `repronim/neurodocker` image already held by a local docker or podman. The image form is
+# found with `<runtime> images`, which reads local storage only: the gate never pulls it.
 
 set -uo pipefail
 
 usage() {
-  echo "usage: $(basename -- "$0") <docker|podman|apptainer|oci|digest>" >&2
+  echo "usage: $(basename -- "$0") <docker|podman|apptainer|oci|digest|neurodocker>" >&2
   exit 2
 }
 
@@ -139,8 +143,39 @@ case "$tool" in
       enable+=("install skopeo — it resolves a tag without pulling the image, which is the cheapest way to pin a vendored pipeline container. Without one of these, a tag cannot be pinned and MUST NOT be recorded as if it were")
     fi
     ;;
+  neurodocker)
+    # Prefer the binary: its version is what tests/envs/neurodocker locks. The image is the fallback,
+    # and only if it is already local. Never pull.
+    if command -v neurodocker >/dev/null 2>&1 && ver="$(neurodocker --version 2>/dev/null | head -1)" && [ -n "$ver" ]; then
+      found="neurodocker binary ($ver)"
+    else
+      img=""
+      for rt in podman docker; do
+        command -v "$rt" >/dev/null 2>&1 || continue
+        # {{.Digest}} is the registry digest a run can name; {{.ID}} is a local config ID that no
+        # registry knows, and naming it would make the runtime try to pull. An image with no digest
+        # (built locally) is reported by tag, with a caveat.
+        img="$("$rt" images --digests --format '{{.Repository}}:{{.Tag}} {{.Digest}}' 2>/dev/null \
+               | grep -E '(^|/)repronim/neurodocker:' | head -1)"
+        if [ -n "$img" ]; then
+          ref="${img%% *}" dig="${img#* }"
+          if [ -n "$dig" ] && [ "$dig" != "<none>" ]; then
+            found="$rt image ${ref%:*}@$dig ($ref) — run as '$rt run --rm ${ref%:*}@$dig generate …'"
+          else
+            found="$rt image $ref (no registry digest)"
+            caveat+=("the local repronim/neurodocker image has no registry digest, so its version cannot be pinned by digest; record the tag and the image ID, or install the pip binary")
+          fi
+          break
+        fi
+      done
+      if [ -z "$found" ]; then
+        missing+=("neurodocker (the binary on PATH, or a local repronim/neurodocker image)")
+        enable+=("install it into the project's tool environment with 'uv pip install neurodocker==<version>' and record the version. A repronim/neurodocker image works too, but this check does not pull it: pull it yourself, by digest")
+      fi
+    fi
+    ;;
   *)
-    echo "unknown tool: $tool (expected docker, podman, apptainer, oci or digest)" >&2
+    echo "unknown tool: $tool (expected docker, podman, apptainer, oci, digest or neurodocker)" >&2
     exit 2
     ;;
 esac

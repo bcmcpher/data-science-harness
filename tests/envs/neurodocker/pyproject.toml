@@ -1,0 +1,20 @@
+# Live tool test environment: neurodocker.
+#
+# SCOPE: installs the real `neurodocker` so tests/e2e-smoke.sh can run the command lines its toolbox
+# skill teaches against the tool itself. It is not a check dependency (see the root
+# pyproject.toml) and not a harness dependency: a user installing plugins needs none of this.
+#
+#   bin/test-envs sync neurodocker     # uv sync --locked --project tests/envs/neurodocker
+#
+# The `==` pin is the version under test. A bump is `uv lock --project tests/envs/neurodocker
+# --upgrade-package neurodocker` together with an edit to the pin, and re-runs the refinement loop.
+# No extras: `minify` (which pulls in the docker SDK) is out of scope.
+
+[project]
+name = "dsh-test-env-neurodocker"
+version = "0.0.0"
+requires-python = ">=3.10"
+dependencies = ["neurodocker==2.1.2"]
+
+[tool.uv]
+package = false

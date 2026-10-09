@@ -52,7 +52,7 @@ CHECK_SCRIPT_DIRS = ("tests", "schemas")
 PERIPHERAL_BINARIES = {
     "nipoppy", "bids-validator", "apptainer", "singularity", "docker", "podman", "heudiconv",
     "dcm2bids", "pydeface", "bagel", "pynidm", "reproschema", "myst", "repo2data", "pyinfra",
-    "osf", "zenodo", "curl",
+    "osf", "zenodo", "curl", "neurodocker",
 }
 _INLINE_CODE = re.compile(r"`([^`\n]+)`")
 
