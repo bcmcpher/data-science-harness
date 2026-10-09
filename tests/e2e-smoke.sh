@@ -889,11 +889,11 @@ echo; echo "## containers-cli (runtime gates; the pins the toolbox will not waiv
 # the two pinning rules are actually written down where a skill will read them.
 CONCHK="$REPO/plugins/containers-cli/scripts/check-runtimes.sh"
 assert "containers-cli ships the runtime gate" "[ -x '$CONCHK' ]"
-for CSKILL in dockerfile oci-build apptainer; do
+for CSKILL in dockerfile neurodocker repronim-containers oci-build apptainer; do
   assert "containers-cli provides a $CSKILL skill to invoke" \
          "[ -f '$REPO/plugins/containers-cli/skills/$CSKILL/SKILL.md' ]"
 done
-for RT in docker podman apptainer oci digest; do
+for RT in docker podman apptainer oci digest neurodocker; do
   RTRC=$(rc_of bash "$CONCHK" "$RT")
   assert "runtime gate answers available (0) or unavailable (1) for $RT" \
          "[ $RTRC -eq 0 ] || [ $RTRC -eq 1 ]"
@@ -940,6 +940,89 @@ DFSKILL="$REPO/plugins/containers-cli/skills/dockerfile/SKILL.md"
 assert_grep "the dockerfile skill refuses a mutable tag as a pin"  "tag is not a pin"  "$DFSKILL"
 assert_grep "the dockerfile skill distinguishes unpinned from over-pinned" "over-pinned" "$DFSKILL"
 assert_grep "the dockerfile skill names the three environment kinds" "derived" "$DFSKILL"
+
+# Neurodocker and ReproNim/containers (repronim-containers). Both must stay cheap on disk: nothing
+# here pulls an image, the catalog clone is metadata only, and an image run needs a second opt-in.
+NDSKILL="$REPO/plugins/containers-cli/skills/neurodocker/SKILL.md"
+RNSKILL="$REPO/plugins/containers-cli/skills/repronim-containers/SKILL.md"
+assert_grep "the neurodocker skill refuses an unversioned software flag" "Never generate with an unversioned" "$NDSKILL"
+assert_grep "the neurodocker skill records its own version beside the recipe" "neurodocker.sh" "$NDSKILL"
+assert_grep "the repronim-containers skill never fetches during a lookup" "Never fetch annex content" "$RNSKILL"
+assert_grep "the repronim-containers skill removes its temporary clone" "Never leave the temporary clone" "$RNSKILL"
+assert_grep "the neurodocker gate never pulls" "never pulls" "$CONCHK"
+
+# --- neurodocker generate (offline). A fake all-zero digest: generation renders templates and
+# never resolves the base, which is also what makes it runnable with no network.
+if tool_env_ready neurodocker; then
+  NDGRC=$(rc_of tool_env neurodocker bash "$CONCHK" neurodocker)
+  assert "the neurodocker gate sees the env's binary through PATH" "[ $NDGRC -eq 0 ]"
+  NDBASE="debian@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  NDARGS=(generate docker --pkg-manager apt --base-image "$NDBASE" --jq version=1.6 method=binaries)
+  if unshare -rn true 2>/dev/null; then
+    NDRC=$(cd "$WORKDIR" && rc_of tool_env neurodocker sh -c 'unshare -rn neurodocker "$@" > nd.Dockerfile' _ "${NDARGS[@]}")
+    assert "neurodocker generates a Dockerfile with no network (unshare -rn)" "[ $NDRC -eq 0 ]"
+  else
+    NDRC=$(cd "$WORKDIR" && rc_of tool_env neurodocker sh -c 'neurodocker "$@" > nd.Dockerfile' _ "${NDARGS[@]}")
+    assert "neurodocker generates a Dockerfile" "[ $NDRC -eq 0 ]"
+    skip "offline generation not checked — unshare -rn unavailable"
+  fi
+  assert_grep "the generated FROM carries the digest" "^FROM ${NDBASE}\$" "$WORKDIR/nd.Dockerfile"
+  assert_grep "the generated recipe installs the pinned version" "jq-1\.6" "$WORKDIR/nd.Dockerfile"
+  NDNOV=$(rc_of tool_env neurodocker neurodocker generate docker --pkg-manager apt --base-image "$NDBASE" --jq method=binaries)
+  assert "neurodocker itself fails a jq flag with no version=" "[ $NDNOV -ne 0 ]"
+  NDVER=$(tool_env neurodocker neurodocker --version 2>/dev/null </dev/null || true)
+  assert "neurodocker --version names a version for the recipe header" \
+         "printf '%s' '$NDVER' | grep -qE '^neurodocker version [0-9]'"
+fi
+
+# --- ReproNim/containers catalog (metadata only). Gated on DSH_NET=1: a ~17 MB git clone, no annex
+# content. The image run below needs DSH_NET_IMAGES=1 as well, and uses the 2.7 MB test image.
+if ! datalad containers-add --help >/dev/null 2>&1; then
+  skip "ReproNim catalog — datalad-container extension not installed"
+elif [ "${DSH_NET:-}" != 1 ]; then
+  skip "ReproNim catalog needs network — set DSH_NET=1"
+else
+  RNSUP="$WORKDIR/rn-sup"; rm -rf "$RNSUP"
+  datalad -l error create "$RNSUP" >/dev/null
+  RNRC=$(cd "$RNSUP" && rc_of datalad -l error clone -d . ///repronim/containers containers/repronim)
+  assert "///repronim/containers installs as a subdataset at containers/repronim" \
+         "[ $RNRC -eq 0 ] && [ -f '$RNSUP/containers/repronim/.datalad/config' ]"
+  if [ "$RNRC" -eq 0 ]; then
+    (cd "$RNSUP" && datalad containers-list -r) > "$WORKDIR/rn-list.txt" 2>/dev/null || true
+    assert_grep "containers-list -r names subdataset images with the path prefix" \
+                "^containers/repronim/bids-mriqc " "$WORKDIR/rn-list.txt"
+    RNCFG="$RNSUP/containers/repronim/.datalad/config"
+    assert "the registered call format runs through scripts/singularity_cmd" \
+           "git config -f '$RNCFG' datalad.containers.bids-fmriprep.cmdexec | grep -q 'scripts/singularity_cmd'"
+    RNPRESENT=$(git -C "$RNSUP/containers/repronim" annex find --in here 2>/dev/null | wc -l)
+    assert "the clone fetched no image content" "[ $RNPRESENT -eq 0 ]"
+    RNKEY=$(git -C "$RNSUP/containers/repronim" annex lookupkey images/bids/bids-mriqc--24.0.2.sif 2>/dev/null || true)
+    assert "an image's size is readable from its annex key before any fetch" \
+           "printf '%s' '$RNKEY' | grep -qE -- '-s[0-9]+--'"
+    # The skill's lookup from a temporary clone, offline here (the source is the local clone): the
+    # trap must remove the clone on a failing exit too.
+    RNTMP="$WORKDIR/rn-tmp"; rm -rf "$RNTMP"; mkdir -p "$RNTMP"
+    TMPDIR="$RNTMP" bash -c '
+      CATTMP=$(mktemp -d)
+      trap '\''chmod -R u+w "$CATTMP" 2>/dev/null; rm -rf "$CATTMP"'\'' EXIT
+      datalad -l error clone "$1" "$CATTMP/c" >/dev/null || exit 3
+      git config -f "$CATTMP/c/.datalad/config" --get-regexp "^datalad\.containers\..*\.image$" | grep -q fmriprep || exit 4
+      exit 1' _ "$RNSUP/containers/repronim" && RNLRC=0 || RNLRC=$?
+    assert "the lookup snippet reads the catalog from a temporary clone" "[ $RNLRC -eq 1 ]"
+    assert "the temporary catalog clone is gone after a failing exit" "[ -z \"\$(ls -A '$RNTMP')\" ]"
+    if [ "${DSH_NET_IMAGES:-}" != 1 ]; then
+      skip "ReproNim image run — set DSH_NET_IMAGES=1 (fetches the 2.7 MB arg-test image)"
+    elif ! command -v singularity >/dev/null 2>&1; then
+      skip "ReproNim image run — no singularity on PATH (the registered call format names it)"
+    else
+      RNRUN=$(cd "$RNSUP" && rc_of datalad -l error containers-run -n containers/repronim/arg-test \
+              -m "arg-test" -o rn-arg.txt "echo hi > rn-arg.txt")
+      assert "containers-run runs a subdataset image by its prefixed name" "[ $RNRUN -eq 0 ]"
+      git -C "$RNSUP" show -s --format=%B HEAD > "$WORKDIR/rn-run.txt"
+      assert_grep "the run commit records the ReproNim image" "arg-test\.simg" "$WORKDIR/rn-run.txt"
+    fi
+  fi
+fi
 
 # =========================================================== bids validation (bids-cli toolbox)
 echo; echo "## bids (validator presence check; validation gated on an installed validator)"

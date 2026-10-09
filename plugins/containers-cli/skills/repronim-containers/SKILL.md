@@ -89,6 +89,8 @@ Measured 2026-10-09, at subdataset commit `76e98307`:
    datalad containers-run -n containers/repronim/<name> \
      --input <inputs> --output <outputs> -- <args>
    ```
+   `datalad containers-run` fetches a missing image by itself, so the size from step 3 must reach
+   the caller before the planner runs either command, not only before `datalad get`.
    From the superdataset, a subdataset's container is named with its path prefix
    (`containers/repronim/bids-mriqc`), and `datalad containers-list -r` lists them.
    For a **file match**, the planner registers that version in the superdataset first:
@@ -117,7 +119,8 @@ Measured 2026-10-09, at subdataset commit `76e98307`:
 - **Never report an image as available to run when its content is not fetched.** `fetched: no`
   until `datalad get` has run.
 - **Never fetch annex content.** A lookup reads git metadata only. The planner runs `datalad get`
-  for the one image chosen.
+  (or `containers-run`, which fetches too) for the one image chosen, after the caller has seen its
+  size.
 - **Never leave the temporary clone behind.** Remove it on every exit path.
 - **Never install the subdataset, register, or run.** Return the commands; the planner runs them.
 - **Never treat a match as a decision.** Report it and let the caller choose; they may need a version
