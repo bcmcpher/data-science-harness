@@ -2,7 +2,7 @@
 
 A community-driven, harness-agnostic collection of AI assistant configurations for academic data science work — skills, agents, commands, hooks, MCP configs, and planning templates. The content is harness-neutral Markdown; `bin/install.sh` installs to **Claude Code and OpenCode today**, and Cursor, GitHub Copilot, Windsurf and Gemini CLI are the harnesses the format is designed to reach next (see [Install](#install)).
 
-> **Status:** both planes are built — 37 planner skills over 21 plugins / 59 skills / 8 agents, specified by 22 specs in [`openspec/specs/`](openspec/specs). **Every capability now has a toolbox.** What that does not mean: **most paths have never been run against their real tool** — deposits, document builds, fetches and bundle emission are each gated, the gates are tested, and what sits behind them is not. The exception among deposits is Zenodo, whose deposit, relate and new-version path has run against the Zenodo sandbox (production Zenodo, OSF and DataCite have not). Read that narrowly: it is a claim about deposits, document builds, fetches and bundle emission. `datalad` is a hard precondition of the e2e suite and is exercised against the real tool unconditionally, and six other capabilities have real-tool paths behind gates. What is distinctive about `containers` is that its whole Docker → OCI → `.sif` path was run end to end here — and, ironically, that it is the one real path CI cannot run, because apptainer is deliberately not installed there. The [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
+> **Status:** both planes are built — 37 planner skills over 21 plugins / 61 skills / 8 agents, specified by 22 specs in [`openspec/specs/`](openspec/specs). **Every capability now has a toolbox.** What that does not mean: **most paths have never been run against their real tool** — deposits, document builds, fetches and bundle emission are each gated, the gates are tested, and what sits behind them is not. The exception among deposits is Zenodo, whose deposit, relate and new-version path has run against the Zenodo sandbox (production Zenodo, OSF and DataCite have not). Read that narrowly: it is a claim about deposits, document builds, fetches and bundle emission. `datalad` is a hard precondition of the e2e suite and is exercised against the real tool unconditionally, and six other capabilities have real-tool paths behind gates. What is distinctive about `containers` is that its whole Docker → OCI → `.sif` path was run end to end here — and, ironically, that it is the one real path CI cannot run, because apptainer is deliberately not installed there. The [evaluation protocol](docs/evaluation.md) is specified but **unrun**. No number in this repository comes from a measurement. [**Why this exists**](docs/motivation.md) states what is built, what is specified, and what is a gap.
 
 ---
 
@@ -228,7 +228,7 @@ exception: it has a toolbox and no doer, because it is native to the main thread
 | `bids` | doer | bids-validator | `bids-doer` | S, M |
 | `bids-cli` | toolbox | `@bids/validator` / legacy `bids-validator` | 1 skill + offline validator-presence check | S, M |
 | `containers` | doer | Docker / Podman / Apptainer | `containers-doer` | P, E |
-| `containers-cli` | toolbox | Docker, Podman, Apptainer | 3 skills, one per job (author / build / convert), + offline runtime check | P, E |
+| `containers-cli` | toolbox | Docker, Podman, Apptainer | 5 skills, one per job (author / generate / find pre-built / build / convert), + offline runtime check | P, E |
 | `archive` | doer | OSF / Zenodo / DataCite | `archive-doer` | D |
 | `archive-cli` | toolbox | OSF / Zenodo / DataCite APIs | 3 skills, one per backend, + offline readiness check | D |
 | `annotate` | doer | Neurobagel / SNOMED / ReproSchema / NIDM | `annotate-doer` | M, A |
@@ -244,9 +244,12 @@ plugins but **execution**: the paths below the gates, described after the table.
 
 The capability plane is the uneven half of the harness. `datalad` has 19 toolbox skills; `annotate`,
 `nipoppy` and `compendium` have 4 each; `archive` has 3; `liab` has 2; `bids` has 1. **`containers`
-has 3, one per job.** `containers` was the last capability without a toolbox; `add-containers-toolbox`
+has 5, one per job.** `containers` was the last capability without a toolbox; `add-containers-toolbox`
 built one and reframed the capability around the path people actually use — author a Dockerfile from
 the project's pinned manifest, build it with Docker or Podman, convert it to a `.sif` for a cluster.
+`repronim-containers` added the two ReproNim sources: Neurodocker generates a pinned recipe when the
+user names software rather than a manifest, and the ReproNim/containers dataset is checked for a
+ready-built image before anything is built.
 It holds two pins that look like pedantry and are not: an unpinned manifest and a mutable image tag
 both produce containers that run, produce numbers, and do not rebuild.
 
