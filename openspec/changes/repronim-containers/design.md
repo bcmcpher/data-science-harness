@@ -103,6 +103,9 @@ are DataLad operations, and those belong to the main thread. The `repronim-conta
 - returns the install, get and run commands;
 - returns the `binding: containers/repronim@<subdataset commit>` line.
 
+The temporary clone lives under `mktemp -d` and is removed by a trap when the lookup ends, whether
+it succeeds or fails. A lookup leaves nothing on disk.
+
 *Alternative: let the doer install the subdataset.* Rejected. It would give the containers doer a
 DataLad write, which the containers spec's boundary forbids.
 
@@ -139,6 +142,11 @@ toolbox skills may quote the command, as for the other container binaries.
   `neurodocker` refuses unversioned software, and `repronim-containers` refuses to present an
   unfetched image as available.
 
+- [Disk use.] → Nothing pulls an image unasked. The `neurodocker` runtime check inspects local
+  images only and never pulls `repronim/neurodocker`. The catalog lookup reads git metadata (about
+  8 MB) and deletes it afterwards. Only `datalad get`, run by the planner on request, fetches one
+  image.
+
 ## Migration Plan
 
 Additive. Removing the two skills, the gate target and the e2e steps restores the current
@@ -146,16 +154,12 @@ behaviour. Existing projects are unaffected until they install the subdataset.
 
 ## Open Questions
 
-- **Where is the subdataset installed?** **Default: `containers/repronim/`.** Every compute
-  environment in a harness dataset already lives under `containers/` (recipes, `.sif` files,
-  `containers/<name>/` for neurodocker recipes). `.bidsignore` already excludes it, and nipoppy
-  0.4.5 creates the same top-level directory. The alternative is upstream's documented
-  `code/containers/`. It matches ReproNim's README verbatim, which helps users following
-  ReproNim's own tutorials. But it puts a large image dataset under `code/`, which YODA reserves
-  for scripts kept in git. `inputs/` is rejected: YODA reserves it for input data. The skill will
-  accept a user-chosen path either way.
-- Which neurodocker version `tests/envs/neurodocker` locks, and whether the skill should prefer the
-  pip binary or the `repronim/neurodocker` image when both exist. **Default: the pip binary**, whose
-  version the lock names. The image is the fallback, pinned by digest.
-- Whether a catalog match should short-circuit the build silently. **Default: no.** The doer
-  reports the match and asks, because the user may need a version ReproNim does not carry.
+Resolved 2026-10-09 with the defaults:
+
+- **Subdataset path:** `containers/repronim/`. Every compute environment already lives under
+  `containers/`, `.bidsignore` excludes it, and YODA reserves `code/` for scripts kept in git.
+  The skill accepts a user-chosen path.
+- **Neurodocker form:** the pip binary, locked at 2.1.2 in `tests/envs/neurodocker`. A local
+  `repronim/neurodocker` image is the fallback, pinned by digest, and is never pulled.
+- **Silent short-circuit on a catalog match:** no. The doer reports the match and asks, because the
+  user may need a version ReproNim does not carry.

@@ -1,8 +1,8 @@
 ## 1. Toolbox skills
 
 - [ ] 1.1 `plugins/containers-cli/skills/neurodocker/SKILL.md`: gate via `check-runtimes.sh neurodocker` and `digest`; generate docker/singularity into `containers/<name>/`; write `neurodocker.sh` and a version header; refuse software without `version=` and a base image without a digest; hand off to `oci-build` or `apptainer`; report block in the toolbox's format; `user-invocable: true`, `argument-hint`, scoped `allowed-tools`
-- [ ] 1.2 `plugins/containers-cli/skills/repronim-containers/SKILL.md`: catalog lookup from `.datalad/config` (installed subdataset, else temporary metadata-only clone outside the dataset); report matches; return the install / `datalad get` / `datalad containers-run` commands for the planner; document `singularity_cmd`, `SINGULARITY_CMD`, `REPRONIM_USE_DOCKER`, `REPRONIM_USE_DUCT`; never report an unfetched image as available; `binding: containers/repronim@<commit>`
-- [ ] 1.3 `check-runtimes.sh`: add a `neurodocker` target (binary on `PATH`, else a local `repronim/neurodocker` image via docker/podman); update the usage line and the unknown-tool message
+- [ ] 1.2 `plugins/containers-cli/skills/repronim-containers/SKILL.md`: catalog lookup from `.datalad/config` (installed subdataset, else temporary metadata-only clone under `mktemp -d` outside the dataset, removed by a trap after the lookup whether it succeeds or fails); report matches; return the install / `datalad get` / `datalad containers-run` commands for the planner; document `singularity_cmd`, `SINGULARITY_CMD`, `REPRONIM_USE_DOCKER`, `REPRONIM_USE_DUCT`; never report an unfetched image as available; `binding: containers/repronim@<commit>`
+- [ ] 1.3 `check-runtimes.sh`: add a `neurodocker` target (binary on `PATH`, else a local `repronim/neurodocker` image via `docker`/`podman image inspect`; never pulls); update the usage line and the unknown-tool message
 - [ ] 1.4 `plugins/containers-cli/.claude-plugin/plugin.json`: add both skills to `skills`, add `neurodocker` and `repronim` keywords; update the description
 
 ## 2. Doer
