@@ -958,6 +958,7 @@ if tool_env_ready neurodocker; then
   assert "the neurodocker gate sees the env's binary through PATH" "[ $NDGRC -eq 0 ]"
   NDBASE="debian@sha256:0000000000000000000000000000000000000000000000000000000000000000"
   NDARGS=(generate docker --pkg-manager apt --base-image "$NDBASE" --jq version=1.6 method=binaries)
+  rm -f "$WORKDIR/nd.Dockerfile"   # a reused workdir must not let a stale recipe pass the greps
   if unshare -rn true 2>/dev/null; then
     NDRC=$(cd "$WORKDIR" && rc_of tool_env neurodocker sh -c 'unshare -rn neurodocker "$@" > nd.Dockerfile' _ "${NDARGS[@]}")
     assert "neurodocker generates a Dockerfile with no network (unshare -rn)" "[ $NDRC -eq 0 ]"
@@ -999,17 +1000,32 @@ else
     RNKEY=$(git -C "$RNSUP/containers/repronim" annex lookupkey images/bids/bids-mriqc--24.0.2.sif 2>/dev/null || true)
     assert "an image's size is readable from its annex key before any fetch" \
            "printf '%s' '$RNKEY' | grep -qE -- '-s[0-9]+--'"
-    # The skill's lookup from a temporary clone, offline here (the source is the local clone): the
-    # trap must remove the clone on a failing exit too.
-    RNTMP="$WORKDIR/rn-tmp"; rm -rf "$RNTMP"; mkdir -p "$RNTMP"
-    TMPDIR="$RNTMP" bash -c '
-      CATTMP=$(mktemp -d)
-      trap '\''chmod -R u+w "$CATTMP" 2>/dev/null; rm -rf "$CATTMP"'\'' EXIT
-      datalad -l error clone "$1" "$CATTMP/c" >/dev/null || exit 3
-      git config -f "$CATTMP/c/.datalad/config" --get-regexp "^datalad\.containers\..*\.image$" | grep -q fmriprep || exit 4
-      exit 1' _ "$RNSUP/containers/repronim" && RNLRC=0 || RNLRC=$?
-    assert "the lookup snippet reads the catalog from a temporary clone" "[ $RNLRC -eq 1 ]"
-    assert "the temporary catalog clone is gone after a failing exit" "[ -z \"\$(ls -A '$RNTMP')\" ]"
+    # The lookup script exactly as the skill ships it, between its begin/end markers, with only the
+    # source swapped for the local clone (offline) or for a path that does not exist (a failed
+    # clone). It runs from $WORKDIR, where no containers/repronim is installed, so it must take the
+    # temporary-clone path, and the clone it names on its tmpclone: line must be gone afterwards.
+    sed -n '/# repronim-lookup:begin/,/# repronim-lookup:end/p' "$RNSKILL" | sed '1d;$d;s/^   //' \
+      > "$WORKDIR/rn-lookup.sh"
+    assert "the skill ships its lookup between begin/end markers" "grep -q '^LOOKUP\$' '$WORKDIR/rn-lookup.sh'"
+    rn_lookup() {  # rn_lookup <source> <tool> <version> -> output in $WORKDIR/rn-lookup.out
+      sed -e "s#///repronim/containers#$1#" -e "s#\"<tool>\" \"<version>\"#\"$2\" \"$3\"#" "$WORKDIR/rn-lookup.sh" \
+        > "$WORKDIR/rn-lookup-run.sh"
+      (cd "$WORKDIR" && bash "$WORKDIR/rn-lookup-run.sh") > "$WORKDIR/rn-lookup.out" 2>&1 </dev/null || true
+    }
+    rn_lookup "$RNSUP/containers/repronim" fmriprep 23.2.0
+    assert_grep "the lookup finds an unregistered older version as a file match" \
+                "^file: images/bids/bids-fmriprep--23\.2\.0\.sing version=23\.2\.0 unregistered bytes=[0-9]+ fetched=no\$" \
+                "$WORKDIR/rn-lookup.out"
+    RNTMPC=$(sed -n 's/^tmpclone: //p' "$WORKDIR/rn-lookup.out")
+    assert "the lookup's temporary clone is gone after it exits" "[ -n '$RNTMPC' ] && [ ! -e '$RNTMPC' ]"
+    rn_lookup "$RNSUP/containers/repronim" mriqc ""
+    assert_grep "the lookup marks the registered version and its size" \
+                "registered:bids-mriqc bytes=[0-9]+ fetched=no" "$WORKDIR/rn-lookup.out"
+    assert_grep "a registered match carries its call format" "^  cmdexec: .*singularity_cmd" "$WORKDIR/rn-lookup.out"
+    rn_lookup "$WORKDIR/no-such-catalog" fmriprep 23.2.0
+    assert_grep "a failed clone reports not checked, not no match" "^catalog: not checked" "$WORKDIR/rn-lookup.out"
+    RNTMPC=$(sed -n 's/^tmpclone: //p' "$WORKDIR/rn-lookup.out")
+    assert "the temporary clone is gone after a failed clone too" "[ -n '$RNTMPC' ] && [ ! -e '$RNTMPC' ]"
     if [ "${DSH_NET_IMAGES:-}" != 1 ]; then
       skip "ReproNim image run — set DSH_NET_IMAGES=1 (fetches the 2.7 MB arg-test image)"
     elif ! command -v singularity >/dev/null 2>&1; then

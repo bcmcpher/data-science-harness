@@ -152,9 +152,21 @@ case "$tool" in
       img=""
       for rt in podman docker; do
         command -v "$rt" >/dev/null 2>&1 || continue
-        img="$("$rt" images --no-trunc --format '{{.Repository}}:{{.Tag}}@{{.ID}}' 2>/dev/null \
+        # {{.Digest}} is the registry digest a run can name; {{.ID}} is a local config ID that no
+        # registry knows, and naming it would make the runtime try to pull. An image with no digest
+        # (built locally) is reported by tag, with a caveat.
+        img="$("$rt" images --digests --format '{{.Repository}}:{{.Tag}} {{.Digest}}' 2>/dev/null \
                | grep -E '(^|/)repronim/neurodocker:' | head -1)"
-        [ -n "$img" ] && { found="$rt image $img — run as '$rt run --rm <image> generate …', and record the image digest"; break; }
+        if [ -n "$img" ]; then
+          ref="${img%% *}" dig="${img#* }"
+          if [ -n "$dig" ] && [ "$dig" != "<none>" ]; then
+            found="$rt image ${ref%:*}@$dig ($ref) — run as '$rt run --rm ${ref%:*}@$dig generate …'"
+          else
+            found="$rt image $ref (no registry digest)"
+            caveat+=("the local repronim/neurodocker image has no registry digest, so its version cannot be pinned by digest; record the tag and the image ID, or install the pip binary")
+          fi
+          break
+        fi
       done
       if [ -z "$found" ]; then
         missing+=("neurodocker (the binary on PATH, or a local repronim/neurodocker image)")

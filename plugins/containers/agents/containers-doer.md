@@ -99,6 +99,8 @@ pipeline declaration, hand it to the nipoppy doer.
 4. **Check ReproNim before a vendored or derived build.** Follow the `repronim-containers` skill and
    report one of:
    - `catalog: match <name> <version>`: stop, and ask whether to use it instead of building;
+   - `catalog: file match <path>`: the version is in the dataset but not registered. Stop and ask,
+     as for a match, and say that using it needs the planner's `containers-add` first;
    - `catalog: no match`: proceed;
    - `catalog: not checked (<why>)`: no network and no installed subdataset. Proceed, and say so.
 
@@ -122,7 +124,7 @@ pipeline declaration, hand it to the nipoppy doer.
    environment: <name> (serves: <pipeline or analysis>)
    kind:        authored | vendored | derived
    pin:         <manifest + how pinned> | <image>@sha256:… | containers/repronim@<commit> + <annex key> | unresolved (<why>)
-   catalog:     match <name> <version> | no match | not checked (<why>) | n/a (authored)
+   catalog:     match <name> <version> | file match <path> | no match | not checked (<why>) | n/a (authored)
    runtime:     podman <version> (rootless) | docker <version> (rootful) | n/a
    image:       <path to the built .sif, or the OCI tag if conversion did not run>
    verified:    inspect ok, exec ok | <what failed> | not run

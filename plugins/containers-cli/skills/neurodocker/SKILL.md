@@ -61,11 +61,19 @@ three things make it regenerable:
      --pkg-manager apt \
      --base-image debian@sha256:<digest> \
      --mrtrix3 version=3.0.4 method=binaries \
-     > containers/<name>/Dockerfile
+     > containers/<name>/Dockerfile.tmp </dev/null \
+     && mv containers/<name>/Dockerfile.tmp containers/<name>/Dockerfile \
+     || rm -f containers/<name>/Dockerfile.tmp
    ```
    Use `generate singularity` and `containers/<name>/Singularity` for an Apptainer definition file.
-   Some templates (FSL) ask the user to accept a licence. Do not pass `--yes` for the user: show the
-   prompt, and pass `--yes` only after the user accepts.
+   Generate into a temporary file and move it into place only on exit 0, so a failed run leaves no
+   partial recipe.
+
+   Some templates ask the user to accept a licence on stdin; FSL does ("FSL is non-free … Proceed?").
+   Your shell cannot answer it: with no input, Neurodocker aborts. **Before generating** a recipe
+   that includes FSL, ask the user whether they accept FSL's licence. Pass `--yes` only after they
+   say yes, and record that they did in `notes:`. If any other template aborts on a prompt, report
+   the prompt text and ask the same way.
 
 4. **Record the generator next to the recipe.**
    - `containers/<name>/neurodocker.sh`: the exact command, one flag per line, with the redirect.
@@ -102,5 +110,5 @@ three things make it regenerable:
 - **Never write install steps yourself** for software Neurodocker does not template. Report that it
   has no template, and name `dockerfile` (a derived image from a pinned manifest) as the way forward.
 - **Never pull `repronim/neurodocker`.** Use it only when the gate found it locally.
-- Do not accept a licence for the user, do not build, and do not commit. The planner owns
+- Do not accept a licence for the user: ask first. Do not build, and do not commit. The planner owns
   `datalad save`.
